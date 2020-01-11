@@ -26,25 +26,24 @@ const Editor = () => {
       {
         id: "1",
         name: "Header 1",
-        component: "Header",
+        component: "Primitives / Header",
         x1: 50,
         y1: 100,
         x2: 250,
         y2: 150,
-        props: {}
+        options: {}
       },
       {
         id: "2",
         name: "Paragraph 1",
-        component: "Paragraph",
+        component: "Primitives / Paragraph",
         x1: 100,
         y1: 150,
         x2: 350,
         y2: 300,
-        props: {
-          children: [
+        options: {
+          text:
             "Now is the time for all good men to come to the aid of their party."
-          ]
         }
       }
     ]
@@ -484,9 +483,9 @@ const Editor = () => {
           <>
             <h2>Insert</h2>
             <div>
-              {Object.keys(config).map(type => (
+              {Object.keys(config).map(component => (
                 <button
-                  key={type}
+                  key={component}
                   onClick={() => {
                     const id = (Math.random() * 0xffffff).toString(16);
                     setDoc(document => ({
@@ -495,13 +494,20 @@ const Editor = () => {
                         ...document.layers,
                         {
                           id,
-                          name: `${type}`,
-                          component: type,
+                          name: `${component}`,
+                          component: component,
                           x1: view.transform.x,
                           y1: view.transform.y,
-                          x2: view.transform.x + config[type].defaultWidth,
-                          y2: view.transform.y + config[type].defaultHeight,
-                          options: {}
+                          x2: view.transform.x + config[component].defaultWidth,
+                          y2:
+                            view.transform.y + config[component].defaultHeight,
+                          options: config[component].options?.reduce(
+                            (result, option) => ({
+                              ...result,
+                              [option.key]: option.default()
+                            }),
+                            {}
+                          )
                         }
                       ]
                     }));
@@ -511,7 +517,7 @@ const Editor = () => {
                     }));
                   }}
                 >
-                  {type}
+                  {component}
                 </button>
               ))}
             </div>
@@ -733,6 +739,46 @@ const Editor = () => {
                 Send to Back
               </button>
             </p>
+            {view.selection.size === 1 ? (
+              <>
+                <h2>Options</h2>
+                {config[
+                  doc.layers.find(({ id }) => id === [...view.selection][0])
+                    .component
+                ].options?.map(({ key, input }) => {
+                  switch (input) {
+                    case "short-string":
+                      return (
+                        <input
+                          key={key}
+                          type="text"
+                          value={
+                            doc.layers.find(
+                              ({ id }) => id === [...view.selection][0]
+                            ).options[key]
+                          }
+                          onChange={({ currentTarget: { value } }) => {
+                            setDoc(current => ({
+                              ...current,
+                              layers: current.layers.map(layer =>
+                                layer.id === [...view.selection][0]
+                                  ? {
+                                      ...layer,
+                                      options: {
+                                        ...layer.options,
+                                        [key]: value
+                                      }
+                                    }
+                                  : layer
+                              )
+                            }));
+                          }}
+                        />
+                      );
+                  }
+                })}
+              </>
+            ) : null}
           </>
         )}
       </div>

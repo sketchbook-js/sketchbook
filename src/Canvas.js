@@ -46,7 +46,7 @@ const Canvas = () => {
         setView(current => ({ ...current, selection: set([]) }));
       }}
     >
-      {doc.layers.map(({ id, component, x1, y1, x2, y2, props }) => {
+      {doc.layers.map(({ id, component, x1, y1, x2, y2, options }) => {
         if (!config[component]) throw Error(`Unknown type ${component}`);
         const Component = config[component].component;
         return (
@@ -82,7 +82,7 @@ const Canvas = () => {
               }}
             >
               <div style={{ flexGrow: 1 }}>
-                <Component width={x2 - x1} height={y2 - y1} {...props} />
+                <Component width={x2 - x1} height={y2 - y1} options={options} />
               </div>
             </div>
           </div>
