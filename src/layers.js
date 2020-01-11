@@ -70,27 +70,27 @@ const alignLayers = (layers, { x, y }, predicate = () => true) => {
                 c: 0,
                 d: 1,
                 e:
-                  x === undefined
-                    ? 0
-                    : x === 0
+                  x === 0
                     ? bounds.x1 +
                       (bounds.x2 - bounds.x1) / 2 -
                       (layer.x2 - layer.x1) / 2 -
                       layer.x1
                     : x === -1
                     ? bounds.x1 - layer.x1
-                    : bounds.x2 - layer.x2,
+                    : x === 1
+                    ? bounds.x2 - layer.x2
+                    : 0,
                 f:
-                  y === undefined
-                    ? 0
-                    : y === 0
+                  y === 0
                     ? bounds.y1 +
                       (bounds.y2 - bounds.y1) / 2 -
                       (layer.y2 - layer.y1) / 2 -
                       layer.y1
                     : y === -1
                     ? bounds.y1 - layer.y1
-                    : bounds.y2 - layer.y2
+                    : y === 1
+                    ? bounds.y2 - layer.y2
+                    : 0
               }
             ],
             layer

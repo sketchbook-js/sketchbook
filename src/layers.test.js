@@ -251,6 +251,220 @@ describe("transformLayers", () => {
   test.todo("predicate");
 });
 
+describe("alignLayers", () => {
+  test("align vertical top", () => {
+    expect(
+      alignLayers(
+        [
+          {
+            x1: 130,
+            y1: 130,
+            x2: 400,
+            y2: 400
+          },
+          {
+            x1: 400,
+            y1: 400,
+            x2: 430,
+            y2: 430
+          }
+        ],
+        { y: -1 }
+      )
+    ).toEqual([
+      {
+        x1: 130,
+        y1: 130,
+        x2: 400,
+        y2: 400
+      },
+      {
+        x1: 400,
+        y1: 130,
+        x2: 430,
+        y2: 160
+      }
+    ]);
+  });
+
+  test("align vertical center", () => {
+    expect(
+      alignLayers(
+        [
+          {
+            x1: 130,
+            y1: 130,
+            x2: 400,
+            y2: 410
+          },
+          {
+            x1: 400,
+            y1: 400,
+            x2: 430,
+            y2: 440
+          }
+        ],
+        { y: 0 }
+      )
+    ).toEqual([
+      {
+        x1: 130,
+        y1: 145,
+        x2: 400,
+        y2: 425
+      },
+      {
+        x1: 400,
+        y1: 265,
+        x2: 430,
+        y2: 305
+      }
+    ]);
+  });
+
+  test("align vertical bottom", () => {
+    expect(
+      alignLayers(
+        [
+          {
+            x1: 130,
+            y1: 130,
+            x2: 400,
+            y2: 400
+          },
+          {
+            x1: 400,
+            y1: 400,
+            x2: 430,
+            y2: 430
+          }
+        ],
+        { y: 1 }
+      )
+    ).toEqual([
+      {
+        x1: 130,
+        y1: 160,
+        x2: 400,
+        y2: 430
+      },
+      {
+        x1: 400,
+        y1: 400,
+        x2: 430,
+        y2: 430
+      }
+    ]);
+  });
+
+  test("align horizontal left", () => {
+    expect(
+      alignLayers(
+        [
+          {
+            x1: 130,
+            y1: 130,
+            x2: 400,
+            y2: 400
+          },
+          {
+            x1: 400,
+            y1: 400,
+            x2: 430,
+            y2: 430
+          }
+        ],
+        { x: -1 }
+      )
+    ).toEqual([
+      {
+        x1: 130,
+        y1: 130,
+        x2: 400,
+        y2: 400
+      },
+      {
+        x1: 130,
+        y1: 400,
+        x2: 160,
+        y2: 430
+      }
+    ]);
+  });
+
+  test("align horizontal center", () => {
+    expect(
+      alignLayers(
+        [
+          {
+            x1: 130,
+            y1: 130,
+            x2: 400,
+            y2: 400
+          },
+          {
+            x1: 400,
+            y1: 400,
+            x2: 430,
+            y2: 430
+          }
+        ],
+        { x: 0 }
+      )
+    ).toEqual([
+      {
+        x1: 145,
+        y1: 130,
+        x2: 415,
+        y2: 400
+      },
+      {
+        x1: 265,
+        y1: 400,
+        x2: 295,
+        y2: 430
+      }
+    ]);
+  });
+
+  test("align horizontal right", () => {
+    expect(
+      alignLayers(
+        [
+          {
+            x1: 130,
+            y1: 130,
+            x2: 400,
+            y2: 400
+          },
+          {
+            x1: 400,
+            y1: 400,
+            x2: 430,
+            y2: 430
+          }
+        ],
+        { x: 1 }
+      )
+    ).toEqual([
+      {
+        x1: 160,
+        y1: 130,
+        x2: 430,
+        y2: 400
+      },
+      {
+        x1: 400,
+        y1: 400,
+        x2: 430,
+        y2: 430
+      }
+    ]);
+  });
+
+  test.todo("predicate");
+});
+
 describe("getLayerBounds", () => {
   test("no layers", () => {
     expect(getLayerBounds([])).toEqual({
@@ -449,8 +663,6 @@ describe("transformBounds", () => {
       y2: 480
     });
   });
-
-  test.todo("round");
 });
 
 describe("transformPoints", () => {
