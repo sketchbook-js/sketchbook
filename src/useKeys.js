@@ -6,11 +6,25 @@ const useKeys = ({ keydown, keyup }) => {
   const [keys, setKeys] = useState(set());
   useEffect(() => {
     const onKeydown = event => {
-      if (keydown) keydown(event);
+      if (
+        keydown &&
+        !(
+          document.activeElement instanceof HTMLInputElement ||
+          document.activeElement instanceof HTMLTextAreaElement
+        )
+      )
+        keydown(event);
       setKeys(current => or(current, [event.keyCode]));
     };
     const onKeyup = event => {
-      if (keyup) keyup(event);
+      if (
+        keyup &&
+        !(
+          document.activeElement instanceof HTMLInputElement ||
+          document.activeElement instanceof HTMLTextAreaElement
+        )
+      )
+        keyup(event);
       setKeys(current => not(current, [event.keyCode]));
     };
     document.addEventListener("keydown", onKeydown);

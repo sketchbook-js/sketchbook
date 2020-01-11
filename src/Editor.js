@@ -484,11 +484,23 @@ const Editor = () => {
                 value={
                   view.selection.size > 1
                     ? "Multiple layers selected"
-                    : doc.layers.find(
-                        ({ id }) => id === [...view.selection].find(() => true)
-                      ).name
+                    : doc.layers.find(({ id }) => id === [...view.selection][0])
+                        .name
                 }
-                readOnly
+                onChange={({ currentTarget: { value } }) => {
+                  setDoc(
+                    view.selection.size === 1
+                      ? current => ({
+                          ...current,
+                          layers: current.layers.map(layer =>
+                            layer.id === [...view.selection][0]
+                              ? { ...layer, name: value }
+                              : layer
+                          )
+                        })
+                      : null
+                  );
+                }}
               />
             </p>
             <p>
