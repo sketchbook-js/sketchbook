@@ -488,21 +488,26 @@ const Editor = () => {
                 <button
                   key={type}
                   onClick={() => {
+                    const id = (Math.random() * 0xffffff).toString(16);
                     setDoc(document => ({
                       ...document,
                       layers: [
                         ...document.layers,
                         {
-                          id: (Math.random() * 0xffffff).toString(16),
+                          id,
                           name: `${type}`,
                           component: type,
                           x1: view.transform.x,
                           y1: view.transform.y,
                           x2: view.transform.x + config[type].defaultWidth,
                           y2: view.transform.y + config[type].defaultHeight,
-                          props: {}
+                          options: {}
                         }
                       ]
+                    }));
+                    setView(current => ({
+                      ...current,
+                      selection: set([id])
                     }));
                   }}
                 >
