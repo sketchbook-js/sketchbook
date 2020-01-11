@@ -230,19 +230,55 @@ const Editor = () => {
           if (view.mouse.status === "down") {
             const distance = Math.abs(Math.sqrt(dx * dx + dy * dy));
             if (distance > 1) {
-              setView(current => ({
-                ...current,
-                mouse: {
-                  ...current.mouse,
-                  status:
-                    selectionBounds.x1 < view.mouse.startX &&
-                    selectionBounds.x2 > view.mouse.startX &&
-                    selectionBounds.y1 < view.mouse.startY &&
-                    selectionBounds.y2 > view.mouse.startY
-                      ? "drag"
-                      : "select"
+              if (
+                selectionBounds.x1 < view.mouse.startX &&
+                selectionBounds.x2 > view.mouse.startX &&
+                selectionBounds.y1 < view.mouse.startY &&
+                selectionBounds.y2 > view.mouse.startY
+              ) {
+                setView(current => ({
+                  ...current,
+                  mouse: {
+                    ...current.mouse,
+                    status: "drag"
+                  }
+                }));
+              } else {
+                const layersUnderClick = doc.layers.filter(
+                  layer =>
+                    layer.x1 < view.mouse.startX &&
+                    layer.x2 > view.mouse.startX &&
+                    layer.y1 < view.mouse.startY &&
+                    layer.y2 > view.mouse.startY
+                );
+                if (layersUnderClick.length > 0) {
+                  const clickedLayer =
+                    layersUnderClick[layersUnderClick.length - 1];
+                  setView(current => ({
+                    ...current,
+                    selection: keys.has(16)
+                      ? current.selection.has(clickedLayer.id)
+                        ? not(current.selection, [clickedLayer.id])
+                        : or(current.selection, [clickedLayer.id])
+                      : set([clickedLayer.id])
+                  }));
+                  setView(current => ({
+                    ...current,
+                    mouse: {
+                      ...current.mouse,
+                      status: "drag"
+                    }
+                  }));
+                } else {
+                  setView(current => ({
+                    ...current,
+                    mouse: {
+                      ...current.mouse,
+                      status: "select"
+                    }
+                  }));
                 }
-              }));
+              }
             }
           }
         }}
