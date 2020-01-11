@@ -3,6 +3,7 @@ import { set, or, not } from "set-fns";
 
 import config from "./config";
 import useKeys from "./useKeys";
+import reorder from "./reorder";
 import { getLayerBounds, transformLayers, alignLayers } from "./layers";
 
 import Canvas from "./Canvas";
@@ -587,29 +588,146 @@ const Editor = () => {
                 }}
               />
             </p>
-            {[
-              { label: "Left", alignment: { x: -1 } },
-              { label: "Center", alignment: { x: 0 } },
-              { label: "Right", alignment: { x: 1 } },
-              { label: "Top", alignment: { y: -1 } },
-              { label: "Middle", alignment: { y: 0 } },
-              { label: "Bottom", alignment: { y: 1 } }
-            ].map(({ label, alignment }) => (
+            <p>
+              {[
+                { label: "Left", alignment: { x: -1 } },
+                { label: "Center", alignment: { x: 0 } },
+                { label: "Right", alignment: { x: 1 } }
+              ].map(({ label, alignment }) => (
+                <button
+                  key={label}
+                  disabled={view.selection.size < 2}
+                  onClick={() => {
+                    setDoc(doc => ({
+                      ...doc,
+                      layers: alignLayers(doc.layers, alignment, layer =>
+                        view.selection.has(layer.id)
+                      )
+                    }));
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </p>
+            <p>
+              {[
+                { label: "Top", alignment: { y: -1 } },
+                { label: "Middle", alignment: { y: 0 } },
+                { label: "Bottom", alignment: { y: 1 } }
+              ].map(({ label, alignment }) => (
+                <button
+                  key={label}
+                  disabled={view.selection.size < 2}
+                  onClick={() => {
+                    setDoc(doc => ({
+                      ...doc,
+                      layers: alignLayers(doc.layers, alignment, layer =>
+                        view.selection.has(layer.id)
+                      )
+                    }));
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </p>
+            <p>
               <button
-                key={label}
-                disabled={view.selection.size < 2}
+                disabled={
+                  view.selection.size !== 1 ||
+                  doc.layers.findIndex(
+                    ({ id }) => id === [...view.selection][0]
+                  ) ===
+                    doc.layers.length - 1
+                }
                 onClick={() => {
-                  setDoc(doc => ({
-                    ...doc,
-                    layers: alignLayers(doc.layers, alignment, layer =>
-                      view.selection.has(layer.id)
+                  setDoc(current => ({
+                    ...current,
+                    layers: reorder(
+                      current.layers,
+                      current.layers.findIndex(
+                        ({ id }) => id === [...view.selection][0]
+                      ),
+                      current.layers.findIndex(
+                        ({ id }) => id === [...view.selection][0]
+                      ) + 1
                     )
                   }));
                 }}
               >
-                {label}
+                Bring Forward
               </button>
-            ))}
+              <button
+                disabled={
+                  view.selection.size !== 1 ||
+                  doc.layers.findIndex(
+                    ({ id }) => id === [...view.selection][0]
+                  ) ===
+                    doc.layers.length - 1
+                }
+                onClick={() => {
+                  setDoc(current => ({
+                    ...current,
+                    layers: reorder(
+                      current.layers,
+                      current.layers.findIndex(
+                        ({ id }) => id === [...view.selection][0]
+                      ),
+                      current.layers.length - 1
+                    )
+                  }));
+                }}
+              >
+                Bring to Front
+              </button>
+              <button
+                disabled={
+                  view.selection.size !== 1 ||
+                  doc.layers.findIndex(
+                    ({ id }) => id === [...view.selection][0]
+                  ) === 0
+                }
+                onClick={() => {
+                  setDoc(current => ({
+                    ...current,
+                    layers: reorder(
+                      current.layers,
+                      current.layers.findIndex(
+                        ({ id }) => id === [...view.selection][0]
+                      ),
+                      current.layers.findIndex(
+                        ({ id }) => id === [...view.selection][0]
+                      ) - 1
+                    )
+                  }));
+                }}
+              >
+                Send Backward
+              </button>
+              <button
+                disabled={
+                  view.selection.size !== 1 ||
+                  doc.layers.findIndex(
+                    ({ id }) => id === [...view.selection][0]
+                  ) === 0
+                }
+                onClick={() => {
+                  setDoc(current => ({
+                    ...current,
+                    layers: reorder(
+                      current.layers,
+                      current.layers.findIndex(
+                        ({ id }) => id === [...view.selection][0]
+                      ),
+                      0
+                    )
+                  }));
+                }}
+              >
+                Send to Back
+              </button>
+            </p>
           </>
         )}
       </div>
