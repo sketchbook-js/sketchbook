@@ -4,7 +4,7 @@
   </h1>
   <p>The design tool that lives in your repo.</p>
   <p>
-    <img alt="travis build status" src="https://img.shields.io/travis/com/haydn/sketchbook.svg" />
+    <a href="https://travis-ci.com/haydn/sketchbook"><img alt="Travis CI build status" src="https://img.shields.io/travis/com/haydn/sketchbook.svg" /></a>
   </p>
 </div>
 
