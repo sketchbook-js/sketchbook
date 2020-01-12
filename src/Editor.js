@@ -12,59 +12,62 @@ import "./reset.css";
 
 const Editor = () => {
   const canvas = useRef(null);
-  const [doc, setDoc] = useState({
-    layers: [
-      {
-        id: "1",
-        name: "Header 1",
-        component: "Primitives / Header",
-        x1: 50,
-        y1: 100,
-        x2: 250,
-        y2: 150,
-        options: {}
-      },
-      {
-        id: "2",
-        name: "Paragraph 1",
-        component: "Primitives / Paragraph",
-        x1: 100,
-        y1: 150,
-        x2: 350,
-        y2: 300,
-        options: {
-          text:
-            "Now is the time for all good men to come to the aid of their party."
+  const [{ doc, view }, setState] = useState({
+    doc: {
+      layers: [
+        {
+          id: "1",
+          name: "Header 1",
+          component: "Primitives / Header",
+          x1: 50,
+          y1: 100,
+          x2: 250,
+          y2: 150,
+          options: {}
+        },
+        {
+          id: "2",
+          name: "Paragraph 1",
+          component: "Primitives / Paragraph",
+          x1: 100,
+          y1: 150,
+          x2: 350,
+          y2: 300,
+          options: {
+            text:
+              "Now is the time for all good men to come to the aid of their party."
+          }
         }
-      }
-    ]
-  });
-  const [view, setView] = useState({
-    selection: set(["1", "2"]),
-    transform: {
-      x: 0,
-      y: 0,
-      scale: 1
+      ]
     },
-    width: 0,
-    height: 0,
-    mouse: {
-      status: "up", // "up", "down", "drag", "select" or "pan"
-      x: 0,
-      y: 0,
-      startX: 0,
-      startY: 0
+    view: {
+      selection: set(["1", "2"]),
+      transform: {
+        x: 0,
+        y: 0,
+        scale: 1
+      },
+      width: 0,
+      height: 0,
+      mouse: {
+        status: "up", // "up", "down", "drag", "select" or "pan"
+        x: 0,
+        y: 0,
+        startX: 0,
+        startY: 0
+      }
     }
   });
   const transformSelection = transform => {
-    setDoc(doc => {
-      return {
-        ...doc,
-        layers: transformLayers(doc.layers, transform, layer =>
+    setState(current => ({
+      ...current,
+      doc: {
+        ...current.doc,
+        layers: transformLayers(current.doc.layers, transform, layer =>
           view.selection.has(layer.id)
         )
-      };
-    });
+      }
+    }));
   };
   useEffect(() => {
     window.postMessage({ type: "update_canvas", doc, view }, "*");
@@ -74,10 +77,13 @@ const Editor = () => {
     const interval = setInterval(() => {
       if (canvas.current) {
         const rect = canvas.current.getBoundingClientRect();
-        setView(view => ({
-          ...view,
-          width: rect.width,
-          height: rect.height
+        setState(current => ({
+          ...current,
+          view: {
+            ...current.view,
+            width: rect.width,
+            height: rect.height
+          }
         }));
       }
     }, 1000);
@@ -117,13 +123,18 @@ const Editor = () => {
           break;
         // backspace
         case 8:
-          setView(current => ({
+          setState(current => ({
             ...current,
-            selection: set()
+            view: { ...current.view, selection: set() }
           }));
-          setDoc(current => ({
+          setState(current => ({
             ...current,
-            layers: current.layers.filter(({ id }) => !view.selection.has(id))
+            doc: {
+              ...current.doc,
+              layers: current.doc.layers.filter(
+                ({ id }) => !view.selection.has(id)
+              )
+            }
           }));
           break;
         default:
@@ -149,7 +160,10 @@ const Editor = () => {
         }}
         onClick={event => {
           event.stopPropagation();
-          setView(current => ({ ...current, selection: set([]) }));
+          setState(current => ({
+            ...current,
+            view: { ...current.view, selection: set([]) }
+          }));
         }}
       >
         <h2>Layers</h2>
@@ -163,13 +177,16 @@ const Editor = () => {
               }}
               onClick={event => {
                 event.stopPropagation();
-                setView(current => ({
+                setState(current => ({
                   ...current,
-                  selection: keys.has(16)
-                    ? current.selection.has(id)
-                      ? not(current.selection, [id])
-                      : or(current.selection, [id])
-                    : set([id])
+                  view: {
+                    ...current.view,
+                    selection: keys.has(16)
+                      ? current.view.selection.has(id)
+                        ? not(current.view.selection, [id])
+                        : or(current.view.selection, [id])
+                      : set([id])
+                  }
                 }));
               }}
             >
@@ -196,15 +213,18 @@ const Editor = () => {
                 const rect = canvas.current.getBoundingClientRect();
                 const x = clientX - rect.x - view.transform.x;
                 const y = clientY - rect.y - view.transform.y;
-                setView(current => ({
+                setState(current => ({
                   ...current,
-                  mouse: {
-                    ...current.mouse,
-                    status: "down",
-                    x,
-                    y,
-                    startX: x,
-                    startY: y
+                  view: {
+                    ...current.view,
+                    mouse: {
+                      ...current.view.mouse,
+                      status: "down",
+                      x,
+                      y,
+                      startX: x,
+                      startY: y
+                    }
                   }
                 }));
               }
@@ -214,12 +234,15 @@ const Editor = () => {
           const rect = canvas.current.getBoundingClientRect();
           const x = clientX - rect.x - view.transform.x;
           const y = clientY - rect.y - view.transform.y;
-          setView(current => ({
+          setState(current => ({
             ...current,
-            mouse: {
-              ...current.mouse,
-              x: clientX - rect.x - current.transform.x,
-              y: clientY - rect.y - current.transform.y
+            view: {
+              ...current.view,
+              mouse: {
+                ...current.view.mouse,
+                x: clientX - rect.x - current.view.transform.x,
+                y: clientY - rect.y - current.view.transform.y
+              }
             }
           }));
           if (view.mouse.status === "down") {
@@ -228,11 +251,14 @@ const Editor = () => {
             const distance = Math.abs(Math.sqrt(dx * dx + dy * dy));
             if (distance > 1) {
               if (keys.has(32)) {
-                setView(current => ({
+                setState(current => ({
                   ...current,
-                  mouse: {
-                    ...current.mouse,
-                    status: "pan"
+                  view: {
+                    ...current.view,
+                    mouse: {
+                      ...current.view.mouse,
+                      status: "pan"
+                    }
                   }
                 }));
               } else if (
@@ -241,11 +267,14 @@ const Editor = () => {
                 selectionBounds.y1 < view.mouse.startY &&
                 selectionBounds.y2 > view.mouse.startY
               ) {
-                setView(current => ({
+                setState(current => ({
                   ...current,
-                  mouse: {
-                    ...current.mouse,
-                    status: "drag"
+                  view: {
+                    ...current.view,
+                    mouse: {
+                      ...current.view.mouse,
+                      status: "drag"
+                    }
                   }
                 }));
               } else {
@@ -259,27 +288,36 @@ const Editor = () => {
                 if (layersUnderClick.length > 0) {
                   const clickedLayer =
                     layersUnderClick[layersUnderClick.length - 1];
-                  setView(current => ({
+                  setState(current => ({
                     ...current,
-                    selection: keys.has(16)
-                      ? current.selection.has(clickedLayer.id)
-                        ? not(current.selection, [clickedLayer.id])
-                        : or(current.selection, [clickedLayer.id])
-                      : set([clickedLayer.id])
+                    view: {
+                      ...current.view,
+                      selection: keys.has(16)
+                        ? current.view.selection.has(clickedLayer.id)
+                          ? not(current.view.selection, [clickedLayer.id])
+                          : or(current.view.selection, [clickedLayer.id])
+                        : set([clickedLayer.id])
+                    }
                   }));
-                  setView(current => ({
+                  setState(current => ({
                     ...current,
-                    mouse: {
-                      ...current.mouse,
-                      status: "drag"
+                    view: {
+                      ...current.view,
+                      mouse: {
+                        ...current.view.mouse,
+                        status: "drag"
+                      }
                     }
                   }));
                 } else {
-                  setView(current => ({
+                  setState(current => ({
                     ...current,
-                    mouse: {
-                      ...current.mouse,
-                      status: "select"
+                    view: {
+                      ...current.view,
+                      mouse: {
+                        ...current.view.mouse,
+                        status: "select"
+                      }
                     }
                   }));
                 }
@@ -301,18 +339,24 @@ const Editor = () => {
                   if (layersUnderClick.length > 0) {
                     const clickedLayer =
                       layersUnderClick[layersUnderClick.length - 1];
-                    setView(current => ({
+                    setState(current => ({
                       ...current,
-                      selection: keys.has(16)
-                        ? current.selection.has(clickedLayer.id)
-                          ? not(current.selection, [clickedLayer.id])
-                          : or(current.selection, [clickedLayer.id])
-                        : set([clickedLayer.id])
+                      view: {
+                        ...current.view,
+                        selection: keys.has(16)
+                          ? current.view.selection.has(clickedLayer.id)
+                            ? not(current.view.selection, [clickedLayer.id])
+                            : or(current.view.selection, [clickedLayer.id])
+                          : set([clickedLayer.id])
+                      }
                     }));
                   } else {
-                    setView(current => ({
+                    setState(current => ({
                       ...current,
-                      selection: set([])
+                      view: {
+                        ...current.view,
+                        selection: set([])
+                      }
                     }));
                   }
                 } else if (view.mouse.status === "drag") {
@@ -325,38 +369,48 @@ const Editor = () => {
                   const y1 = Math.min(view.mouse.startY, view.mouse.y);
                   const x2 = Math.max(view.mouse.startX, view.mouse.x);
                   const y2 = Math.max(view.mouse.startY, view.mouse.y);
-                  setView(current => ({
+                  setState(current => ({
                     ...current,
-                    selection: set(
-                      doc.layers
-                        .filter(
-                          layer =>
-                            layer.x1 < x2 &&
-                            layer.x2 > x1 &&
-                            layer.y1 < y2 &&
-                            layer.y2 > y1
-                        )
-                        .map(({ id }) => id)
-                    )
+                    view: {
+                      ...current.view,
+                      selection: set(
+                        doc.layers
+                          .filter(
+                            layer =>
+                              layer.x1 < x2 &&
+                              layer.x2 > x1 &&
+                              layer.y1 < y2 &&
+                              layer.y2 > y1
+                          )
+                          .map(({ id }) => id)
+                      )
+                    }
                   }));
                 } else if (view.mouse.status === "pan") {
-                  setView(current => ({
+                  setState(current => ({
                     ...current,
-                    transform: {
-                      ...current.transform,
-                      x:
-                        current.transform.x +
-                        (view.mouse.x - view.mouse.startX),
-                      y:
-                        current.transform.y + (view.mouse.y - view.mouse.startY)
+                    view: {
+                      ...current.view,
+                      transform: {
+                        ...current.view.transform,
+                        x:
+                          current.view.transform.x +
+                          (view.mouse.x - view.mouse.startX),
+                        y:
+                          current.view.transform.y +
+                          (view.mouse.y - view.mouse.startY)
+                      }
                     }
                   }));
                 }
-                setView(current => ({
+                setState(current => ({
                   ...current,
-                  mouse: {
-                    ...current.mouse,
-                    status: "up"
+                  view: {
+                    ...current.view,
+                    mouse: {
+                      ...current.view.mouse,
+                      status: "up"
+                    }
                   }
                 }));
               }
@@ -520,32 +574,41 @@ const Editor = () => {
                   key={component}
                   onClick={() => {
                     const id = (Math.random() * 0xffffff).toString(16);
-                    setDoc(document => ({
-                      ...document,
-                      layers: [
-                        ...document.layers,
-                        {
-                          id,
-                          name: `${component}`,
-                          component: component,
-                          x1: -view.transform.x,
-                          y1: -view.transform.y,
-                          x2: -view.transform.x + config[component].defaultWidth,
-                          y2:
-                            -view.transform.y + config[component].defaultHeight,
-                          options: config[component].options?.reduce(
-                            (result, option) => ({
-                              ...result,
-                              [option.key]: option.default()
-                            }),
-                            {}
-                          )
-                        }
-                      ]
-                    }));
-                    setView(current => ({
+                    setState(current => ({
                       ...current,
-                      selection: set([id])
+                      doc: {
+                        ...current.doc,
+                        layers: [
+                          ...current.doc.layers,
+                          {
+                            id,
+                            name: `${component}`,
+                            component: component,
+                            x1: -view.transform.x,
+                            y1: -view.transform.y,
+                            x2:
+                              -view.transform.x +
+                              config[component].defaultWidth,
+                            y2:
+                              -view.transform.y +
+                              config[component].defaultHeight,
+                            options: config[component].options?.reduce(
+                              (result, option) => ({
+                                ...result,
+                                [option.key]: option.default()
+                              }),
+                              {}
+                            )
+                          }
+                        ]
+                      }
+                    }));
+                    setState(current => ({
+                      ...current,
+                      view: {
+                        ...current.view,
+                        selection: set([id])
+                      }
                     }));
                   }}
                 >
@@ -568,17 +631,20 @@ const Editor = () => {
                         .name
                 }
                 onChange={({ currentTarget: { value } }) => {
-                  setDoc(
+                  setState(current =>
                     view.selection.size === 1
-                      ? current => ({
+                      ? {
                           ...current,
-                          layers: current.layers.map(layer =>
-                            layer.id === [...view.selection][0]
-                              ? { ...layer, name: value }
-                              : layer
-                          )
-                        })
-                      : null
+                          doc: {
+                            ...current.doc,
+                            layers: current.doc.layers.map(layer =>
+                              layer.id === [...view.selection][0]
+                                ? { ...layer, name: value }
+                                : layer
+                            )
+                          }
+                        }
+                      : current
                   );
                 }}
               />
@@ -641,11 +707,16 @@ const Editor = () => {
                   key={label}
                   disabled={view.selection.size < 2}
                   onClick={() => {
-                    setDoc(doc => ({
-                      ...doc,
-                      layers: alignLayers(doc.layers, alignment, layer =>
-                        view.selection.has(layer.id)
-                      )
+                    setState(current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: alignLayers(
+                          current.doc.layers,
+                          alignment,
+                          layer => view.selection.has(layer.id)
+                        )
+                      }
                     }));
                   }}
                 >
@@ -663,11 +734,16 @@ const Editor = () => {
                   key={label}
                   disabled={view.selection.size < 2}
                   onClick={() => {
-                    setDoc(doc => ({
-                      ...doc,
-                      layers: alignLayers(doc.layers, alignment, layer =>
-                        view.selection.has(layer.id)
-                      )
+                    setState(current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: alignLayers(
+                          current.doc.layers,
+                          alignment,
+                          layer => view.selection.has(layer.id)
+                        )
+                      }
                     }));
                   }}
                 >
@@ -685,17 +761,20 @@ const Editor = () => {
                     doc.layers.length - 1
                 }
                 onClick={() => {
-                  setDoc(current => ({
+                  setState(current => ({
                     ...current,
-                    layers: reorder(
-                      current.layers,
-                      current.layers.findIndex(
-                        ({ id }) => id === [...view.selection][0]
-                      ),
-                      current.layers.findIndex(
-                        ({ id }) => id === [...view.selection][0]
-                      ) + 1
-                    )
+                    doc: {
+                      ...current.doc,
+                      layers: reorder(
+                        current.doc.layers,
+                        current.doc.layers.findIndex(
+                          ({ id }) => id === [...view.selection][0]
+                        ),
+                        current.doc.layers.findIndex(
+                          ({ id }) => id === [...view.selection][0]
+                        ) + 1
+                      )
+                    }
                   }));
                 }}
               >
@@ -710,15 +789,18 @@ const Editor = () => {
                     doc.layers.length - 1
                 }
                 onClick={() => {
-                  setDoc(current => ({
+                  setState(current => ({
                     ...current,
-                    layers: reorder(
-                      current.layers,
-                      current.layers.findIndex(
-                        ({ id }) => id === [...view.selection][0]
-                      ),
-                      current.layers.length - 1
-                    )
+                    doc: {
+                      ...current.doc,
+                      layers: reorder(
+                        current.doc.layers,
+                        current.doc.layers.findIndex(
+                          ({ id }) => id === [...view.selection][0]
+                        ),
+                        current.doc.layers.length - 1
+                      )
+                    }
                   }));
                 }}
               >
@@ -732,17 +814,20 @@ const Editor = () => {
                   ) === 0
                 }
                 onClick={() => {
-                  setDoc(current => ({
+                  setState(current => ({
                     ...current,
-                    layers: reorder(
-                      current.layers,
-                      current.layers.findIndex(
-                        ({ id }) => id === [...view.selection][0]
-                      ),
-                      current.layers.findIndex(
-                        ({ id }) => id === [...view.selection][0]
-                      ) - 1
-                    )
+                    doc: {
+                      ...current.doc,
+                      layers: reorder(
+                        current.doc.layers,
+                        current.doc.layers.findIndex(
+                          ({ id }) => id === [...view.selection][0]
+                        ),
+                        current.doc.layers.findIndex(
+                          ({ id }) => id === [...view.selection][0]
+                        ) - 1
+                      )
+                    }
                   }));
                 }}
               >
@@ -756,15 +841,18 @@ const Editor = () => {
                   ) === 0
                 }
                 onClick={() => {
-                  setDoc(current => ({
+                  setState(current => ({
                     ...current,
-                    layers: reorder(
-                      current.layers,
-                      current.layers.findIndex(
-                        ({ id }) => id === [...view.selection][0]
-                      ),
-                      0
-                    )
+                    doc: {
+                      ...current.doc,
+                      layers: reorder(
+                        current.doc.layers,
+                        current.doc.layers.findIndex(
+                          ({ id }) => id === [...view.selection][0]
+                        ),
+                        0
+                      )
+                    }
                   }));
                 }}
               >
@@ -790,23 +878,27 @@ const Editor = () => {
                             ).options[key]
                           }
                           onChange={({ currentTarget: { value } }) => {
-                            setDoc(current => ({
+                            setState(current => ({
                               ...current,
-                              layers: current.layers.map(layer =>
-                                layer.id === [...view.selection][0]
-                                  ? {
-                                      ...layer,
-                                      options: {
-                                        ...layer.options,
-                                        [key]: value
+                              doc: {
+                                layers: current.doc.layers.map(layer =>
+                                  layer.id === [...view.selection][0]
+                                    ? {
+                                        ...layer,
+                                        options: {
+                                          ...layer.options,
+                                          [key]: value
+                                        }
                                       }
-                                    }
-                                  : layer
-                              )
+                                    : layer
+                                )
+                              }
                             }));
                           }}
                         />
                       );
+                    default:
+                      return null;
                   }
                 })}
               </>
