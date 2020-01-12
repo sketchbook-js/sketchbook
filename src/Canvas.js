@@ -38,9 +38,7 @@ const Canvas = () => {
         background: "#f0f",
         display: "block",
         position: "relative",
-        transform: `translate(${view.transform.x}px, ${
-          view.transform.y
-        }px) scale(${view.transform.scale})`
+        transform: `translate(${view.transform.x}px, ${view.transform.y}px) scale(${view.transform.scale})`
       }}
       onClick={() => {
         setView(current => ({ ...current, selection: set([]) }));
@@ -59,10 +57,14 @@ const Canvas = () => {
                 y1 +
                 (view.mouse.status === "drag" && view.selection.has(id)
                   ? view.mouse.y - view.mouse.startY
+                  : view.mouse.status === "pan"
+                  ? view.mouse.y - view.mouse.startY
                   : 0),
               left:
                 x1 +
                 (view.mouse.status === "drag" && view.selection.has(id)
+                  ? view.mouse.x - view.mouse.startX
+                  : view.mouse.status === "pan"
                   ? view.mouse.x - view.mouse.startX
                   : 0),
               width: x2 - x1,

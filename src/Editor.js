@@ -10,15 +10,6 @@ import Canvas from "./Canvas";
 
 import "./reset.css";
 
-const getLayersUnderPoint = (canvas, doc, clientX, clientY) => {
-  const rect = canvas.current.getBoundingClientRect();
-  const x = clientX - rect.x;
-  const y = clientY - rect.y;
-  return doc.layers.filter(
-    layer => layer.x1 < x && layer.x2 > x && layer.y1 < y && layer.y2 > y
-  );
-};
-
 const Editor = () => {
   const canvas = useRef(null);
   const [doc, setDoc] = useState({
@@ -58,7 +49,7 @@ const Editor = () => {
     width: 0,
     height: 0,
     mouse: {
-      status: "up", // "up", "down", "drag", or "select"
+      status: "up", // "up", "down", "drag", "select" or "pan"
       x: 0,
       y: 0,
       startX: 0,
@@ -191,14 +182,20 @@ const Editor = () => {
         ref={canvas}
         style={{
           overflow: "hidden",
-          position: "relative"
+          position: "relative",
+          cursor:
+            view.mouse.status === "pan"
+              ? "grabbing"
+              : keys.has(32)
+              ? "grab"
+              : null
         }}
         onMouseDown={
           view.mouse.status === "up"
             ? ({ clientX, clientY }) => {
                 const rect = canvas.current.getBoundingClientRect();
-                const x = clientX - rect.x;
-                const y = clientY - rect.y;
+                const x = clientX - rect.x - view.transform.x;
+                const y = clientY - rect.y - view.transform.y;
                 setView(current => ({
                   ...current,
                   mouse: {
@@ -215,22 +212,30 @@ const Editor = () => {
         }
         onMouseMove={({ clientX, clientY }) => {
           const rect = canvas.current.getBoundingClientRect();
-          const x = clientX - rect.x;
-          const y = clientY - rect.y;
-          const dx = view.mouse.x - view.mouse.startX;
-          const dy = view.mouse.y - view.mouse.startY;
+          const x = clientX - rect.x - view.transform.x;
+          const y = clientY - rect.y - view.transform.y;
           setView(current => ({
             ...current,
             mouse: {
               ...current.mouse,
-              x,
-              y
+              x: clientX - rect.x - current.transform.x,
+              y: clientY - rect.y - current.transform.y
             }
           }));
           if (view.mouse.status === "down") {
+            const dx = x - view.mouse.startX;
+            const dy = y - view.mouse.startY;
             const distance = Math.abs(Math.sqrt(dx * dx + dy * dy));
             if (distance > 1) {
-              if (
+              if (keys.has(32)) {
+                setView(current => ({
+                  ...current,
+                  mouse: {
+                    ...current.mouse,
+                    status: "pan"
+                  }
+                }));
+              } else if (
                 selectionBounds.x1 < view.mouse.startX &&
                 selectionBounds.x2 > view.mouse.startX &&
                 selectionBounds.y1 < view.mouse.startY &&
@@ -286,11 +291,12 @@ const Editor = () => {
           view.mouse.status !== "up"
             ? ({ clientX, clientY }) => {
                 if (view.mouse.status === "down") {
-                  const layersUnderClick = getLayersUnderPoint(
-                    canvas,
-                    doc,
-                    clientX,
-                    clientY
+                  const layersUnderClick = doc.layers.filter(
+                    layer =>
+                      layer.x1 < view.mouse.x &&
+                      layer.x2 > view.mouse.x &&
+                      layer.y1 < view.mouse.y &&
+                      layer.y2 > view.mouse.y
                   );
                   if (layersUnderClick.length > 0) {
                     const clickedLayer =
@@ -332,6 +338,18 @@ const Editor = () => {
                         )
                         .map(({ id }) => id)
                     )
+                  }));
+                } else if (view.mouse.status === "pan") {
+                  setView(current => ({
+                    ...current,
+                    transform: {
+                      ...current.transform,
+                      x:
+                        current.transform.x +
+                        (view.mouse.x - view.mouse.startX),
+                      y:
+                        current.transform.y + (view.mouse.y - view.mouse.startY)
+                    }
                   }));
                 }
                 setView(current => ({
@@ -377,13 +395,15 @@ const Editor = () => {
             strokeWidth={2}
             x={
               selectionBounds.x1 +
-              (view.mouse.status === "drag"
+              view.transform.x +
+              (view.mouse.status === "drag" || view.mouse.status === "pan"
                 ? view.mouse.x - view.mouse.startX
                 : 0)
             }
             y={
               selectionBounds.y1 +
-              (view.mouse.status === "drag"
+              view.transform.y +
+              (view.mouse.status === "drag" || view.mouse.status === "pan"
                 ? view.mouse.y - view.mouse.startY
                 : 0)
             }
@@ -400,14 +420,16 @@ const Editor = () => {
                 strokeDasharray={[1, 3]}
                 x={
                   x1 +
-                  (view.mouse.status === "drag"
+                  view.transform.x +
+                  (view.mouse.status === "drag" || view.mouse.status === "pan"
                     ? view.mouse.x - view.mouse.startX
                     : 0) +
                   0.5
                 }
                 y={
                   y1 +
-                  (view.mouse.status === "drag"
+                  view.transform.y +
+                  (view.mouse.status === "drag" || view.mouse.status === "pan"
                     ? view.mouse.y - view.mouse.startY
                     : 0) +
                   0.5
@@ -438,6 +460,7 @@ const Editor = () => {
                     strokeDasharray={[1, 3]}
                     x={
                       x1 +
+                      view.transform.x +
                       (view.mouse.status === "drag"
                         ? view.mouse.x - view.mouse.startX
                         : 0) +
@@ -445,6 +468,7 @@ const Editor = () => {
                     }
                     y={
                       y1 +
+                      view.transform.y +
                       (view.mouse.status === "drag"
                         ? view.mouse.y - view.mouse.startY
                         : 0) +
@@ -460,8 +484,16 @@ const Editor = () => {
               stroke="#f0f"
               strokeWidth={1}
               strokeDasharray={[1, 2]}
-              x={Math.min(view.mouse.startX, view.mouse.x) + 0.5}
-              y={Math.min(view.mouse.startY, view.mouse.y) + 0.5}
+              x={
+                view.transform.x +
+                Math.min(view.mouse.startX, view.mouse.x) +
+                0.5
+              }
+              y={
+                view.transform.y +
+                Math.min(view.mouse.startY, view.mouse.y) +
+                0.5
+              }
               width={Math.max(
                 Math.max(view.mouse.startX, view.mouse.x) -
                   Math.min(view.mouse.startX, view.mouse.x) -
@@ -496,11 +528,11 @@ const Editor = () => {
                           id,
                           name: `${component}`,
                           component: component,
-                          x1: view.transform.x,
-                          y1: view.transform.y,
-                          x2: view.transform.x + config[component].defaultWidth,
+                          x1: -view.transform.x,
+                          y1: -view.transform.y,
+                          x2: -view.transform.x + config[component].defaultWidth,
                           y2:
-                            view.transform.y + config[component].defaultHeight,
+                            -view.transform.y + config[component].defaultHeight,
                           options: config[component].options?.reduce(
                             (result, option) => ({
                               ...result,
