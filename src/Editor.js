@@ -10,6 +10,65 @@ import Canvas from "./Canvas";
 
 import "./reset.css";
 
+const PanelTitle = ({ style, ...props }) => (
+  <h2
+    style={{
+      color: "#000",
+      fontWeight: "bold",
+      fontSize: 14,
+      fontVariantCaps: "small-caps",
+      padding: "0 6px",
+      borderBottom: "1px solid #ddd",
+      ...style
+    }}
+    {...props}
+  />
+);
+
+const Heading = props => (
+  <h3
+    style={{
+      fontWeight: "bold"
+    }}
+    {...props}
+  />
+);
+
+const Label = props => (
+  <label
+    style={{
+      fontWeight: "bold"
+    }}
+    {...props}
+  />
+);
+
+const Input = ({ style, ...props }) => (
+  <input
+    style={{
+      background: "#fff",
+      border: "1px solid #ddd",
+      padding: "0 3px",
+      ...style
+    }}
+    {...props}
+  />
+);
+
+const Button = ({ style, ...props }) => (
+  <button
+    style={{
+      background: "#ddd",
+      minWidth: 24,
+      textAlign: "center",
+      borderRadius: 3,
+      padding: "0 6px",
+      ...style
+    }}
+    {...props}
+  />
+);
+
 const Editor = () => {
   const canvas = useRef(null);
   const [{ doc, view }, setState] = useState({
@@ -148,7 +207,7 @@ const Editor = () => {
       style={{
         display: "grid",
         height: "100%",
-        gridTemplateColumns: "200px 1fr 200px"
+        gridTemplateColumns: "300px 1fr 300px"
       }}
     >
       <div
@@ -160,20 +219,18 @@ const Editor = () => {
         }}
         onClick={event => {
           event.stopPropagation();
-          setState(current => ({
-            ...current,
-            view: { ...current.view, selection: set([]) }
-          }));
         }}
       >
-        <h2>Layers</h2>
+        <PanelTitle>Layers</PanelTitle>
         <ol>
           {doc.layers.map(({ id, name }) => (
             <li
               key={id}
               style={{
-                color: view.selection.has(id) ? "red" : null,
-                cursor: "pointer"
+                color: view.selection.has(id) ? "#f0f" : null,
+                cursor: "pointer",
+                padding: "6px",
+                borderBottom: "1px solid #ddd"
               }}
               onClick={event => {
                 event.stopPropagation();
@@ -567,91 +624,135 @@ const Editor = () => {
       <div style={{ background: "#eee" }}>
         {view.selection.size === 0 ? (
           <>
-            <h2>Insert</h2>
-            <div>
-              {Object.keys(config).map(component => (
-                <button
-                  key={component}
-                  onClick={() => {
-                    const id = (Math.random() * 0xffffff).toString(16);
-                    setState(current => ({
-                      ...current,
-                      doc: {
-                        ...current.doc,
-                        layers: [
-                          ...current.doc.layers,
-                          {
-                            id,
-                            name: `${component}`,
-                            component: component,
-                            x1: -view.transform.x,
-                            y1: -view.transform.y,
-                            x2:
-                              -view.transform.x +
-                              config[component].defaultWidth,
-                            y2:
-                              -view.transform.y +
-                              config[component].defaultHeight,
-                            options: config[component].options?.reduce(
-                              (result, option) => ({
-                                ...result,
-                                [option.key]: option.default()
-                              }),
-                              {}
-                            )
-                          }
-                        ]
-                      }
-                    }));
-                    setState(current => ({
-                      ...current,
-                      view: {
-                        ...current.view,
-                        selection: set([id])
-                      }
-                    }));
-                  }}
-                >
-                  {component}
-                </button>
-              ))}
+            <PanelTitle>Insert</PanelTitle>
+            <div
+              style={{
+                display: "grid",
+                alignItems: "center",
+                justifyItems: "left",
+                gap: 6,
+                padding: 6
+              }}
+            >
+              {Object.keys(config)
+                .sort((a, b) => a.localeCompare(b))
+                .map(component => (
+                  <Button
+                    key={component}
+                    onClick={() => {
+                      const id = (Math.random() * 0xffffff).toString(16);
+                      setState(current => ({
+                        ...current,
+                        doc: {
+                          ...current.doc,
+                          layers: [
+                            ...current.doc.layers,
+                            {
+                              id,
+                              name: `${component}`,
+                              component: component,
+                              x1: -view.transform.x,
+                              y1: -view.transform.y,
+                              x2:
+                                -view.transform.x +
+                                config[component].defaultWidth,
+                              y2:
+                                -view.transform.y +
+                                config[component].defaultHeight,
+                              options: config[component].options?.reduce(
+                                (result, option) => ({
+                                  ...result,
+                                  [option.key]: option.default()
+                                }),
+                                {}
+                              )
+                            }
+                          ]
+                        }
+                      }));
+                      setState(current => ({
+                        ...current,
+                        view: {
+                          ...current.view,
+                          selection: set([id])
+                        }
+                      }));
+                    }}
+                  >
+                    {component}
+                  </Button>
+                ))}
             </div>
           </>
         ) : (
           <>
-            <h2>Info</h2>
-            <p>
-              name:{" "}
-              <input
-                disabled={view.selection.size !== 1}
-                value={
-                  view.selection.size > 1
-                    ? "Multiple layers selected"
-                    : doc.layers.find(({ id }) => id === [...view.selection][0])
-                        .name
-                }
-                onChange={({ currentTarget: { value } }) => {
-                  setState(current =>
-                    view.selection.size === 1
-                      ? {
-                          ...current,
-                          doc: {
-                            ...current.doc,
-                            layers: current.doc.layers.map(layer =>
-                              layer.id === [...view.selection][0]
-                                ? { ...layer, name: value }
-                                : layer
-                            )
-                          }
-                        }
-                      : current
-                  );
+            <PanelTitle>Info</PanelTitle>
+            {view.selection.size > 1 ? (
+              <div
+                style={{
+                  color: "#999",
+                  fontStyle: "italic",
+                  padding: 6
                 }}
-              />
-            </p>
-            <p>
-              x:{" "}
-              <input
+              >
+                Multiple layers selected
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(1, min-content 1fr)",
+                  alignItems: "center",
+                  justifyItems: "center",
+                  gap: 6,
+                  padding: 6
+                }}
+              >
+                <Label>Name</Label>
+                <Input
+                  id="info-panel-name"
+                  style={{
+                    color: view.selection.size !== 1 ? "#ddd" : null
+                  }}
+                  disabled={view.selection.size !== 1}
+                  value={
+                    doc.layers.find(({ id }) => id === [...view.selection][0])
+                      .name
+                  }
+                  onChange={({ currentTarget: { value } }) => {
+                    setState(current =>
+                      view.selection.size === 1
+                        ? {
+                            ...current,
+                            doc: {
+                              ...current.doc,
+                              layers: current.doc.layers.map(layer =>
+                                layer.id === [...view.selection][0]
+                                  ? { ...layer, name: value }
+                                  : layer
+                              )
+                            }
+                          }
+                        : current
+                    );
+                  }}
+                />
+              </div>
+            )}
+            <PanelTitle>Dimensions</PanelTitle>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, min-content 1fr)",
+                alignItems: "center",
+                justifyItems: "center",
+                gap: "6px",
+                padding: 6
+              }}
+            >
+              <Label htmlFor="info-panel-x">X</Label>
+              <Input
+                id="info-panel-x"
                 type="number"
                 value={Math.round(selectionBounds.x1)}
                 onChange={({ currentTarget: { value } }) => {
@@ -660,10 +761,9 @@ const Editor = () => {
                   });
                 }}
               />
-            </p>
-            <p>
-              y:{" "}
-              <input
+              <Label htmlFor="info-panel-y">Y</Label>
+              <Input
+                id="info-panel-y"
                 type="number"
                 value={Math.round(selectionBounds.y1)}
                 onChange={({ currentTarget: { value } }) => {
@@ -672,10 +772,8 @@ const Editor = () => {
                   });
                 }}
               />
-            </p>
-            <p>
-              width:{" "}
-              <input
+              <Label htmlFor="info-panel-w">W</Label>
+              <Input
                 type="number"
                 value={Math.round(selectionBounds.x2 - selectionBounds.x1)}
                 onChange={({ currentTarget: { value } }) => {
@@ -684,10 +782,8 @@ const Editor = () => {
                   });
                 }}
               />
-            </p>
-            <p>
-              height:{" "}
-              <input
+              <Label htmlFor="info-panel-h">H</Label>
+              <Input
                 type="number"
                 value={Math.round(selectionBounds.y2 - selectionBounds.y1)}
                 onChange={({ currentTarget: { value } }) => {
@@ -696,15 +792,34 @@ const Editor = () => {
                   });
                 }}
               />
-            </p>
-            <p>
+            </div>
+            <PanelTitle style={{ marginTop: 6 }}>Align</PanelTitle>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(6, min-content)",
+                alignItems: "center",
+                justifyItems: "center",
+                gap: 6,
+                padding: 6
+              }}
+            >
               {[
-                { label: "Left", alignment: { x: -1 } },
-                { label: "Center", alignment: { x: 0 } },
-                { label: "Right", alignment: { x: 1 } }
+                { label: "←", alignment: { x: -1 } },
+                { label: "↔︎", alignment: { x: 0 } },
+                { label: "→", alignment: { x: 1 } },
+                { label: "↑", alignment: { y: -1 } },
+                { label: "↕︎", alignment: { y: 0 } },
+                { label: "↓", alignment: { y: 1 } }
               ].map(({ label, alignment }) => (
                 <button
                   key={label}
+                  style={{
+                    background: "#ddd",
+                    width: 24,
+                    textAlign: "center",
+                    borderRadius: 3
+                  }}
                   disabled={view.selection.size < 2}
                   onClick={() => {
                     setState(current => ({
@@ -723,36 +838,65 @@ const Editor = () => {
                   {label}
                 </button>
               ))}
-            </p>
-            <p>
-              {[
-                { label: "Top", alignment: { y: -1 } },
-                { label: "Middle", alignment: { y: 0 } },
-                { label: "Bottom", alignment: { y: 1 } }
-              ].map(({ label, alignment }) => (
-                <button
-                  key={label}
-                  disabled={view.selection.size < 2}
-                  onClick={() => {
-                    setState(current => ({
-                      ...current,
-                      doc: {
-                        ...current.doc,
-                        layers: alignLayers(
-                          current.doc.layers,
-                          alignment,
-                          layer => view.selection.has(layer.id)
-                        )
-                      }
-                    }));
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </p>
-            <p>
-              <button
+            </div>
+            <PanelTitle style={{ marginTop: 6 }}>Arrange</PanelTitle>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(6, min-content)",
+                alignItems: "center",
+                justifyItems: "center",
+                gap: 6,
+                padding: 6
+              }}
+            >
+              <Button
+                style={{
+                  color:
+                    view.selection.size !== 1 ||
+                    doc.layers.findIndex(
+                      ({ id }) => id === [...view.selection][0]
+                    ) ===
+                      doc.layers.length - 1
+                      ? "#bbb"
+                      : null
+                }}
+                disabled={
+                  view.selection.size !== 1 ||
+                  doc.layers.findIndex(
+                    ({ id }) => id === [...view.selection][0]
+                  ) ===
+                    doc.layers.length - 1
+                }
+                onClick={() => {
+                  setState(current => ({
+                    ...current,
+                    doc: {
+                      ...current.doc,
+                      layers: reorder(
+                        current.doc.layers,
+                        current.doc.layers.findIndex(
+                          ({ id }) => id === [...view.selection][0]
+                        ),
+                        current.doc.layers.length - 1
+                      )
+                    }
+                  }));
+                }}
+              >
+                ⤒
+              </Button>
+              <Button
+                style={{
+                  color:
+                    view.selection.size !== 1 ||
+                    doc.layers.findIndex(
+                      ({ id }) => id === [...view.selection][0]
+                    ) ===
+                      doc.layers.length - 1
+                      ? "#bbb"
+                      : null
+                }}
                 disabled={
                   view.selection.size !== 1 ||
                   doc.layers.findIndex(
@@ -778,35 +922,18 @@ const Editor = () => {
                   }));
                 }}
               >
-                Bring Forward
-              </button>
-              <button
-                disabled={
-                  view.selection.size !== 1 ||
-                  doc.layers.findIndex(
-                    ({ id }) => id === [...view.selection][0]
-                  ) ===
-                    doc.layers.length - 1
-                }
-                onClick={() => {
-                  setState(current => ({
-                    ...current,
-                    doc: {
-                      ...current.doc,
-                      layers: reorder(
-                        current.doc.layers,
-                        current.doc.layers.findIndex(
-                          ({ id }) => id === [...view.selection][0]
-                        ),
-                        current.doc.layers.length - 1
-                      )
-                    }
-                  }));
+                ↑
+              </Button>
+              <Button
+                style={{
+                  color:
+                    view.selection.size !== 1 ||
+                    doc.layers.findIndex(
+                      ({ id }) => id === [...view.selection][0]
+                    ) === 0
+                      ? "#bbb"
+                      : null
                 }}
-              >
-                Bring to Front
-              </button>
-              <button
                 disabled={
                   view.selection.size !== 1 ||
                   doc.layers.findIndex(
@@ -831,9 +958,18 @@ const Editor = () => {
                   }));
                 }}
               >
-                Send Backward
-              </button>
-              <button
+                ↓
+              </Button>
+              <Button
+                style={{
+                  color:
+                    view.selection.size !== 1 ||
+                    doc.layers.findIndex(
+                      ({ id }) => id === [...view.selection][0]
+                    ) === 0
+                      ? "#bbb"
+                      : null
+                }}
                 disabled={
                   view.selection.size !== 1 ||
                   doc.layers.findIndex(
@@ -856,53 +992,86 @@ const Editor = () => {
                   }));
                 }}
               >
-                Send to Back
-              </button>
-            </p>
-            {view.selection.size === 1 ? (
-              <>
-                <h2>Options</h2>
-                {config[
+                ⤓
+              </Button>
+            </div>
+            <>
+              <PanelTitle style={{ marginTop: 6 }}>Options</PanelTitle>
+              {view.selection.size > 1 ? (
+                <div
+                  style={{
+                    color: "#999",
+                    fontStyle: "italic",
+                    padding: 6
+                  }}
+                >
+                  Multiple layers selected
+                </div>
+              ) : (
+                config[
                   doc.layers.find(({ id }) => id === [...view.selection][0])
                     .component
                 ].options?.map(({ key, input }) => {
                   switch (input) {
                     case "short-string":
                       return (
-                        <input
-                          key={key}
-                          type="text"
-                          value={
-                            doc.layers.find(
-                              ({ id }) => id === [...view.selection][0]
-                            ).options[key]
-                          }
-                          onChange={({ currentTarget: { value } }) => {
-                            setState(current => ({
-                              ...current,
-                              doc: {
-                                layers: current.doc.layers.map(layer =>
-                                  layer.id === [...view.selection][0]
-                                    ? {
-                                        ...layer,
-                                        options: {
-                                          ...layer.options,
-                                          [key]: value
-                                        }
-                                      }
-                                    : layer
-                                )
-                              }
-                            }));
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(1, min-content 1fr)",
+                            alignItems: "center",
+                            justifyItems: "center",
+                            gap: 6,
+                            padding: 6
                           }}
-                        />
+                        >
+                          <Label htmlFor={`option-${key}`}>{key}</Label>
+                          <Input
+                            key={key}
+                            id={`option-${key}`}
+                            type="text"
+                            value={
+                              doc.layers.find(
+                                ({ id }) => id === [...view.selection][0]
+                              ).options[key]
+                            }
+                            onChange={({ currentTarget: { value } }) => {
+                              setState(current => ({
+                                ...current,
+                                doc: {
+                                  layers: current.doc.layers.map(layer =>
+                                    layer.id === [...view.selection][0]
+                                      ? {
+                                          ...layer,
+                                          options: {
+                                            ...layer.options,
+                                            [key]: value
+                                          }
+                                        }
+                                      : layer
+                                  )
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
                       );
                     default:
                       return null;
                   }
-                })}
-              </>
-            ) : null}
+                }) ?? (
+                  <div
+                    style={{
+                      color: "#999",
+                      fontStyle: "italic",
+                      padding: 6
+                    }}
+                  >
+                    No options
+                  </div>
+                )
+              )}
+            </>
           </>
         )}
       </div>
