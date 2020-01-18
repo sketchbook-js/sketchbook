@@ -1171,6 +1171,7 @@ const Editor = () => {
                     case "short-string":
                       return (
                         <div
+                          key={{key}}
                           style={{
                             display: "grid",
                             gridTemplateColumns: "repeat(1, min-content 1fr)",
