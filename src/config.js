@@ -98,6 +98,60 @@ const config = {
         />
       </svg>
     )
+  },
+  Button: {
+    render: ({ width, height, options: { label } }) => (
+      <button
+        style={{
+          background: "#eee",
+          borderRadius: 6,
+          fontWeight: "bold",
+          padding: "6px 12px",
+          width,
+          height,
+          textAlign: "center"
+        }}
+      >
+        {label}
+      </button>
+    ),
+    init: () => ({
+      options: {
+        label: "Button"
+      }
+    }),
+    options: [{ key: "label", label: "Label", input: "short-string" }]
+  },
+  Input: {
+    render: ({ width, height, options: { label, value } }) => (
+      <div>
+        <label
+          style={{
+            fontWeight: "bold"
+          }}
+        >
+          {label}
+        </label>
+        <input
+          style={{
+            border: "1px solid #ccc",
+            padding: "3px",
+            width
+          }}
+          value={value}
+        />
+      </div>
+    ),
+    init: () => ({
+      width: 400,
+      options: {
+        label: "Label"
+      }
+    }),
+    options: [
+      { key: "label", label: "Label", input: "short-string" },
+      { key: "value", label: "Value", input: "short-string" }
+    ]
   }
 };
 
