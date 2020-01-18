@@ -4,13 +4,41 @@ import { set, or, not } from "set-fns";
 import config from "./config";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
+import pushID from "./pushID";
 import { getLayerBounds, transformLayers, alignLayers } from "./layers";
 
 import Canvas from "./Canvas";
 
 import "./reset.css";
 
-const PanelTitle = ({ style, ...props }) => (
+const measure = ({ type, width, height, options }, callback) => {
+  const id = pushID();
+  const receiveMessage = event => {
+    if (
+      event.data.type === "sketchbook_measure_layer_response" &&
+      event.data.id === id
+    ) {
+      callback(event.data.width, event.data.height);
+      window.removeEventListener("message", receiveMessage);
+    }
+  };
+  window.addEventListener("message", receiveMessage);
+  window.postMessage(
+    {
+      type: "sketchbook_measure_layer_request",
+      layer: {
+        id,
+        type,
+        width,
+        height,
+        options
+      }
+    },
+    "*"
+  );
+};
+
+const PanelTitle = ({ style, children, ...props }) => (
   <h2
     style={{
       color: "#000",
@@ -22,16 +50,9 @@ const PanelTitle = ({ style, ...props }) => (
       ...style
     }}
     {...props}
-  />
-);
-
-const Heading = props => (
-  <h3
-    style={{
-      fontWeight: "bold"
-    }}
-    {...props}
-  />
+  >
+    {children}
+  </h2>
 );
 
 const Label = props => (
@@ -71,23 +92,25 @@ const Button = ({ style, ...props }) => (
 
 const Editor = () => {
   const canvas = useRef(null);
-  const [{ doc, view }, setState] = useState({
+  const [state, setState] = useState({
     doc: {
       layers: [
         {
           id: "1",
-          name: "Header 1",
-          component: "Primitives / Header",
+          name: "Heading 1",
+          component: "Heading 1",
           x1: 50,
           y1: 100,
           x2: 250,
           y2: 150,
-          options: {}
+          options: {
+            text: "Hello World"
+          }
         },
         {
           id: "2",
-          name: "Paragraph 1",
-          component: "Primitives / Paragraph",
+          name: "Paragraph",
+          component: "Paragraph",
           x1: 100,
           y1: 150,
           x2: 350,
@@ -117,6 +140,7 @@ const Editor = () => {
       }
     }
   });
+  const { doc, view } = state;
   const transformSelection = transform => {
     setState(current => ({
       ...current,
@@ -129,8 +153,41 @@ const Editor = () => {
     }));
   };
   useEffect(() => {
-    window.postMessage({ type: "update_canvas", doc, view }, "*");
-  }, [doc, view]);
+    window.postMessage(
+      {
+        type: "sketchbook_update_render_layers",
+        layers: state.doc.layers.map(
+          ({ id, component: type, x1, y1, x2, y2, options }) => ({
+            id,
+            type,
+            x:
+              state.view.transform.x +
+              x1 +
+              (state.view.mouse.status === "drag" &&
+              state.view.selection.has(id)
+                ? state.view.mouse.x - state.view.mouse.startX
+                : state.view.mouse.status === "pan"
+                ? state.view.mouse.x - state.view.mouse.startX
+                : 0),
+            y:
+              state.view.transform.y +
+              y1 +
+              (state.view.mouse.status === "drag" &&
+              state.view.selection.has(id)
+                ? state.view.mouse.y - state.view.mouse.startY
+                : state.view.mouse.status === "pan"
+                ? state.view.mouse.y - state.view.mouse.startY
+                : 0),
+            scale: state.view.transform.scale,
+            width: x2 - x1,
+            height: y2 - y1,
+            options
+          })
+        )
+      },
+      "*"
+    );
+  }, [state]);
   // TODO: Something more sophisticated than an interval.
   useEffect(() => {
     const interval = setInterval(() => {
@@ -640,43 +697,37 @@ const Editor = () => {
                   <Button
                     key={component}
                     onClick={() => {
-                      const id = (Math.random() * 0xffffff).toString(16);
-                      setState(current => ({
-                        ...current,
-                        doc: {
-                          ...current.doc,
-                          layers: [
-                            ...current.doc.layers,
-                            {
-                              id,
-                              name: `${component}`,
-                              component: component,
-                              x1: -view.transform.x,
-                              y1: -view.transform.y,
-                              x2:
-                                -view.transform.x +
-                                config[component].defaultWidth,
-                              y2:
-                                -view.transform.y +
-                                config[component].defaultHeight,
-                              options: config[component].options?.reduce(
-                                (result, option) => ({
-                                  ...result,
-                                  [option.key]: option.default()
-                                }),
-                                {}
-                              )
+                      const id = pushID();
+                      const initial =
+                        config[component].init && config[component].init();
+                      measure(
+                        { type: component, ...initial },
+                        (width, height) => {
+                          setState(current => ({
+                            ...current,
+                            doc: {
+                              ...current.doc,
+                              layers: [
+                                ...current.doc.layers,
+                                {
+                                  id,
+                                  name: `${component}`,
+                                  component,
+                                  x1: -view.transform.x,
+                                  y1: -view.transform.y,
+                                  x2: -view.transform.x + width,
+                                  y2: -view.transform.y + height,
+                                  options: initial?.options
+                                }
+                              ]
+                            },
+                            view: {
+                              ...current.view,
+                              selection: set([id])
                             }
-                          ]
+                          }));
                         }
-                      }));
-                      setState(current => ({
-                        ...current,
-                        view: {
-                          ...current.view,
-                          selection: set([id])
-                        }
-                      }));
+                      );
                     }}
                   >
                     {component}
@@ -793,6 +844,116 @@ const Editor = () => {
                 }}
               />
             </div>
+            <PanelTitle style={{ marginTop: 6 }}>Resize</PanelTitle>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, min-content)",
+                alignItems: "center",
+                justifyItems: "center",
+                gap: 6,
+                padding: 6
+              }}
+            >
+              <Button
+                disabled={view.selection.size !== 1}
+                onClick={() => {
+                  const {
+                    id,
+                    component: type,
+                    y1,
+                    y2,
+                    options
+                  } = state.doc.layers.find(({ id }) =>
+                    state.view.selection.has(id)
+                  );
+                  measure(
+                    { type, height: y2 - y1, options },
+                    (width, height) => {
+                      setState(current => ({
+                        ...current,
+                        doc: {
+                          ...current.doc,
+                          layers: current.doc.layers.map(layer =>
+                            layer.id === id
+                              ? {
+                                  ...layer,
+                                  x2: layer.x1 + width
+                                }
+                              : layer
+                          )
+                        }
+                      }));
+                    }
+                  );
+                }}
+              >
+                Width
+              </Button>
+              <Button
+                disabled={view.selection.size !== 1}
+                onClick={() => {
+                  const {
+                    id,
+                    component: type,
+                    x1,
+                    x2,
+                    options
+                  } = state.doc.layers.find(({ id }) =>
+                    state.view.selection.has(id)
+                  );
+                  measure({ type, width: x2 - x1, options }, (_, height) => {
+                    setState(current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: current.doc.layers.map(layer =>
+                          layer.id === id
+                            ? {
+                                ...layer,
+                                y2: layer.y1 + height
+                              }
+                            : layer
+                        )
+                      }
+                    }));
+                  });
+                }}
+              >
+                Height
+              </Button>
+              <Button
+                disabled={view.selection.size !== 1}
+                onClick={() => {
+                  const {
+                    id,
+                    component: type,
+                    options
+                  } = state.doc.layers.find(({ id }) =>
+                    state.view.selection.has(id)
+                  );
+                  measure({ type, options }, (width, height) => {
+                    setState(current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: current.doc.layers.map(layer =>
+                          layer.id === id
+                            ? {
+                                ...layer,
+                                x2: layer.x1 + width,
+                                y2: layer.y1 + height
+                              }
+                            : layer
+                        )
+                      }
+                    }));
+                  });
+                }}
+              >
+                Width{" "}&{" "}Height
+              </Button>
+            </div>
             <PanelTitle style={{ marginTop: 6 }}>Align</PanelTitle>
             <div
               style={{
@@ -812,14 +973,8 @@ const Editor = () => {
                 { label: "↕︎", alignment: { y: 0 } },
                 { label: "↓", alignment: { y: 1 } }
               ].map(({ label, alignment }) => (
-                <button
+                <Button
                   key={label}
-                  style={{
-                    background: "#ddd",
-                    width: 24,
-                    textAlign: "center",
-                    borderRadius: 3
-                  }}
                   disabled={view.selection.size < 2}
                   onClick={() => {
                     setState(current => ({
@@ -836,7 +991,7 @@ const Editor = () => {
                   }}
                 >
                   {label}
-                </button>
+                </Button>
               ))}
             </div>
             <PanelTitle style={{ marginTop: 6 }}>Arrange</PanelTitle>

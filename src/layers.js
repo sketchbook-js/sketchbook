@@ -100,6 +100,7 @@ const alignLayers = (layers, { x, y }, predicate = () => true) => {
   );
 };
 
+// TODO: Rename this getSelectionBounds?
 const getLayerBounds = (layers, predicate = () => true) =>
   layers.filter(predicate).length > 0
     ? layers.filter(predicate).reduce(
