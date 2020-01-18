@@ -1166,7 +1166,7 @@ const Editor = () => {
                 config[
                   doc.layers.find(({ id }) => id === [...view.selection][0])
                     .component
-                ].options?.map(({ key, input }) => {
+                ].options?.map(({ key, input, label }) => {
                   switch (input) {
                     case "short-string":
                       return (
@@ -1180,7 +1180,7 @@ const Editor = () => {
                             padding: 6
                           }}
                         >
-                          <Label htmlFor={`option-${key}`}>{key}</Label>
+                          <Label htmlFor={`option-${key}`}>{label}</Label>
                           <Input
                             key={key}
                             id={`option-${key}`}

@@ -23,7 +23,8 @@ const config = {
     options: [
       {
         key: "text",
-        input: "short-string"
+        input: "short-string",
+        label: "Text"
       }
     ]
   },
@@ -41,7 +42,8 @@ const config = {
     options: [
       {
         key: "text",
-        input: "short-string"
+        input: "short-string",
+        label: "Text"
       }
     ]
   },
@@ -59,7 +61,8 @@ const config = {
     options: [
       {
         key: "text",
-        input: "short-string"
+        input: "short-string",
+        label: "Text"
       }
     ]
   },
