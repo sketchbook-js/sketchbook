@@ -9,7 +9,8 @@
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-scripts": "3.3.0",
-    "set-fns": "0.0.2"
+    "set-fns": "0.0.2",
+    "use-state-snapshots": "^0.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
