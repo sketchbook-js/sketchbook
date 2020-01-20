@@ -90,6 +90,18 @@ const Button = ({ style, ...props }) => (
   />
 );
 
+const Textarea = ({ style, ...props }) => (
+  <textarea style={{
+    background: "#fff",
+    border: "1px solid #ddd",
+    resize: "none",
+    ...style
+  }}
+  spellcheck="false"
+  {...props}
+  />
+)
+
 const Editor = () => {
   const canvas = useRef(null);
   const [state, setState] = useState({
@@ -1301,6 +1313,53 @@ const Editor = () => {
                           />
                         </div>
                       );
+                      case "long-string":
+                        return (
+                          <div
+                            key={key}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(1, min-content 1fr)",
+                              alignItems: "center",
+                              justifyItems: "center",
+                              gap: 6,
+                              padding: 6
+                            }}
+                          >
+                            <Label htmlFor={`option-${key}`}>{label}</Label>
+                            <Textarea
+                              key={key}
+                              id={`option-${key}`}
+                              type="text"
+                              style={{
+                                "min-height": "8em"
+                              }}
+                              value={
+                                doc.layers.find(
+                                  ({ id }) => id === [...view.selection][0]
+                                ).options[key]
+                              }
+                              onChange={({ currentTarget: { value } }) => {
+                                setState(current => ({
+                                  ...current,
+                                  doc: {
+                                    layers: current.doc.layers.map(layer =>
+                                      layer.id === [...view.selection][0]
+                                        ? {
+                                            ...layer,
+                                            options: {
+                                              ...layer.options,
+                                              [key]: value
+                                            }
+                                          }
+                                        : layer
+                                    )
+                                  }
+                                }));
+                              }}
+                            />
+                          </div>
+                        );
                     default:
                       return null;
                   }
