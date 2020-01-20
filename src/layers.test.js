@@ -7,11 +7,11 @@ import {
 } from "./layers";
 
 describe("transformLayers", () => {
-  test("no layers no-op", () => {
+  test("no layers, no-op", () => {
     expect(transformLayers([], {})).toEqual([]);
   });
 
-  test("single layer no-op", () => {
+  test("single layer, no-op", () => {
     expect(
       transformLayers(
         [
@@ -34,7 +34,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers no-op", () => {
+  test("multiple layers, no-op", () => {
     expect(
       transformLayers(
         [
@@ -69,7 +69,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers translating", () => {
+  test("multiple layers, translating", () => {
     expect(
       transformLayers(
         [
@@ -107,7 +107,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers scaling", () => {
+  test("multiple layers, scaling", () => {
     expect(
       transformLayers(
         [
@@ -145,7 +145,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers translating and scaling", () => {
+  test("multiple layers, translating and scaling", () => {
     expect(
       transformLayers(
         [
@@ -185,7 +185,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("single layer positivly offset from 0 scaling", () => {
+  test("single layer, positivly offset from 0, scaling", () => {
     expect(
       transformLayers(
         [
@@ -211,7 +211,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers positivly offset from 0 scaling", () => {
+  test("multiple layers, positivly offset from 0, scaling", () => {
     expect(
       transformLayers(
         [
@@ -243,6 +243,44 @@ describe("transformLayers", () => {
         x1: 265,
         y1: 400,
         x2: 280,
+        y2: 430
+      }
+    ]);
+  });
+
+  test("multiple layers, positivly offset from 0, scaling, origin middle-right", () => {
+    expect(
+      transformLayers(
+        [
+          {
+            x1: 130,
+            y1: 130,
+            x2: 400,
+            y2: 400
+          },
+          {
+            x1: 400,
+            y1: 400,
+            x2: 430,
+            y2: 430
+          }
+        ],
+        {
+          w: 150,
+          cx: 1
+        }
+      )
+    ).toEqual([
+      {
+        x1: 280,
+        y1: 130,
+        x2: 415,
+        y2: 400
+      },
+      {
+        x1: 415,
+        y1: 400,
+        x2: 430,
         y2: 430
       }
     ]);
