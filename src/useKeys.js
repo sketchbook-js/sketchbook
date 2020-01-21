@@ -14,7 +14,7 @@ const useKeys = ({ keydown, keyup }) => {
         )
       )
         keydown(event);
-      setKeys(current => or(current, [event.keyCode]));
+      setKeys(current => or(current, [event.code]));
     };
     const onKeyup = event => {
       if (
@@ -25,7 +25,7 @@ const useKeys = ({ keydown, keyup }) => {
         )
       )
         keyup(event);
-      setKeys(current => not(current, [event.keyCode]));
+      setKeys(current => not(current, [event.code]));
     };
     document.addEventListener("keydown", onKeydown);
     document.addEventListener("keyup", onKeyup);

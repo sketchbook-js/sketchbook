@@ -300,34 +300,29 @@ const Editor = () => {
     doc.layers.filter(layer => view.selection.has(layer.id))
   );
   const keys = useKeys({
-    keydown: ({ keyCode }) => {
-      switch (keyCode) {
-        // left
-        case 37:
+    keydown: ({ code }) => {
+      switch (code) {
+        case "ArrowLeft":
           transformSelection({
-            x: Math.round(selectionBounds.x1) - (keys.has(16) ? 10 : 1)
+            x: Math.round(selectionBounds.x1) - (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
-        // up
-        case 38:
+        case "ArrowUp":
           transformSelection({
-            y: Math.round(selectionBounds.y1) - (keys.has(16) ? 10 : 1)
+            y: Math.round(selectionBounds.y1) - (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
-        // right
-        case 39:
+        case "ArrowRight":
           transformSelection({
-            x: Math.round(selectionBounds.x1) + (keys.has(16) ? 10 : 1)
+            x: Math.round(selectionBounds.x1) + (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
-        // down
-        case 40:
+        case "ArrowDown":
           transformSelection({
-            y: Math.round(selectionBounds.y1) + (keys.has(16) ? 10 : 1)
+            y: Math.round(selectionBounds.y1) + (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
-        // backspace
-        case 8:
+        case "Backspace":
           setState(current => ({
             ...current,
             view: { ...current.view, selection: set() }
@@ -384,7 +379,7 @@ const Editor = () => {
                   ...current,
                   view: {
                     ...current.view,
-                    selection: keys.has(16)
+                    selection: keys.has("ShiftLeft") || keys.has("ShiftRight")
                       ? current.view.selection.has(id)
                         ? not(current.view.selection, [id])
                         : or(current.view.selection, [id])
@@ -406,7 +401,7 @@ const Editor = () => {
           cursor:
             view.mouse.status === "pan"
               ? "grabbing"
-              : keys.has(32)
+              : keys.has("Space")
               ? "grab"
               : null
         }}
@@ -453,7 +448,7 @@ const Editor = () => {
             const dy = y - view.mouse.startY;
             const distance = Math.abs(Math.sqrt(dx * dx + dy * dy));
             if (distance > 1) {
-              if (keys.has(32)) {
+              if (keys.has("Space")) {
                 setState(current => ({
                   ...current,
                   view: {
@@ -495,7 +490,7 @@ const Editor = () => {
                     ...current,
                     view: {
                       ...current.view,
-                      selection: keys.has(16)
+                      selection: keys.has("ShiftLeft") || keys.has("ShiftRight")
                         ? current.view.selection.has(clickedLayer.id)
                           ? not(current.view.selection, [clickedLayer.id])
                           : or(current.view.selection, [clickedLayer.id])
@@ -546,7 +541,7 @@ const Editor = () => {
                       ...current,
                       view: {
                         ...current.view,
-                        selection: keys.has(16)
+                        selection: keys.has("ShiftLeft") || keys.has("ShiftRight")
                           ? current.view.selection.has(clickedLayer.id)
                             ? not(current.view.selection, [clickedLayer.id])
                             : or(current.view.selection, [clickedLayer.id])
