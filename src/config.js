@@ -155,6 +155,41 @@ const config = {
       { key: "label", label: "Label", input: "short-string" },
       { key: "value", label: "Value", input: "short-string" }
     ]
+  },
+  validateOptions: (options, input) => {
+    // Here, you can impose constraints to component options to provide feedback to the designer in case they enter something invalid.
+    switch (input) {
+      case "short-string":
+        if (options.text.length > 100) {
+          return [{ key: "text", message: "Must be less than 100 characters long" }];
+        }
+        break
+      case "long-string":
+        if (options.text.length <= 100) {
+          return [{ key: "text", message: "Must be more than 100 characters long" }];
+        }
+        break
+      default:
+        return null
+    }
+    if (options.label === "Email" && options.value) {
+      // Checks for an @ in the string and at least 1 character to the left and right of the @.
+      const regexPattern = /^\S+@\S+$/
+      const isValidEmail = regexPattern.test(options.value)
+      if (!isValidEmail) {
+        return [{ key: "text", message: "Input is not a valid email" }];
+      }
+    }
+    if (options.label === "Password" && options.value.length < 8) {
+      return [{ key: "text", message: "Password must be at least 8 characters long" }];
+    }
+    if (options.label === "Phone") {
+      // Implement as required.
+    }
+    if (options.label === "Credit card") {
+      // Implement as required.
+    }
+    // Add other validation requirements as required.
   }
 };
 
