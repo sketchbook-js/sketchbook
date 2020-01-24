@@ -102,6 +102,12 @@ const Textarea = ({ style, ...props }) => (
   />
 )
 
+const OptionsErrorMessage = ({children, style, ...props }) => {
+  return <div style={{ color: "red", ...style }} {...props}>
+    {children}
+  </div>
+}
+
 const Editor = () => {
   const canvas = useRef(null);
   const [state, setState] = useState({
@@ -794,46 +800,49 @@ const Editor = () => {
             >
               {Object.keys(config)
                 .sort((a, b) => a.localeCompare(b))
-                .map(component => (
-                  <Button
-                    key={component}
-                    onClick={() => {
-                      const id = pushID();
-                      const initial =
-                        config[component].init && config[component].init();
-                      measure(
-                        { type: component, ...initial },
-                        (width, height) => {
-                          setState(current => ({
-                            ...current,
-                            doc: {
-                              ...current.doc,
-                              layers: [
-                                ...current.doc.layers,
-                                {
-                                  id,
-                                  name: `${component}`,
-                                  component,
-                                  x1: -view.transform.x,
-                                  y1: -view.transform.y,
-                                  x2: -view.transform.x + width,
-                                  y2: -view.transform.y + height,
-                                  options: initial?.options
-                                }
-                              ]
-                            },
-                            view: {
-                              ...current.view,
-                              selection: set([id])
-                            }
-                          }));
-                        }
-                      );
-                    }}
-                  >
-                    {component}
-                  </Button>
-                ))}
+                .map(component => {
+                  if (component !== "validateOptions") {
+                    return <Button
+                      key={component}
+                      onClick={() => {
+                        const id = pushID();
+                        const initial =
+                          config[component].init && config[component].init();
+                        measure(
+                          { type: component, ...initial },
+                          (width, height) => {
+                            setState(current => ({
+                              ...current,
+                              doc: {
+                                ...current.doc,
+                                layers: [
+                                  ...current.doc.layers,
+                                  {
+                                    id,
+                                    name: `${component}`,
+                                    component,
+                                    x1: -view.transform.x,
+                                    y1: -view.transform.y,
+                                    x2: -view.transform.x + width,
+                                    y2: -view.transform.y + height,
+                                    options: initial?.options
+                                  }
+                                ]
+                              },
+                              view: {
+                                ...current.view,
+                                selection: set([id])
+                              }
+                            }));
+                          }
+                        );
+                      }}
+                    >
+                      {component}
+                    </Button>
+                  }
+                  return null
+              })}
             </div>
           </>
         ) : (
@@ -1267,54 +1276,15 @@ const Editor = () => {
                 config[
                   doc.layers.find(({ id }) => id === [...view.selection][0])
                     .component
-                ].options?.map(({ key, input, label }) => {
+                ].options?.map(({ key, input, label }, index) => {
+                  const componentOptions = doc.layers.find(({ id }) => id === [...view.selection][0]).options
+                  const error = config.validateOptions(componentOptions, key)
+                  const displayErrorMessage = error && key === error[0].key
                   switch (input) {
                     case "short-string":
                       return (
-                        <div
-                          key={key}
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(1, min-content 1fr)",
-                            alignItems: "center",
-                            justifyItems: "center",
-                            gap: 6,
-                            padding: 6
-                          }}
-                        >
-                          <Label htmlFor={`option-${key}`}>{label}</Label>
-                          <Input
-                            key={key}
-                            id={`option-${key}`}
-                            type="text"
-                            value={
-                              doc.layers.find(
-                                ({ id }) => id === [...view.selection][0]
-                              ).options[key]
-                            }
-                            onChange={({ currentTarget: { value } }) => {
-                              setState(current => ({
-                                ...current,
-                                doc: {
-                                  layers: current.doc.layers.map(layer =>
-                                    layer.id === [...view.selection][0]
-                                      ? {
-                                          ...layer,
-                                          options: {
-                                            ...layer.options,
-                                            [key]: value
-                                          }
-                                        }
-                                      : layer
-                                  )
-                                }
-                              }));
-                            }}
-                          />
-                        </div>
-                      );
-                      case "long-string":
-                        return (
+                        <>
+                          { displayErrorMessage ? <OptionsErrorMessage style={{ paddingTop: index === 0 ? "4px" : "0px", paddingLeft: "6px"}} >{error[0].message}</OptionsErrorMessage> : null }
                           <div
                             key={key}
                             style={{
@@ -1327,13 +1297,10 @@ const Editor = () => {
                             }}
                           >
                             <Label htmlFor={`option-${key}`}>{label}</Label>
-                            <Textarea
+                            <Input
                               key={key}
                               id={`option-${key}`}
                               type="text"
-                              style={{
-                                "min-height": "8em"
-                              }}
                               value={
                                 doc.layers.find(
                                   ({ id }) => id === [...view.selection][0]
@@ -1359,6 +1326,58 @@ const Editor = () => {
                               }}
                             />
                           </div>
+                        </>
+                      );
+                      case "long-string":
+                        return (
+                          <>
+                            { displayErrorMessage ? <OptionsErrorMessage style={{ paddingTop: index === 0 ? "4px" : "0px", paddingLeft: "6px"}} >{error[0].message}</OptionsErrorMessage> : null }
+                            <div
+                              key={key}
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(1, min-content 1fr)",
+                                alignItems: "center",
+                                justifyItems: "center",
+                                gap: 6,
+                                padding: 6
+                              }}
+                            >
+
+                              <Label htmlFor={`option-${key}`}>{label}</Label>
+                              <Textarea
+                                key={key}
+                                id={`option-${key}`}
+                                type="text"
+                                style={{
+                                  "min-height": "8em"
+                                }}
+                                value={
+                                  doc.layers.find(
+                                    ({ id }) => id === [...view.selection][0]
+                                  ).options[key]
+                                }
+                                onChange={({ currentTarget: { value } }) => {
+                                  setState(current => ({
+                                    ...current,
+                                    doc: {
+                                      layers: current.doc.layers.map(layer =>
+                                        layer.id === [...view.selection][0]
+                                          ? {
+                                              ...layer,
+                                              options: {
+                                                ...layer.options,
+                                                [key]: value
+                                              }
+                                            }
+                                          : layer
+                                      )
+                                    }
+                                  }));
+                                }}
+                              />
+                            </div>
+                          </>
                         );
                     default:
                       return null;
