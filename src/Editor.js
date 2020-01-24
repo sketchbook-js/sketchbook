@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { set, or, not } from "set-fns";
+import useStateSnapshots from "use-state-snapshots";
 
 import config from "./config";
 import useKeys from "./useKeys";
@@ -104,7 +105,7 @@ const Textarea = ({ style, ...props }) => (
 
 const Editor = () => {
   const canvas = useRef(null);
-  const [state, setState] = useState({
+  const [state, setState, pointer, setPointer] = useStateSnapshots({
     doc: {
       layers: [
         {
@@ -240,9 +241,9 @@ const Editor = () => {
         startY: 0
       }
     }
-  });
+  }, false, 100);
   const { doc, view } = state;
-  const transformSelection = transform => {
+  const transformSelection = (transform, storeSnapshot = true) => {
     setState(current => ({
       ...current,
       doc: {
@@ -251,7 +252,7 @@ const Editor = () => {
           view.selection.has(layer.id)
         )
       }
-    }));
+    }), storeSnapshot);
   };
   useEffect(() => {
     window.postMessage(
@@ -307,7 +308,7 @@ const Editor = () => {
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [setState]);
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => view.selection.has(layer.id))
   );
@@ -374,6 +375,20 @@ const Editor = () => {
           event.stopPropagation();
         }}
       >
+        <button
+          onClick={() => {
+            setPointer(pointer - 1);
+          }}
+        >
+          Undo
+        </button>
+        <button
+          onClick={() => {
+            setPointer(pointer + 1);
+          }}
+        >
+          Redo
+        </button>
         <PanelTitle>Layers</PanelTitle>
         <ol>
           {doc.layers.map(({ id, name }) => (
@@ -397,7 +412,7 @@ const Editor = () => {
                         : or(current.view.selection, [id])
                       : set([id])
                   }
-                }));
+                }), true);
               }}
             >
               {name}
@@ -436,7 +451,7 @@ const Editor = () => {
                       startY: y
                     }
                   }
-                }));
+                }), true);
               }
             : null
         }
@@ -573,7 +588,7 @@ const Editor = () => {
                   transformSelection({
                     x: selectionBounds.x1 + view.mouse.x - view.mouse.startX,
                     y: selectionBounds.y1 + view.mouse.y - view.mouse.startY
-                  });
+                  }, false); // If true, undoing after dragging will undo the dimensions (x,y coordinates) without moving the component. You will need to undo again will move the component.
                 } else if (view.mouse.status === "select") {
                   const x1 = Math.min(view.mouse.startX, view.mouse.x);
                   const y1 = Math.min(view.mouse.startY, view.mouse.y);
@@ -821,7 +836,7 @@ const Editor = () => {
                               ...current.view,
                               selection: set([id])
                             }
-                          }));
+                          }), true);
                         }
                       );
                     }}
@@ -979,7 +994,7 @@ const Editor = () => {
                               : layer
                           )
                         }
-                      }));
+                      }), true);
                     }
                   );
                 }}
@@ -1012,7 +1027,7 @@ const Editor = () => {
                             : layer
                         )
                       }
-                    }));
+                    }), true);
                   });
                 }}
               >
@@ -1043,7 +1058,7 @@ const Editor = () => {
                             : layer
                         )
                       }
-                    }));
+                    }), true);
                   });
                 }}
               >
@@ -1083,7 +1098,7 @@ const Editor = () => {
                           layer => view.selection.has(layer.id)
                         )
                       }
-                    }));
+                    }), true);
                   }}
                 >
                   {label}
@@ -1132,7 +1147,7 @@ const Editor = () => {
                         current.doc.layers.length - 1
                       )
                     }
-                  }));
+                  }), true);
                 }}
               >
                 ⤒
@@ -1170,7 +1185,7 @@ const Editor = () => {
                         ) + 1
                       )
                     }
-                  }));
+                  }), true);
                 }}
               >
                 ↑
@@ -1206,7 +1221,7 @@ const Editor = () => {
                         ) - 1
                       )
                     }
-                  }));
+                  }), true);
                 }}
               >
                 ↓
@@ -1240,7 +1255,7 @@ const Editor = () => {
                         0
                       )
                     }
-                  }));
+                  }), true);
                 }}
               >
                 ⤓
