@@ -313,8 +313,12 @@ const Editor = () => {
     doc.layers.filter(layer => view.selection.has(layer.id))
   );
   const keys = useKeys({
-    keydown: ({ code }) => {
-      switch (code) {
+    keydown: (event) => {
+      const codeBlacklist = set(["Backspace", "ShiftLeft", "ShiftRight", "ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"])
+      if ((state.view.selection.size > 0 || event.code === "Backspace") && codeBlacklist.has(event.code)) {
+        event.preventDefault()
+      }
+      switch (event.code) {
         case "ArrowLeft":
           transformSelection({
             x: Math.round(selectionBounds.x1) - (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
