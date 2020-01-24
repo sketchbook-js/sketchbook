@@ -1,4 +1,5 @@
 import React from "react";
+import { set } from "set-fns";
 
 const config = {
   "Heading 1": {
@@ -156,32 +157,27 @@ const config = {
       { key: "value", label: "Value", input: "short-string" }
     ]
   },
-  validateOptions: (options, input) => {
-    // Here, you can impose constraints to component options to provide feedback to the designer in case they enter something invalid.
-    switch (input) {
-      case "short-string":
-        if (options.text.length > 100) {
-          return [{ key: "text", message: "Must be less than 100 characters long" }];
-        }
-        break
-      case "long-string":
-        if (options.text.length <= 100) {
-          return [{ key: "text", message: "Must be more than 100 characters long" }];
-        }
-        break
-      default:
-        return null
+  validateOptions: (options, key) => {
+    // Here, you can impose constraints to component options to provide feedback to the designer in case they enter something invalid. Below are some examples.
+    if (key === "text" && options.text && options.text.length > 100) {
+      return [{ key: "text", message: "Must be less than 100 characters long" }];
     }
-    if (options.label === "Email" && options.value) {
+
+    const labels = set(["Email", "Password", "Phone", "Credit card"])
+    if (key === "label" && !(labels.has(options.label))) {
+      return [{ key: "label", message: "Label is invalid" }]
+    }
+
+    if (key === "value" && options.value) {
       // Checks for an @ in the string and at least 1 character to the left and right of the @.
       const regexPattern = /^\S+@\S+$/
       const isValidEmail = regexPattern.test(options.value)
       if (!isValidEmail) {
-        return [{ key: "text", message: "Input is not a valid email" }];
+        return [{ key: "value", message: "Input is not a valid email" }];
       }
     }
-    if (options.label === "Password" && options.value.length < 8) {
-      return [{ key: "text", message: "Password must be at least 8 characters long" }];
+    if (options.label === "Password" && options.value && options.value.length < 8) {
+      return [{ key: "value", message: "Password must be at least 8 characters long" }];
     }
     if (options.label === "Phone") {
       // Implement as required.
@@ -190,6 +186,7 @@ const config = {
       // Implement as required.
     }
     // Add other validation requirements as required.
+    return null
   }
 };
 
