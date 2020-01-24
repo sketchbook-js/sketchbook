@@ -811,7 +811,6 @@ const Editor = () => {
               {Object.keys(config)
                 .sort((a, b) => a.localeCompare(b))
                 .map(component => {
-                  if (component !== "validateOptions") {
                     return <Button
                       key={component}
                       onClick={() => {
@@ -850,8 +849,6 @@ const Editor = () => {
                     >
                       {component}
                     </Button>
-                  }
-                  return null
               })}
             </div>
           </>
@@ -1287,8 +1284,8 @@ const Editor = () => {
                   doc.layers.find(({ id }) => id === [...view.selection][0])
                     .component
                 ].options?.map(({ key, input, label }, index) => {
-                  const componentOptions = doc.layers.find(({ id }) => id === [...view.selection][0]).options
-                  const error = config.validateOptions(componentOptions, key)
+                  const layer = doc.layers.find(({ id }) => id === [...view.selection][0])
+                  const error = config[layer.component].validate(layer.options, key)
                   const displayErrorMessage = error && key === error[0].key
                   switch (input) {
                     case "short-string":

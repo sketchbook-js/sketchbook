@@ -27,7 +27,13 @@ const config = {
         input: "short-string",
         label: "Text"
       }
-    ]
+    ],
+    validate: (options, key) => {
+      if (key === "text" && options.text.length > 100) {
+        return [{ key: "text", message: "Must be less than 100 characters long" }];
+      }
+      return null
+    }
   },
   "Heading 2": {
     render: ({ width, height, options: { text } }) => (
@@ -46,7 +52,13 @@ const config = {
         input: "short-string",
         label: "Text"
       }
-    ]
+    ],
+    validate: (options, key) => {
+      if (key === "text" && options.text.length > 100) {
+        return [{ key: "text", message: "Must be less than 100 characters long" }];
+      }
+      return null
+    }
   },
   Paragraph: {
     render: ({ width, height, options: { text } }) => (
@@ -62,10 +74,16 @@ const config = {
     options: [
       {
         key: "text",
-        input: "short-string",
+        input: "long-string",
         label: "Text"
       }
-    ]
+    ],
+    validate: (options, key) => {
+      if (key === "text" && options.text.length > 100) {
+        return [{ key: "text", message: "Must be more than 100 characters long" }];
+      }
+      return null
+    }
   },
   Image: {
     render: ({ width, height }) => (
@@ -101,7 +119,10 @@ const config = {
           strokeWidth="4"
         />
       </svg>
-    )
+    ),
+    validate: (options, key) => {
+      return null
+    }
   },
   Button: {
     render: ({ width, height, options: { label } }) => (
@@ -124,7 +145,13 @@ const config = {
         label: "Button"
       }
     }),
-    options: [{ key: "label", label: "Label", input: "short-string" }]
+    options: [{ key: "label", label: "Label", input: "short-string" }],
+    validate: (options, key) => {
+      if (key === "label" && options.label.length > 100) {
+        return [{ key: "label", message: "Must be less than 100 characters long" }]
+      }
+      return null
+    }
   },
   Input: {
     render: ({ width, height, options: { label, value } }) => (
@@ -155,38 +182,35 @@ const config = {
     options: [
       { key: "label", label: "Label", input: "short-string" },
       { key: "value", label: "Value", input: "short-string" }
-    ]
-  },
-  validateOptions: (options, key) => {
-    // Here, you can impose constraints to component options to provide feedback to the designer in case they enter something invalid. Below are some examples.
-    if (key === "text" && options.text && options.text.length > 100) {
-      return [{ key: "text", message: "Must be less than 100 characters long" }];
-    }
-
-    const labels = set(["Email", "Password", "Phone", "Credit card"])
-    if (key === "label" && !(labels.has(options.label))) {
-      return [{ key: "label", message: "Label is invalid" }]
-    }
-
-    if (key === "value" && options.value) {
-      // Checks for an @ in the string and at least 1 character to the left and right of the @.
-      const regexPattern = /^\S+@\S+$/
-      const isValidEmail = regexPattern.test(options.value)
-      if (!isValidEmail) {
-        return [{ key: "value", message: "Input is not a valid email" }];
+    ],
+    validate: (options, key) => {
+      const labels = set(["Email", "Password", "Phone", "Credit card"])
+      if (key === "label" && !(labels.has(options.label))) {
+        return [{ key: "label", message: "Input label is invalid" }]
       }
+
+      if (key === "value") {
+        if (options.label === "Email") {
+          // Checks for an @ in the string and at least 1 character to the left and right of the @.
+          const regexPattern = /^\S+@\S+$/
+          const isValidEmail = regexPattern.test(options.value)
+          if (!isValidEmail) {
+            return [{ key: "value", message: "Input is not a valid email" }];
+          }
+        }
+
+        if (options.label === "Password" && options.value.length < 8) {
+          return [{ key: "value", message: "Password must be at least 8 characters long" }];
+        }
+        if (options.label === "Phone") {
+          // Implement as required.
+        }
+        if (options.label === "Credit card") {
+          // Implement as required.
+        }
+      }
+      return null
     }
-    if (options.label === "Password" && options.value && options.value.length < 8) {
-      return [{ key: "value", message: "Password must be at least 8 characters long" }];
-    }
-    if (options.label === "Phone") {
-      // Implement as required.
-    }
-    if (options.label === "Credit card") {
-      // Implement as required.
-    }
-    // Add other validation requirements as required.
-    return null
   }
 };
 
