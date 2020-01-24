@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { set, or, not } from "set-fns";
+import useStateSnapshots from "use-state-snapshots";
 
 import config from "./config";
 import useKeys from "./useKeys";
@@ -110,7 +111,7 @@ const OptionsErrorMessage = ({children, style, ...props }) => {
 
 const Editor = () => {
   const canvas = useRef(null);
-  const [state, setState] = useState({
+  const [state, setState, pointer, setPointer] = useStateSnapshots({
     doc: {
       layers: [
         {
@@ -246,9 +247,9 @@ const Editor = () => {
         startY: 0
       }
     }
-  });
+  }, false, 100);
   const { doc, view } = state;
-  const transformSelection = transform => {
+  const transformSelection = (transform, storeSnapshot = true) => {
     setState(current => ({
       ...current,
       doc: {
@@ -257,7 +258,7 @@ const Editor = () => {
           view.selection.has(layer.id)
         )
       }
-    }));
+    }), storeSnapshot);
   };
   useEffect(() => {
     window.postMessage(
@@ -313,39 +314,34 @@ const Editor = () => {
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [setState]);
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => view.selection.has(layer.id))
   );
   const keys = useKeys({
-    keydown: ({ keyCode }) => {
-      switch (keyCode) {
-        // left
-        case 37:
+    keydown: ({ code }) => {
+      switch (code) {
+        case "ArrowLeft":
           transformSelection({
-            x: Math.round(selectionBounds.x1) - (keys.has(16) ? 10 : 1)
+            x: Math.round(selectionBounds.x1) - (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
-        // up
-        case 38:
+        case "ArrowUp":
           transformSelection({
-            y: Math.round(selectionBounds.y1) - (keys.has(16) ? 10 : 1)
+            y: Math.round(selectionBounds.y1) - (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
-        // right
-        case 39:
+        case "ArrowRight":
           transformSelection({
-            x: Math.round(selectionBounds.x1) + (keys.has(16) ? 10 : 1)
+            x: Math.round(selectionBounds.x1) + (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
-        // down
-        case 40:
+        case "ArrowDown":
           transformSelection({
-            y: Math.round(selectionBounds.y1) + (keys.has(16) ? 10 : 1)
+            y: Math.round(selectionBounds.y1) + (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
-        // backspace
-        case 8:
+        case "Backspace":
           setState(current => ({
             ...current,
             view: { ...current.view, selection: set() }
@@ -385,6 +381,20 @@ const Editor = () => {
           event.stopPropagation();
         }}
       >
+        <button
+          onClick={() => {
+            setPointer(pointer - 1);
+          }}
+        >
+          Undo
+        </button>
+        <button
+          onClick={() => {
+            setPointer(pointer + 1);
+          }}
+        >
+          Redo
+        </button>
         <PanelTitle>Layers</PanelTitle>
         <ol>
           {doc.layers.map(({ id, name }) => (
@@ -402,13 +412,13 @@ const Editor = () => {
                   ...current,
                   view: {
                     ...current.view,
-                    selection: keys.has(16)
+                    selection: keys.has("ShiftLeft") || keys.has("ShiftRight")
                       ? current.view.selection.has(id)
                         ? not(current.view.selection, [id])
                         : or(current.view.selection, [id])
                       : set([id])
                   }
-                }));
+                }), true);
               }}
             >
               {name}
@@ -424,7 +434,7 @@ const Editor = () => {
           cursor:
             view.mouse.status === "pan"
               ? "grabbing"
-              : keys.has(32)
+              : keys.has("Space")
               ? "grab"
               : null
         }}
@@ -447,7 +457,7 @@ const Editor = () => {
                       startY: y
                     }
                   }
-                }));
+                }), true);
               }
             : null
         }
@@ -471,7 +481,7 @@ const Editor = () => {
             const dy = y - view.mouse.startY;
             const distance = Math.abs(Math.sqrt(dx * dx + dy * dy));
             if (distance > 1) {
-              if (keys.has(32)) {
+              if (keys.has("Space")) {
                 setState(current => ({
                   ...current,
                   view: {
@@ -513,7 +523,7 @@ const Editor = () => {
                     ...current,
                     view: {
                       ...current.view,
-                      selection: keys.has(16)
+                      selection: keys.has("ShiftLeft") || keys.has("ShiftRight")
                         ? current.view.selection.has(clickedLayer.id)
                           ? not(current.view.selection, [clickedLayer.id])
                           : or(current.view.selection, [clickedLayer.id])
@@ -564,7 +574,7 @@ const Editor = () => {
                       ...current,
                       view: {
                         ...current.view,
-                        selection: keys.has(16)
+                        selection: keys.has("ShiftLeft") || keys.has("ShiftRight")
                           ? current.view.selection.has(clickedLayer.id)
                             ? not(current.view.selection, [clickedLayer.id])
                             : or(current.view.selection, [clickedLayer.id])
@@ -584,7 +594,7 @@ const Editor = () => {
                   transformSelection({
                     x: selectionBounds.x1 + view.mouse.x - view.mouse.startX,
                     y: selectionBounds.y1 + view.mouse.y - view.mouse.startY
-                  });
+                  }, false); // If true, undoing after dragging will undo the dimensions (x,y coordinates) without moving the component. You will need to undo again will move the component.
                 } else if (view.mouse.status === "select") {
                   const x1 = Math.min(view.mouse.startX, view.mouse.x);
                   const y1 = Math.min(view.mouse.startY, view.mouse.y);
@@ -993,7 +1003,7 @@ const Editor = () => {
                               : layer
                           )
                         }
-                      }));
+                      }), true);
                     }
                   );
                 }}
@@ -1026,7 +1036,7 @@ const Editor = () => {
                             : layer
                         )
                       }
-                    }));
+                    }), true);
                   });
                 }}
               >
@@ -1057,7 +1067,7 @@ const Editor = () => {
                             : layer
                         )
                       }
-                    }));
+                    }), true);
                   });
                 }}
               >
@@ -1097,7 +1107,7 @@ const Editor = () => {
                           layer => view.selection.has(layer.id)
                         )
                       }
-                    }));
+                    }), true);
                   }}
                 >
                   {label}
@@ -1146,7 +1156,7 @@ const Editor = () => {
                         current.doc.layers.length - 1
                       )
                     }
-                  }));
+                  }), true);
                 }}
               >
                 ⤒
@@ -1184,7 +1194,7 @@ const Editor = () => {
                         ) + 1
                       )
                     }
-                  }));
+                  }), true);
                 }}
               >
                 ↑
@@ -1220,7 +1230,7 @@ const Editor = () => {
                         ) - 1
                       )
                     }
-                  }));
+                  }), true);
                 }}
               >
                 ↓
@@ -1254,7 +1264,7 @@ const Editor = () => {
                         0
                       )
                     }
-                  }));
+                  }), true);
                 }}
               >
                 ⤓
