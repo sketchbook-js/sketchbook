@@ -671,7 +671,15 @@ describe("transformPoints", () => {
   });
 
   test("no-op, multiple points", () => {
-    expect(transformPoints([], [[45, 23], [23, 11]])).toEqual([
+    expect(
+      transformPoints(
+        [],
+        [
+          [45, 23],
+          [23, 11]
+        ]
+      )
+    ).toEqual([
       [45, 23],
       [23, 11]
     ]);
@@ -690,9 +698,15 @@ describe("transformPoints", () => {
             f: 0
           }
         ],
-        [[45, 23], [23, 11]]
+        [
+          [45, 23],
+          [23, 11]
+        ]
       )
-    ).toEqual([[45, 23], [23, 11]]);
+    ).toEqual([
+      [45, 23],
+      [23, 11]
+    ]);
   });
 
   test("translate, multiple points", () => {
@@ -708,9 +722,15 @@ describe("transformPoints", () => {
             f: -25
           }
         ],
-        [[45, 23], [23, 11]]
+        [
+          [45, 23],
+          [23, 11]
+        ]
       )
-    ).toEqual([[-5, -2], [-27, -14]]);
+    ).toEqual([
+      [-5, -2],
+      [-27, -14]
+    ]);
   });
 
   test("translate and scale, multiple points", () => {
@@ -734,8 +754,14 @@ describe("transformPoints", () => {
             f: 0
           }
         ],
-        [[45, 23], [23, 11]]
+        [
+          [45, 23],
+          [23, 11]
+        ]
       )
-    ).toEqual([[-10, -4], [-54, -28]]);
+    ).toEqual([
+      [-10, -4],
+      [-54, -28]
+    ]);
   });
 });
