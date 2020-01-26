@@ -286,6 +286,45 @@ describe("transformLayers", () => {
     ]);
   });
 
+  test("multiple layers, negativly offset from 0, scaling, origin middle-right, relative", () => {
+    expect(
+      transformLayers(
+        [
+          {
+            x1: -70,
+            y1: -70,
+            x2: 200,
+            y2: 200
+          },
+          {
+            x1: 200,
+            y1: 200,
+            x2: 230,
+            y2: 230
+          }
+        ],
+        {
+          w: -150,
+          cx: 1,
+          relative: true
+        }
+      )
+    ).toEqual([
+      {
+        x1: 80,
+        y1: -70,
+        x2: 215,
+        y2: 200
+      },
+      {
+        x1: 215,
+        y1: 200,
+        x2: 230,
+        y2: 230
+      }
+    ]);
+  });
+
   test.todo("predicate");
 });
 
@@ -602,8 +641,6 @@ describe("getLayerBounds", () => {
       y2: -100
     });
   });
-
-  test.todo("inverted x and y");
 
   test.todo("predicate");
 });
