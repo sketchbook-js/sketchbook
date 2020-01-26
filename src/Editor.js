@@ -122,7 +122,7 @@ const Editor = () => {
     height: 0
   });
   const [mouse, setMouse] = useState({
-    status: "up", // "up", "down", "drag", "select", or "pan"
+    status: "up", // "up", "down", "drag", "select", "pan" or "resize"
     x: 0,
     y: 0,
     startX: 0,
@@ -254,6 +254,101 @@ const Editor = () => {
     100
   );
   const { doc, selection } = state;
+  const selectionBounds = getLayerBounds(
+    doc.layers.filter(layer => selection.has(layer.id))
+  );
+  const mouseIsWithinSelection =
+    mouse.x >= selectionBounds.x1 - 3 &&
+    mouse.x <= selectionBounds.x2 + 3 &&
+    mouse.y >= selectionBounds.y1 - 3 &&
+    mouse.y <= selectionBounds.y2 + 3;
+  const mouseIsOverSelectionLeft =
+    mouseIsWithinSelection && mouse.x <= selectionBounds.x1 + 3;
+  const mouseIsOverSelectionRight =
+    mouseIsWithinSelection && mouse.x >= selectionBounds.x2 - 3;
+  const mouseIsOverSelectionTop =
+    mouseIsWithinSelection && mouse.y <= selectionBounds.y1 + 3;
+  const mouseIsOverSelectionBottom =
+    mouseIsWithinSelection && mouse.y >= selectionBounds.y2 - 3;
+  const mouseStartedWithinSelection =
+    mouse.startX >= selectionBounds.x1 - 3 &&
+    mouse.startX <= selectionBounds.x2 + 3 &&
+    mouse.startY >= selectionBounds.y1 - 3 &&
+    mouse.startY <= selectionBounds.y2 + 3;
+  const mouseStartedOverSelectionLeft =
+    mouseStartedWithinSelection && mouse.startX <= selectionBounds.x1 + 3;
+  const mouseStartedOverSelectionRight =
+    mouseStartedWithinSelection && mouse.startX >= selectionBounds.x2 - 3;
+  const mouseStartedOverSelectionTop =
+    mouseStartedWithinSelection && mouse.startY <= selectionBounds.y1 + 3;
+  const mouseStartedOverSelectionBottom =
+    mouseStartedWithinSelection && mouse.startY >= selectionBounds.y2 - 3;
+  let transformedLayers = state.doc.layers;
+  switch (mouse.status) {
+    case "resize":
+      transformedLayers = transformLayers(
+        transformedLayers,
+        {
+          w:
+            mouseStartedOverSelectionLeft || mouseStartedOverSelectionRight
+              ? (mouse.x - mouse.startX) *
+                (mouseStartedOverSelectionLeft ? -1 : 1)
+              : undefined,
+          h:
+            mouseStartedOverSelectionTop || mouseStartedOverSelectionBottom
+              ? (mouse.y - mouse.startY) *
+                (mouseStartedOverSelectionTop ? -1 : 1)
+              : undefined,
+          cx: mouseStartedOverSelectionLeft ? 1 : 0,
+          cy: mouseStartedOverSelectionTop ? 1 : 0,
+          relative: true
+        },
+        layer => state.selection.has(layer.id)
+      );
+      break;
+    case "drag":
+      transformedLayers = transformLayers(
+        transformedLayers,
+        {
+          x: mouse.x - mouse.startX,
+          y: mouse.y - mouse.startY,
+          relative: true
+        },
+        layer => state.selection.has(layer.id)
+      );
+      break;
+    case "pan":
+      transformedLayers = transformLayers(transformedLayers, {
+        x: mouse.x - mouse.startX,
+        y: mouse.y - mouse.startY,
+        relative: true
+      });
+      break;
+    default:
+      break;
+  }
+  transformedLayers = transformLayers(transformedLayers, {
+    x: viewport.x,
+    y: viewport.y,
+    relative: true
+  });
+  const transformedSelectionBounds = getLayerBounds(
+    transformedLayers.filter(layer => selection.has(layer.id))
+  );
+  const display = {
+    layers: transformedLayers.map(
+      ({ id, component: type, x1, y1, x2, y2, options }) => ({
+        id,
+        type,
+        x: x1,
+        y: y1,
+        scale: viewport.scale,
+        width: x2 - x1,
+        height: y2 - y1,
+        options
+      })
+    )
+  };
   const transformSelection = (transform, storeSnapshot = true) => {
     setState(
       current => ({
@@ -272,46 +367,11 @@ const Editor = () => {
     window.postMessage(
       {
         type: "sketchbook_update_render_layers",
-        layers: state.doc.layers.map(
-          ({ id, component: type, x1, y1, x2, y2, options }) => ({
-            id,
-            type,
-            x:
-              viewport.x +
-              x1 +
-              (mouse.status === "drag" && state.selection.has(id)
-                ? mouse.x - mouse.startX
-                : mouse.status === "pan"
-                ? mouse.x - mouse.startX
-                : 0),
-            y:
-              viewport.y +
-              y1 +
-              (mouse.status === "drag" && state.selection.has(id)
-                ? mouse.y - mouse.startY
-                : mouse.status === "pan"
-                ? mouse.y - mouse.startY
-                : 0),
-            scale: viewport.scale,
-            width: x2 - x1,
-            height: y2 - y1,
-            options
-          })
-        )
+        layers: display.layers
       },
       "*"
     );
-  }, [
-    mouse.startX,
-    mouse.startY,
-    mouse.status,
-    mouse.x,
-    mouse.y,
-    state,
-    viewport.scale,
-    viewport.x,
-    viewport.y
-  ]);
+  }, [display.layers]);
   // TODO: Something more sophisticated than an interval.
   useEffect(() => {
     const interval = setInterval(() => {
@@ -328,9 +388,6 @@ const Editor = () => {
       clearInterval(interval);
     };
   }, [setViewport]);
-  const selectionBounds = getLayerBounds(
-    doc.layers.filter(layer => selection.has(layer.id))
-  );
   const keys = useKeys({
     keydown: event => {
       const codeBlacklist = set([
@@ -473,6 +530,16 @@ const Editor = () => {
               ? "grabbing"
               : keys.has("Space")
               ? "grab"
+              : (mouseIsOverSelectionLeft && mouseIsOverSelectionTop) ||
+                (mouseIsOverSelectionRight && mouseIsOverSelectionBottom)
+              ? "nwse-resize"
+              : (mouseIsOverSelectionLeft && mouseIsOverSelectionBottom) ||
+                (mouseIsOverSelectionRight && mouseIsOverSelectionTop)
+              ? "nesw-resize"
+              : mouseIsOverSelectionLeft || mouseIsOverSelectionRight
+              ? "ew-resize"
+              : mouseIsOverSelectionTop || mouseIsOverSelectionBottom
+              ? "ns-resize"
               : null
         }}
         onMouseDown={
@@ -510,6 +577,16 @@ const Editor = () => {
                 setMouse(current => ({
                   ...current,
                   status: "pan"
+                }));
+              } else if (
+                mouseStartedOverSelectionLeft ||
+                mouseStartedOverSelectionRight ||
+                mouseStartedOverSelectionTop ||
+                mouseStartedOverSelectionBottom
+              ) {
+                setMouse(current => ({
+                  ...current,
+                  status: "resize"
                 }));
               } else if (
                 selectionBounds.x1 < mouse.startX &&
@@ -626,6 +703,27 @@ const Editor = () => {
                     x: current.x + (mouse.x - mouse.startX),
                     y: current.y + (mouse.y - mouse.startY)
                   }));
+                } else if (mouse.status === "resize") {
+                  transformSelection({
+                    w:
+                      mouseStartedOverSelectionLeft ||
+                      mouseStartedOverSelectionRight
+                        ? selectionBounds.x2 -
+                          selectionBounds.x1 +
+                          (mouse.x - mouse.startX) *
+                            (mouseStartedOverSelectionLeft ? -1 : 1)
+                        : undefined,
+                    h:
+                      mouseStartedOverSelectionTop ||
+                      mouseStartedOverSelectionBottom
+                        ? selectionBounds.y2 -
+                          selectionBounds.y1 +
+                          (mouse.y - mouse.startY) *
+                            (mouseStartedOverSelectionTop ? -1 : 1)
+                        : undefined,
+                    cx: mouseStartedOverSelectionLeft ? 1 : 0,
+                    cy: mouseStartedOverSelectionTop ? 1 : 0
+                  });
                 }
                 setMouse(current => ({
                   ...current,
@@ -662,63 +760,133 @@ const Editor = () => {
           height={viewport.height}
           fill="none"
         >
-          <rect
-            stroke="#f0f"
-            strokeWidth={2}
-            x={
-              selectionBounds.x1 +
-              viewport.x +
-              (mouse.status === "drag" || mouse.status === "pan"
-                ? mouse.x - mouse.startX
-                : 0)
-            }
-            y={
-              selectionBounds.y1 +
-              viewport.y +
-              (mouse.status === "drag" || mouse.status === "pan"
-                ? mouse.y - mouse.startY
-                : 0)
-            }
-            width={selectionBounds.x2 - selectionBounds.x1}
-            height={selectionBounds.y2 - selectionBounds.y1}
-          />
-          {doc.layers
+          {display.layers
             .filter(({ id }) => selection.has(id))
-            .map(({ id, x1, y1, x2, y2 }) => (
+            .map(({ id, x, y, width, height }) => (
               <rect
                 key={id}
                 stroke="#f0f"
                 strokeWidth={1}
                 strokeDasharray={[1, 3]}
-                x={
-                  x1 +
-                  viewport.x +
-                  (mouse.status === "drag" || mouse.status === "pan"
-                    ? mouse.x - mouse.startX
-                    : 0) +
-                  0.5
-                }
-                y={
-                  y1 +
-                  viewport.y +
-                  (mouse.status === "drag" || mouse.status === "pan"
-                    ? mouse.y - mouse.startY
-                    : 0) +
-                  0.5
-                }
-                width={x2 - x1 - 1}
-                height={y2 - y1 - 1}
+                x={x + 0.5}
+                y={y + 0.5}
+                width={width - 1}
+                height={height - 1}
               />
             ))}
+          <rect
+            stroke="#f0f"
+            strokeWidth={2}
+            x={transformedSelectionBounds.x1}
+            y={transformedSelectionBounds.y1}
+            width={
+              transformedSelectionBounds.x2 - transformedSelectionBounds.x1
+            }
+            height={
+              transformedSelectionBounds.y2 - transformedSelectionBounds.y1
+            }
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x1 - 2.5}
+            y={transformedSelectionBounds.y1 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x1 - 2.5}
+            y={transformedSelectionBounds.y2 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x2 - 2.5}
+            y={transformedSelectionBounds.y1 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x2 - 2.5}
+            y={transformedSelectionBounds.y2 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={
+              Math.round(
+                transformedSelectionBounds.x1 +
+                  (transformedSelectionBounds.x2 -
+                    transformedSelectionBounds.x1) /
+                    2
+              ) - 2.5
+            }
+            y={transformedSelectionBounds.y1 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={
+              Math.round(
+                transformedSelectionBounds.x1 +
+                  (transformedSelectionBounds.x2 -
+                    transformedSelectionBounds.x1) /
+                    2
+              ) - 2.5
+            }
+            y={transformedSelectionBounds.y2 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x1 - 2.5}
+            y={
+              Math.round(
+                transformedSelectionBounds.y1 +
+                  (transformedSelectionBounds.y2 -
+                    transformedSelectionBounds.y1) /
+                    2
+              ) - 2.5
+            }
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x2 - 2.5}
+            y={
+              Math.round(
+                transformedSelectionBounds.y1 +
+                  (transformedSelectionBounds.y2 -
+                    transformedSelectionBounds.y1) /
+                    2
+              ) - 2.5
+            }
+            width={5}
+            height={5}
+          />
           {mouse.status === "up"
             ? [
                 doc.layers
                   .filter(
                     ({ x1, y1, x2, y2 }) =>
-                      mouse.x > x1 &&
-                      mouse.x < x2 &&
-                      mouse.y > y1 &&
-                      mouse.y < y2
+                      mouse.x >= x1 &&
+                      mouse.x <= x2 &&
+                      mouse.y >= y1 &&
+                      mouse.y <= y2
                   )
                   .slice(-1)[0]
               ]
