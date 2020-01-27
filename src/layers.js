@@ -120,7 +120,10 @@ const getLayerBounds = (layers, predicate = () => true) =>
     : { x1: 0, y1: 0, x2: 0, y2: 0 };
 
 const transformBounds = (matrices, { x1, y1, x2, y2 }) => {
-  const points = transformPoints(matrices, [[x1, y1], [x2, y2]]);
+  const points = transformPoints(matrices, [
+    [x1, y1],
+    [x2, y2]
+  ]);
   return {
     x1: points[0][0],
     y1: points[0][1],
