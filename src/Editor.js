@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { set, or, not } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 
@@ -92,167 +92,175 @@ const Button = ({ style, ...props }) => (
 );
 
 const Textarea = ({ style, ...props }) => (
-  <textarea style={{
-    background: "#fff",
-    border: "1px solid #ddd",
-    resize: "none",
-    ...style
-  }}
-  spellcheck="false"
-  {...props}
+  <textarea
+    style={{
+      background: "#fff",
+      border: "1px solid #ddd",
+      resize: "none",
+      ...style
+    }}
+    spellcheck="false"
+    {...props}
   />
-)
+);
 
 const Editor = () => {
   const canvas = useRef(null);
-  const [state, setState, pointer, setPointer] = useStateSnapshots({
-    doc: {
-      layers: [
-        {
-          id: "-LyqdJBMdrVihqnJOOo8",
-          name: "Input",
-          component: "Input",
-          x1: 100,
-          y1: 666,
-          x2: 500,
-          y2: 722,
-          options: { label: "Email", value: "" }
-        },
-        {
-          id: "-LyqdsUuufs_UM05V3My",
-          name: "Button",
-          component: "Button",
-          x1: 417.78125,
-          y1: 732,
-          x2: 500,
-          y2: 768,
-          options: { label: "Subscribe" }
-        },
-        {
-          id: "-LyqduQ0G84esGuBLiC4",
-          name: "Image",
-          component: "Image",
-          x1: 100,
-          y1: 156,
-          x2: 340,
-          y2: 336
-        },
-        {
-          id: "-Lyr1QcLkjIhPrr7ojKV",
-          name: "Heading 1",
-          component: "Heading 1",
-          x1: 100,
-          y1: 100,
-          x2: 392.75,
-          y2: 136,
-          options: { text: "Example Website" }
-        },
-        {
-          id: "-Lyr1U4LM637a9qwzp8I",
-          name: "Heading 2",
-          component: "Heading 2",
-          x1: 350,
-          y1: 156,
-          x2: 498.34375,
-          y2: 180,
-          options: { text: "Lorem ipsum" }
-        },
-        {
-          id: "-Lyr1aKzs3cjCk5yyD1R",
-          name: "Paragraph",
-          component: "Paragraph",
-          x1: 350,
-          y1: 190,
-          x2: 750,
-          y2: 310,
-          options: {
-            text:
-              "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+  const [state, setState, pointer, setPointer] = useStateSnapshots(
+    {
+      doc: {
+        layers: [
+          {
+            id: "-LyqdJBMdrVihqnJOOo8",
+            name: "Input",
+            component: "Input",
+            x1: 100,
+            y1: 666,
+            x2: 500,
+            y2: 722,
+            options: { label: "Email", value: "" }
+          },
+          {
+            id: "-LyqdsUuufs_UM05V3My",
+            name: "Button",
+            component: "Button",
+            x1: 417.78125,
+            y1: 732,
+            x2: 500,
+            y2: 768,
+            options: { label: "Subscribe" }
+          },
+          {
+            id: "-LyqduQ0G84esGuBLiC4",
+            name: "Image",
+            component: "Image",
+            x1: 100,
+            y1: 156,
+            x2: 340,
+            y2: 336
+          },
+          {
+            id: "-Lyr1QcLkjIhPrr7ojKV",
+            name: "Heading 1",
+            component: "Heading 1",
+            x1: 100,
+            y1: 100,
+            x2: 392.75,
+            y2: 136,
+            options: { text: "Example Website" }
+          },
+          {
+            id: "-Lyr1U4LM637a9qwzp8I",
+            name: "Heading 2",
+            component: "Heading 2",
+            x1: 350,
+            y1: 156,
+            x2: 498.34375,
+            y2: 180,
+            options: { text: "Lorem ipsum" }
+          },
+          {
+            id: "-Lyr1aKzs3cjCk5yyD1R",
+            name: "Paragraph",
+            component: "Paragraph",
+            x1: 350,
+            y1: 190,
+            x2: 750,
+            y2: 310,
+            options: {
+              text:
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+            }
+          },
+          {
+            id: "-Lyr2YAEGxGezgs2k5sV",
+            name: "Image",
+            component: "Image",
+            x1: 510,
+            y1: 356,
+            x2: 750,
+            y2: 536
+          },
+          {
+            id: "-Lyr2n5QEWuXLOBwMjlt",
+            name: "Heading 2",
+            component: "Heading 2",
+            x1: 100,
+            y1: 356,
+            x2: 248.34375,
+            y2: 380,
+            options: { text: "Lorem ipsum" }
+          },
+          {
+            id: "-Lyr2pytYlfINHOHjB37",
+            name: "Paragraph",
+            component: "Paragraph",
+            x1: 100,
+            y1: 390,
+            x2: 500,
+            y2: 510,
+            options: {
+              text:
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+            }
+          },
+          {
+            id: "-Lyr2zBoU64dhef9SyDI",
+            name: "Heading 2",
+            component: "Heading 2",
+            x1: 100,
+            y1: 632,
+            x2: 248.34375,
+            y2: 656,
+            options: { text: "Lorem ipsum" }
+          },
+          {
+            id: "-Lyr7tPI3CN8t_0-x0X0",
+            name: "Heading 1",
+            component: "Heading 1",
+            x1: 100,
+            y1: 576,
+            x2: 340.640625,
+            y2: 612,
+            options: { text: "Example Form" }
           }
-        },
-        {
-          id: "-Lyr2YAEGxGezgs2k5sV",
-          name: "Image",
-          component: "Image",
-          x1: 510,
-          y1: 356,
-          x2: 750,
-          y2: 536
-        },
-        {
-          id: "-Lyr2n5QEWuXLOBwMjlt",
-          name: "Heading 2",
-          component: "Heading 2",
-          x1: 100,
-          y1: 356,
-          x2: 248.34375,
-          y2: 380,
-          options: { text: "Lorem ipsum" }
-        },
-        {
-          id: "-Lyr2pytYlfINHOHjB37",
-          name: "Paragraph",
-          component: "Paragraph",
-          x1: 100,
-          y1: 390,
-          x2: 500,
-          y2: 510,
-          options: {
-            text:
-              "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
-          }
-        },
-        {
-          id: "-Lyr2zBoU64dhef9SyDI",
-          name: "Heading 2",
-          component: "Heading 2",
-          x1: 100,
-          y1: 632,
-          x2: 248.34375,
-          y2: 656,
-          options: { text: "Lorem ipsum" }
-        },
-        {
-          id: "-Lyr7tPI3CN8t_0-x0X0",
-          name: "Heading 1",
-          component: "Heading 1",
-          x1: 100,
-          y1: 576,
-          x2: 340.640625,
-          y2: 612,
-          options: { text: "Example Form" }
-        }
-      ]
-    },
-    view: {
-      selection: set(["1", "2"]),
-      transform: {
-        x: 0,
-        y: 0,
-        scale: 1
+        ]
       },
-      width: 0,
-      height: 0,
-      mouse: {
-        status: "up", // "up", "down", "drag", "select" or "pan"
-        x: 0,
-        y: 0,
-        startX: 0,
-        startY: 0
+      view: {
+        selection: set(["1", "2"]),
+        transform: {
+          x: 0,
+          y: 0,
+          scale: 1
+        },
+        width: 0,
+        height: 0,
+        mouse: {
+          status: "up", // "up", "down", "drag", "select" or "pan"
+          x: 0,
+          y: 0,
+          startX: 0,
+          startY: 0
+        }
       }
-    }
-  }, false, 100);
+    },
+    false,
+    100
+  );
   const { doc, view } = state;
   const transformSelection = (transform, storeSnapshot = true) => {
-    setState(current => ({
-      ...current,
-      doc: {
-        ...current.doc,
-        layers: transformLayers(current.doc.layers, transform, layer =>
-          view.selection.has(layer.id)
-        )
-      }
-    }), storeSnapshot);
+    setState(
+      current => ({
+        ...current,
+        doc: {
+          ...current.doc,
+          layers: transformLayers(current.doc.layers, transform, layer =>
+            view.selection.has(layer.id)
+          )
+        }
+      }),
+      storeSnapshot
+    );
   };
   useEffect(() => {
     window.postMessage(
@@ -321,22 +329,30 @@ const Editor = () => {
       switch (event.code) {
         case "ArrowLeft":
           transformSelection({
-            x: Math.round(selectionBounds.x1) - (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            x:
+              Math.round(selectionBounds.x1) -
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
         case "ArrowUp":
           transformSelection({
-            y: Math.round(selectionBounds.y1) - (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            y:
+              Math.round(selectionBounds.y1) -
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
         case "ArrowRight":
           transformSelection({
-            x: Math.round(selectionBounds.x1) + (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            x:
+              Math.round(selectionBounds.x1) +
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
         case "ArrowDown":
           transformSelection({
-            y: Math.round(selectionBounds.y1) + (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            y:
+              Math.round(selectionBounds.y1) +
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
           });
           break;
         case "Backspace":
@@ -406,17 +422,21 @@ const Editor = () => {
               }}
               onClick={event => {
                 event.stopPropagation();
-                setState(current => ({
-                  ...current,
-                  view: {
-                    ...current.view,
-                    selection: keys.has("ShiftLeft") || keys.has("ShiftRight")
-                      ? current.view.selection.has(id)
-                        ? not(current.view.selection, [id])
-                        : or(current.view.selection, [id])
-                      : set([id])
-                  }
-                }), true);
+                setState(
+                  current => ({
+                    ...current,
+                    view: {
+                      ...current.view,
+                      selection:
+                        keys.has("ShiftLeft") || keys.has("ShiftRight")
+                          ? current.view.selection.has(id)
+                            ? not(current.view.selection, [id])
+                            : or(current.view.selection, [id])
+                          : set([id])
+                    }
+                  }),
+                  true
+                );
               }}
             >
               {name}
@@ -442,20 +462,23 @@ const Editor = () => {
                 const rect = canvas.current.getBoundingClientRect();
                 const x = clientX - rect.x - view.transform.x;
                 const y = clientY - rect.y - view.transform.y;
-                setState(current => ({
-                  ...current,
-                  view: {
-                    ...current.view,
-                    mouse: {
-                      ...current.view.mouse,
-                      status: "down",
-                      x,
-                      y,
-                      startX: x,
-                      startY: y
+                setState(
+                  current => ({
+                    ...current,
+                    view: {
+                      ...current.view,
+                      mouse: {
+                        ...current.view.mouse,
+                        status: "down",
+                        x,
+                        y,
+                        startX: x,
+                        startY: y
+                      }
                     }
-                  }
-                }), true);
+                  }),
+                  true
+                );
               }
             : null
         }
@@ -521,11 +544,12 @@ const Editor = () => {
                     ...current,
                     view: {
                       ...current.view,
-                      selection: keys.has("ShiftLeft") || keys.has("ShiftRight")
-                        ? current.view.selection.has(clickedLayer.id)
-                          ? not(current.view.selection, [clickedLayer.id])
-                          : or(current.view.selection, [clickedLayer.id])
-                        : set([clickedLayer.id])
+                      selection:
+                        keys.has("ShiftLeft") || keys.has("ShiftRight")
+                          ? current.view.selection.has(clickedLayer.id)
+                            ? not(current.view.selection, [clickedLayer.id])
+                            : or(current.view.selection, [clickedLayer.id])
+                          : set([clickedLayer.id])
                     }
                   }));
                   setState(current => ({
@@ -572,11 +596,12 @@ const Editor = () => {
                       ...current,
                       view: {
                         ...current.view,
-                        selection: keys.has("ShiftLeft") || keys.has("ShiftRight")
-                          ? current.view.selection.has(clickedLayer.id)
-                            ? not(current.view.selection, [clickedLayer.id])
-                            : or(current.view.selection, [clickedLayer.id])
-                          : set([clickedLayer.id])
+                        selection:
+                          keys.has("ShiftLeft") || keys.has("ShiftRight")
+                            ? current.view.selection.has(clickedLayer.id)
+                              ? not(current.view.selection, [clickedLayer.id])
+                              : or(current.view.selection, [clickedLayer.id])
+                            : set([clickedLayer.id])
                       }
                     }));
                   } else {
@@ -589,10 +614,13 @@ const Editor = () => {
                     }));
                   }
                 } else if (view.mouse.status === "drag") {
-                  transformSelection({
-                    x: selectionBounds.x1 + view.mouse.x - view.mouse.startX,
-                    y: selectionBounds.y1 + view.mouse.y - view.mouse.startY
-                  }, false); // If true, undoing after dragging will undo the dimensions (x,y coordinates) without moving the component. You will need to undo again will move the component.
+                  transformSelection(
+                    {
+                      x: selectionBounds.x1 + view.mouse.x - view.mouse.startX,
+                      y: selectionBounds.y1 + view.mouse.y - view.mouse.startY
+                    },
+                    false
+                  ); // If true, undoing after dragging will undo the dimensions (x,y coordinates) without moving the component. You will need to undo again will move the component.
                 } else if (view.mouse.status === "select") {
                   const x1 = Math.min(view.mouse.startX, view.mouse.x);
                   const y1 = Math.min(view.mouse.startY, view.mouse.y);
@@ -818,29 +846,32 @@ const Editor = () => {
                       measure(
                         { type: component, ...initial },
                         (width, height) => {
-                          setState(current => ({
-                            ...current,
-                            doc: {
-                              ...current.doc,
-                              layers: [
-                                ...current.doc.layers,
-                                {
-                                  id,
-                                  name: `${component}`,
-                                  component,
-                                  x1: -view.transform.x,
-                                  y1: -view.transform.y,
-                                  x2: -view.transform.x + width,
-                                  y2: -view.transform.y + height,
-                                  options: initial?.options
-                                }
-                              ]
-                            },
-                            view: {
-                              ...current.view,
-                              selection: set([id])
-                            }
-                          }), true);
+                          setState(
+                            current => ({
+                              ...current,
+                              doc: {
+                                ...current.doc,
+                                layers: [
+                                  ...current.doc.layers,
+                                  {
+                                    id,
+                                    name: `${component}`,
+                                    component,
+                                    x1: -view.transform.x,
+                                    y1: -view.transform.y,
+                                    x2: -view.transform.x + width,
+                                    y2: -view.transform.y + height,
+                                    options: initial?.options
+                                  }
+                                ]
+                              },
+                              view: {
+                                ...current.view,
+                                selection: set([id])
+                              }
+                            }),
+                            true
+                          );
                         }
                       );
                     }}
@@ -985,20 +1016,23 @@ const Editor = () => {
                   measure(
                     { type, height: y2 - y1, options },
                     (width, height) => {
-                      setState(current => ({
-                        ...current,
-                        doc: {
-                          ...current.doc,
-                          layers: current.doc.layers.map(layer =>
-                            layer.id === id
-                              ? {
-                                  ...layer,
-                                  x2: layer.x1 + width
-                                }
-                              : layer
-                          )
-                        }
-                      }), true);
+                      setState(
+                        current => ({
+                          ...current,
+                          doc: {
+                            ...current.doc,
+                            layers: current.doc.layers.map(layer =>
+                              layer.id === id
+                                ? {
+                                    ...layer,
+                                    x2: layer.x1 + width
+                                  }
+                                : layer
+                            )
+                          }
+                        }),
+                        true
+                      );
                     }
                   );
                 }}
@@ -1018,20 +1052,23 @@ const Editor = () => {
                     state.view.selection.has(id)
                   );
                   measure({ type, width: x2 - x1, options }, (_, height) => {
-                    setState(current => ({
-                      ...current,
-                      doc: {
-                        ...current.doc,
-                        layers: current.doc.layers.map(layer =>
-                          layer.id === id
-                            ? {
-                                ...layer,
-                                y2: layer.y1 + height
-                              }
-                            : layer
-                        )
-                      }
-                    }), true);
+                    setState(
+                      current => ({
+                        ...current,
+                        doc: {
+                          ...current.doc,
+                          layers: current.doc.layers.map(layer =>
+                            layer.id === id
+                              ? {
+                                  ...layer,
+                                  y2: layer.y1 + height
+                                }
+                              : layer
+                          )
+                        }
+                      }),
+                      true
+                    );
                   });
                 }}
               >
@@ -1048,21 +1085,24 @@ const Editor = () => {
                     state.view.selection.has(id)
                   );
                   measure({ type, options }, (width, height) => {
-                    setState(current => ({
-                      ...current,
-                      doc: {
-                        ...current.doc,
-                        layers: current.doc.layers.map(layer =>
-                          layer.id === id
-                            ? {
-                                ...layer,
-                                x2: layer.x1 + width,
-                                y2: layer.y1 + height
-                              }
-                            : layer
-                        )
-                      }
-                    }), true);
+                    setState(
+                      current => ({
+                        ...current,
+                        doc: {
+                          ...current.doc,
+                          layers: current.doc.layers.map(layer =>
+                            layer.id === id
+                              ? {
+                                  ...layer,
+                                  x2: layer.x1 + width,
+                                  y2: layer.y1 + height
+                                }
+                              : layer
+                          )
+                        }
+                      }),
+                      true
+                    );
                   });
                 }}
               >
@@ -1092,17 +1132,20 @@ const Editor = () => {
                   key={label}
                   disabled={view.selection.size < 2}
                   onClick={() => {
-                    setState(current => ({
-                      ...current,
-                      doc: {
-                        ...current.doc,
-                        layers: alignLayers(
-                          current.doc.layers,
-                          alignment,
-                          layer => view.selection.has(layer.id)
-                        )
-                      }
-                    }), true);
+                    setState(
+                      current => ({
+                        ...current,
+                        doc: {
+                          ...current.doc,
+                          layers: alignLayers(
+                            current.doc.layers,
+                            alignment,
+                            layer => view.selection.has(layer.id)
+                          )
+                        }
+                      }),
+                      true
+                    );
                   }}
                 >
                   {label}
@@ -1139,19 +1182,22 @@ const Editor = () => {
                     doc.layers.length - 1
                 }
                 onClick={() => {
-                  setState(current => ({
-                    ...current,
-                    doc: {
-                      ...current.doc,
-                      layers: reorder(
-                        current.doc.layers,
-                        current.doc.layers.findIndex(
-                          ({ id }) => id === [...view.selection][0]
-                        ),
-                        current.doc.layers.length - 1
-                      )
-                    }
-                  }), true);
+                  setState(
+                    current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: reorder(
+                          current.doc.layers,
+                          current.doc.layers.findIndex(
+                            ({ id }) => id === [...view.selection][0]
+                          ),
+                          current.doc.layers.length - 1
+                        )
+                      }
+                    }),
+                    true
+                  );
                 }}
               >
                 ⤒
@@ -1175,21 +1221,24 @@ const Editor = () => {
                     doc.layers.length - 1
                 }
                 onClick={() => {
-                  setState(current => ({
-                    ...current,
-                    doc: {
-                      ...current.doc,
-                      layers: reorder(
-                        current.doc.layers,
-                        current.doc.layers.findIndex(
-                          ({ id }) => id === [...view.selection][0]
-                        ),
-                        current.doc.layers.findIndex(
-                          ({ id }) => id === [...view.selection][0]
-                        ) + 1
-                      )
-                    }
-                  }), true);
+                  setState(
+                    current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: reorder(
+                          current.doc.layers,
+                          current.doc.layers.findIndex(
+                            ({ id }) => id === [...view.selection][0]
+                          ),
+                          current.doc.layers.findIndex(
+                            ({ id }) => id === [...view.selection][0]
+                          ) + 1
+                        )
+                      }
+                    }),
+                    true
+                  );
                 }}
               >
                 ↑
@@ -1211,21 +1260,24 @@ const Editor = () => {
                   ) === 0
                 }
                 onClick={() => {
-                  setState(current => ({
-                    ...current,
-                    doc: {
-                      ...current.doc,
-                      layers: reorder(
-                        current.doc.layers,
-                        current.doc.layers.findIndex(
-                          ({ id }) => id === [...view.selection][0]
-                        ),
-                        current.doc.layers.findIndex(
-                          ({ id }) => id === [...view.selection][0]
-                        ) - 1
-                      )
-                    }
-                  }), true);
+                  setState(
+                    current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: reorder(
+                          current.doc.layers,
+                          current.doc.layers.findIndex(
+                            ({ id }) => id === [...view.selection][0]
+                          ),
+                          current.doc.layers.findIndex(
+                            ({ id }) => id === [...view.selection][0]
+                          ) - 1
+                        )
+                      }
+                    }),
+                    true
+                  );
                 }}
               >
                 ↓
@@ -1247,19 +1299,22 @@ const Editor = () => {
                   ) === 0
                 }
                 onClick={() => {
-                  setState(current => ({
-                    ...current,
-                    doc: {
-                      ...current.doc,
-                      layers: reorder(
-                        current.doc.layers,
-                        current.doc.layers.findIndex(
-                          ({ id }) => id === [...view.selection][0]
-                        ),
-                        0
-                      )
-                    }
-                  }), true);
+                  setState(
+                    current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: reorder(
+                          current.doc.layers,
+                          current.doc.layers.findIndex(
+                            ({ id }) => id === [...view.selection][0]
+                          ),
+                          0
+                        )
+                      }
+                    }),
+                    true
+                  );
                 }}
               >
                 ⤓
@@ -1327,53 +1382,53 @@ const Editor = () => {
                           />
                         </div>
                       );
-                      case "long-string":
-                        return (
-                          <div
+                    case "long-string":
+                      return (
+                        <div
+                          key={key}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(1, min-content 1fr)",
+                            alignItems: "center",
+                            justifyItems: "center",
+                            gap: 6,
+                            padding: 6
+                          }}
+                        >
+                          <Label htmlFor={`option-${key}`}>{label}</Label>
+                          <Textarea
                             key={key}
+                            id={`option-${key}`}
+                            type="text"
                             style={{
-                              display: "grid",
-                              gridTemplateColumns: "repeat(1, min-content 1fr)",
-                              alignItems: "center",
-                              justifyItems: "center",
-                              gap: 6,
-                              padding: 6
+                              "min-height": "8em"
                             }}
-                          >
-                            <Label htmlFor={`option-${key}`}>{label}</Label>
-                            <Textarea
-                              key={key}
-                              id={`option-${key}`}
-                              type="text"
-                              style={{
-                                "min-height": "8em"
-                              }}
-                              value={
-                                doc.layers.find(
-                                  ({ id }) => id === [...view.selection][0]
-                                ).options[key]
-                              }
-                              onChange={({ currentTarget: { value } }) => {
-                                setState(current => ({
-                                  ...current,
-                                  doc: {
-                                    layers: current.doc.layers.map(layer =>
-                                      layer.id === [...view.selection][0]
-                                        ? {
-                                            ...layer,
-                                            options: {
-                                              ...layer.options,
-                                              [key]: value
-                                            }
+                            value={
+                              doc.layers.find(
+                                ({ id }) => id === [...view.selection][0]
+                              ).options[key]
+                            }
+                            onChange={({ currentTarget: { value } }) => {
+                              setState(current => ({
+                                ...current,
+                                doc: {
+                                  layers: current.doc.layers.map(layer =>
+                                    layer.id === [...view.selection][0]
+                                      ? {
+                                          ...layer,
+                                          options: {
+                                            ...layer.options,
+                                            [key]: value
                                           }
-                                        : layer
-                                    )
-                                  }
-                                }));
-                              }}
-                            />
-                          </div>
-                        );
+                                        }
+                                      : layer
+                                  )
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                      );
                     default:
                       return null;
                   }
