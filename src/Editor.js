@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { set, or, not } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 
@@ -9,6 +9,8 @@ import pushID from "./pushID";
 import { getLayerBounds, transformLayers, alignLayers } from "./layers";
 
 import Canvas from "./Canvas";
+import KeyboardShortcutsModal from "./KeyboardShortcutsModal";
+import { FaKeyboard } from "react-icons/fa";
 
 import "./reset.css";
 
@@ -106,6 +108,7 @@ const Textarea = ({ style, ...props }) => (
 
 const Editor = () => {
   const canvas = useRef(null);
+  const [showModal, setShowModal] = useState(false);
   const [state, setState, pointer, setPointer] = useStateSnapshots(
     {
       doc: {
@@ -262,6 +265,9 @@ const Editor = () => {
       storeSnapshot
     );
   };
+  const toggleModal = () => {
+    setShowModal(prevState => !prevState);
+  };
   useEffect(() => {
     window.postMessage(
       {
@@ -395,6 +401,7 @@ const Editor = () => {
         gridTemplateColumns: "300px 1fr 300px"
       }}
     >
+      <KeyboardShortcutsModal open={showModal} onClose={toggleModal} />
       <div
         style={{
           background: "#eee",
@@ -1455,6 +1462,17 @@ const Editor = () => {
                   </div>
                 )
               )}
+              <button
+                style={{
+                  position: "absolute",
+                  right: "12px",
+                  bottom: "-2px",
+                  cursor: "pointer"
+                }}
+                onClick={toggleModal}
+              >
+                <FaKeyboard size={30} />
+              </button>
             </>
           </>
         )}
