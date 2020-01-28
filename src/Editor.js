@@ -104,11 +104,13 @@ const Textarea = ({ style, ...props }) => (
   />
 );
 
-const OptionsErrorMessage = ({children, style, ...props }) => {
-  return <div style={{ color: "red", ...style }} {...props}>
-    {children}
-  </div>
-}
+const OptionsErrorMessage = ({ children, style, ...props }) => {
+  return (
+    <div style={{ color: "red", ...style }} {...props}>
+      {children}
+    </div>
+  );
+};
 
 const Editor = () => {
   const canvas = useRef(null);
@@ -1339,20 +1341,39 @@ const Editor = () => {
                   doc.layers.find(({ id }) => id === [...view.selection][0])
                     .component
                 ].options?.map(({ key, input, label }, index) => {
-                  const layer = doc.layers.find(({ id }) => id === [...view.selection][0])
-                  const error = config[layer.component].validate(layer.options, key)
-                  const displayErrorMessage = error && key === error[0].key
+                  const layer = doc.layers.find(
+                    ({ id }) => id === [...view.selection][0]
+                  );
+                  const error = config[layer.component].validate(
+                    layer.options,
+                    key
+                  );
+                  const displayErrorMessage = error && key === error[0].key;
                   switch (input) {
                     case "short-string":
                       return (
                         <>
-                          { displayErrorMessage ? <OptionsErrorMessage style={{ paddingTop: index === 0 ? "4px" : "0px", paddingLeft: "6px"}} >{error[0].message}</OptionsErrorMessage> : null }
+                          {displayErrorMessage ? (
+                            <OptionsErrorMessage
+                              style={{
+                                paddingTop: index === 0 ? "4px" : "0px",
+                                paddingLeft: "6px"
+                              }}
+                            >
+                              {error[0].message}
+                            </OptionsErrorMessage>
+                          ) : null}
                           <div
                             key={key}
                             id={`option-${key}`}
                             type="text"
                             style={{
-                              "min-height": "8em"
+                              display: "grid",
+                              gridTemplateColumns: "repeat(1, min-content 1fr)",
+                              alignItems: "center",
+                              justifyItems: "center",
+                              gap: 6,
+                              padding: 6
                             }}
                           >
                             <Label htmlFor={`option-${key}`}>{label}</Label>
@@ -1387,57 +1408,65 @@ const Editor = () => {
                           </div>
                         </>
                       );
-                      case "long-string":
-                        return (
-                          <>
-                            { displayErrorMessage ? <OptionsErrorMessage style={{ paddingTop: index === 0 ? "4px" : "0px", paddingLeft: "6px"}} >{error[0].message}</OptionsErrorMessage> : null }
-                            <div
-                              key={key}
+                    case "long-string":
+                      return (
+                        <>
+                          {displayErrorMessage ? (
+                            <OptionsErrorMessage
                               style={{
-                                display: "grid",
-                                gridTemplateColumns: "repeat(1, min-content 1fr)",
-                                alignItems: "center",
-                                justifyItems: "center",
-                                gap: 6,
-                                padding: 6
+                                paddingTop: index === 0 ? "4px" : "0px",
+                                paddingLeft: "6px"
                               }}
                             >
-
-                              <Label htmlFor={`option-${key}`}>{label}</Label>
-                              <Textarea
-                                key={key}
-                                id={`option-${key}`}
-                                type="text"
-                                style={{
-                                  "min-height": "8em"
-                                }}
-                                value={
-                                  doc.layers.find(
-                                    ({ id }) => id === [...view.selection][0]
-                                  ).options[key]
-                                }
-                                onChange={({ currentTarget: { value } }) => {
-                                  setState(current => ({
-                                    ...current,
-                                    doc: {
-                                      layers: current.doc.layers.map(layer =>
-                                        layer.id === [...view.selection][0]
-                                          ? {
-                                              ...layer,
-                                              options: {
-                                                ...layer.options,
-                                                [key]: value
-                                              }
+                              {error[0].message}
+                            </OptionsErrorMessage>
+                          ) : null}
+                          <div
+                            key={key}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(1, min-content 1fr)",
+                              alignItems: "center",
+                              justifyItems: "center",
+                              gap: 6,
+                              padding: 6
+                            }}
+                          >
+                            <Label htmlFor={`option-${key}`}>{label}</Label>
+                            <Textarea
+                              key={key}
+                              id={`option-${key}`}
+                              type="text"
+                              style={{
+                                "min-height": "8em"
+                              }}
+                              value={
+                                doc.layers.find(
+                                  ({ id }) => id === [...view.selection][0]
+                                ).options[key]
+                              }
+                              onChange={({ currentTarget: { value } }) => {
+                                setState(current => ({
+                                  ...current,
+                                  doc: {
+                                    layers: current.doc.layers.map(layer =>
+                                      layer.id === [...view.selection][0]
+                                        ? {
+                                            ...layer,
+                                            options: {
+                                              ...layer.options,
+                                              [key]: value
                                             }
-                                          : layer
-                                      )
-                                    }
-                                  }));
-                                }}
-                              />
-                            </div>
-                          </>
-                        );
+                                          }
+                                        : layer
+                                    )
+                                  }
+                                }));
+                              }}
+                            />
+                          </div>
+                        </>
+                      );
                     default:
                       return null;
                   }
