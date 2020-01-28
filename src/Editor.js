@@ -1344,23 +1344,22 @@ const Editor = () => {
                   const layer = doc.layers.find(
                     ({ id }) => id === [...view.selection][0]
                   );
-                  const error = config[layer.component].validate(
-                    layer.options,
-                    key
-                  );
-                  const displayErrorMessage = error && key === error[0].key;
+                  const error = config[layer.component]
+                    .validate(layer.options)
+                    ?.filter(error => error.key === key)
+                    .find(() => true);
                   switch (input) {
                     case "short-string":
                       return (
                         <>
-                          {displayErrorMessage ? (
+                          {error ? (
                             <OptionsErrorMessage
                               style={{
                                 paddingTop: index === 0 ? "4px" : "0px",
                                 paddingLeft: "6px"
                               }}
                             >
-                              {error[0].message}
+                              {error.message}
                             </OptionsErrorMessage>
                           ) : null}
                           <div
@@ -1411,14 +1410,14 @@ const Editor = () => {
                     case "long-string":
                       return (
                         <>
-                          {displayErrorMessage ? (
+                          {error ? (
                             <OptionsErrorMessage
                               style={{
                                 paddingTop: index === 0 ? "4px" : "0px",
                                 paddingLeft: "6px"
                               }}
                             >
-                              {error[0].message}
+                              {error.message}
                             </OptionsErrorMessage>
                           ) : null}
                           <div
