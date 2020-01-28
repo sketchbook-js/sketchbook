@@ -28,11 +28,10 @@ const config = {
         label: "Text"
       }
     ],
-    validate: (options, key) => {
-      if (key === "text" && options.text.length > 100) {
-        return [{ key: "text", message: "Must be less than 100 characters long" }];
-      }
-      return null
+    validate: options => {
+      return options.text.length > 100
+        ? [{ key: "text", message: "Must be less than 100 characters long" }]
+        : null;
     }
   },
   "Heading 2": {
@@ -53,11 +52,10 @@ const config = {
         label: "Text"
       }
     ],
-    validate: (options, key) => {
-      if (key === "text" && options.text.length > 100) {
-        return [{ key: "text", message: "Must be less than 100 characters long" }];
-      }
-      return null
+    validate: options => {
+      return options.text.length > 100
+        ? [{ key: "text", message: "Must be less than 100 characters long" }]
+        : null;
     }
   },
   Paragraph: {
@@ -78,11 +76,10 @@ const config = {
         label: "Text"
       }
     ],
-    validate: (options, key) => {
-      if (key === "text" && options.text.length > 100) {
-        return [{ key: "text", message: "Must be more than 100 characters long" }];
-      }
-      return null
+    validate: options => {
+      return options.text.length < 100
+        ? [{ key: "text", message: "Must be more than 100 characters long" }]
+        : null;
     }
   },
   Image: {
@@ -120,8 +117,8 @@ const config = {
         />
       </svg>
     ),
-    validate: (options, key) => {
-      return null
+    validate: options => {
+      return null;
     }
   },
   Button: {
@@ -146,11 +143,10 @@ const config = {
       }
     }),
     options: [{ key: "label", label: "Label", input: "short-string" }],
-    validate: (options, key) => {
-      if (key === "label" && options.label.length > 100) {
-        return [{ key: "label", message: "Must be less than 100 characters long" }]
-      }
-      return null
+    validate: options => {
+      return options.label.length > 100
+        ? [{ key: "label", message: "Must be less than 100 characters long" }]
+        : null;
     }
   },
   Input: {
@@ -183,33 +179,37 @@ const config = {
       { key: "label", label: "Label", input: "short-string" },
       { key: "value", label: "Value", input: "short-string" }
     ],
-    validate: (options, key) => {
-      const labels = set(["Email", "Password", "Phone", "Credit card"])
-      if (key === "label" && !(labels.has(options.label))) {
-        return [{ key: "label", message: "Input label is invalid" }]
+    validate: options => {
+      const errors = [];
+
+      const labels = set(["Email", "Password", "Phone", "Credit card"]);
+      if (!labels.has(options.label)) {
+        errors.push({ key: "label", message: "Input label is invalid" });
       }
 
-      if (key === "value") {
-        if (options.label === "Email") {
-          // Checks for an @ in the string and at least 1 character to the left and right of the @.
-          const regexPattern = /^\S+@\S+$/
-          const isValidEmail = regexPattern.test(options.value)
-          if (!isValidEmail) {
-            return [{ key: "value", message: "Input is not a valid email" }];
-          }
-        }
-
-        if (options.label === "Password" && options.value.length < 8) {
-          return [{ key: "value", message: "Password must be at least 8 characters long" }];
-        }
-        if (options.label === "Phone") {
-          // Implement as required.
-        }
-        if (options.label === "Credit card") {
-          // Implement as required.
+      if (options.label === "Email") {
+        // Checks for an @ in the string and at least 1 character to the left and right of the @.
+        const regexPattern = /^\S+@\S+$/;
+        const isValidEmail = regexPattern.test(options.value);
+        if (!isValidEmail) {
+          errors.push({ key: "value", message: "Input is not a valid email" });
         }
       }
-      return null
+
+      if (options.label === "Password" && options.value.length < 8) {
+        errors.push({
+          key: "value",
+          message: "Password must be at least 8 characters long"
+        });
+      }
+      if (options.label === "Phone") {
+        // Implement as required.
+      }
+      if (options.label === "Credit card") {
+        // Implement as required.
+      }
+
+      return errors.length > 0 ? errors : null;
     }
   }
 };
