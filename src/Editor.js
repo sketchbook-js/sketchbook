@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { set, or, not } from "set-fns";
+import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 
 import config from "./config";
@@ -99,7 +99,7 @@ const Textarea = ({ style, ...props }) => (
       resize: "none",
       ...style
     }}
-    spellcheck="false"
+    spellCheck="false"
     {...props}
   />
 );
@@ -329,8 +329,92 @@ const Editor = () => {
     doc.layers.filter(layer => view.selection.has(layer.id))
   );
   const keys = useKeys({
-    keydown: ({ code }) => {
-      switch (code) {
+    keydown: event => {
+      // https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
+      // For improved browser compatibility with Safari and IE
+      const fallbackCopyTextToClipboard = text => {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          var successful = document.execCommand("copy");
+          var msg = successful ? "successful" : "unsuccessful";
+          console.log("Fallback: Copying text command was " + msg);
+        } catch (err) {
+          console.error("Fallback: Oops, unable to copy", err);
+        }
+
+        document.body.removeChild(textArea);
+      };
+
+      const copyTextToClipboard = text => {
+        if (!navigator.clipboard) {
+          fallbackCopyTextToClipboard(text);
+          return;
+        }
+        navigator.clipboard.writeText(text).then(
+          () => {
+            console.log("Async: Copying to clipboard was successful!");
+          },
+          err => {
+            console.error("Async: Could not copy text: ", err);
+          }
+        );
+      };
+
+      const deleteSelectedLayers = () => {
+        setState(current => ({
+          ...current,
+          view: { ...current.view, selection: set() }
+        }));
+        setState(current => ({
+          ...current,
+          doc: {
+            ...current.doc,
+            layers: current.doc.layers.filter(
+              ({ id }) => !view.selection.has(id)
+            )
+          }
+        }));
+      };
+
+      const getSelectedLayers = () => {
+        const layers = [];
+        for (let i = 0; i < state.doc.layers.length; i++) {
+          if (state.view.selection.has(state.doc.layers[i].id)) {
+            const layer = state.doc.layers[i];
+            layer.x1 = Math.round(layer.x1);
+            layer.x2 = Math.round(layer.x2);
+            layer.y1 = Math.round(layer.y1);
+            layer.y2 = Math.round(layer.y2);
+
+            layers.push(layer);
+
+            if (layers.length === state.view.selection.size) {
+              break;
+            }
+          }
+        }
+        return layers;
+      };
+
+      const controlOrCommandPressed =
+        and(
+          keys,
+          set([
+            "LeftControl",
+            "RightControl",
+            "OSLeft",
+            "OSRight",
+            "MetaLeft",
+            "MetaRight"
+          ])
+        ).size === 1;
+
+      switch (event.code) {
         case "ArrowLeft":
           transformSelection({
             x:
@@ -360,22 +444,85 @@ const Editor = () => {
           });
           break;
         case "Backspace":
-          setState(current => ({
-            ...current,
-            view: { ...current.view, selection: set() }
-          }));
-          setState(current => ({
-            ...current,
-            doc: {
-              ...current.doc,
-              layers: current.doc.layers.filter(
-                ({ id }) => !view.selection.has(id)
-              )
-            }
-          }));
+          deleteSelectedLayers();
+          break;
+        case "KeyX":
+          if (state.view.selection.size > 0 && controlOrCommandPressed) {
+            const cutComponentData = {
+              type: "SketchbookDocument",
+              version: 0,
+              layers: getSelectedLayers()
+            };
+            copyTextToClipboard(JSON.stringify(cutComponentData));
+            deleteSelectedLayers();
+          }
+          break;
+        case "KeyC":
+          if (state.view.selection.size > 0 && controlOrCommandPressed) {
+            const copiedComponentData = {
+              type: "SketchbookDocument",
+              version: 0,
+              layers: getSelectedLayers()
+            };
+
+            copyTextToClipboard(JSON.stringify(copiedComponentData));
+          }
+          break;
+        case "KeyV":
+          if (controlOrCommandPressed) {
+            // Check if data is in the correct format. If yes, then paste it. Correct fields and no more. More than 1 layer. Do nothing on fail?
+            const getTextFromClipboard = () => {
+              // I have only tested that this works on Chrome. Browser compatibility here. https://developer.mozilla.org/en-US/docs/Web/API/Navigator/clipboard
+              navigator.clipboard
+                .readText()
+                .then(clipboardText => {
+                  try {
+                    const jsonText = JSON.parse(clipboardText);
+                    // FIXME: This validation needs to be fixed.
+                    if (
+                      jsonText.type === "SketchbookDocument" &&
+                      jsonText.version === 0 &&
+                      Array.isArray(jsonText.layers) &&
+                      jsonText.layers.length > 0
+                    ) {
+                      const layers = jsonText.layers;
+                      const newLayers = [];
+                      const newIds = [];
+                      layers.forEach(layer => {
+                        // When a snippet is pasted the ID fields need to be regenerated to prevent clashes with existing nodes.
+                        const id = pushID();
+                        layer.id = id;
+                        newLayers.push(layer);
+                        newIds.push(id);
+                      });
+
+                      setState(
+                        current => ({
+                          ...current,
+                          doc: {
+                            ...current.doc,
+                            layers: [...current.doc.layers, ...newLayers]
+                          },
+                          view: {
+                            ...current.view,
+                            selection: set(newIds)
+                          }
+                        }),
+                        true
+                      );
+                    }
+                  } catch (error) {
+                    console.error(error);
+                  }
+                })
+                .catch(err => {
+                  console.error("Failed to read clipboard contents: ", err);
+                });
+            };
+            getTextFromClipboard();
+          }
           break;
         default:
-          // console.log(keyCode);
           break;
       }
     }
@@ -1484,6 +1631,9 @@ const Editor = () => {
             </>
           </>
         )}
+        {/* <div onPaste={() => console.log("hello")} contentEditable={true}>
+          Hello
+        </div> */}
       </div>
     </div>
   );
