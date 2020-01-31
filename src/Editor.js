@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { set, or, not } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 
@@ -114,6 +114,20 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
 
 const Editor = () => {
   const canvas = useRef(null);
+  const [viewport, setViewport] = useState({
+    x: 0,
+    y: 0,
+    scale: 1,
+    width: 0,
+    height: 0
+  });
+  const [mouse, setMouse] = useState({
+    status: "up", // "up", "down", "drag", "select", "pan" or "resize"
+    x: 0,
+    y: 0,
+    startX: 0,
+    startY: 0
+  });
   const [state, setState, pointer, setPointer] = useStateSnapshots(
     {
       doc: {
@@ -234,28 +248,107 @@ const Editor = () => {
           }
         ]
       },
-      view: {
-        selection: set(["1", "2"]),
-        transform: {
-          x: 0,
-          y: 0,
-          scale: 1
-        },
-        width: 0,
-        height: 0,
-        mouse: {
-          status: "up", // "up", "down", "drag", "select" or "pan"
-          x: 0,
-          y: 0,
-          startX: 0,
-          startY: 0
-        }
-      }
+      selection: set(["1", "2"])
     },
     false,
     100
   );
-  const { doc, view } = state;
+  const { doc, selection } = state;
+  const selectionBounds = getLayerBounds(
+    doc.layers.filter(layer => selection.has(layer.id))
+  );
+  const mouseIsWithinSelection =
+    mouse.x >= selectionBounds.x1 - 3 &&
+    mouse.x <= selectionBounds.x2 + 3 &&
+    mouse.y >= selectionBounds.y1 - 3 &&
+    mouse.y <= selectionBounds.y2 + 3;
+  const mouseIsOverSelectionLeft =
+    mouseIsWithinSelection && mouse.x <= selectionBounds.x1 + 3;
+  const mouseIsOverSelectionRight =
+    mouseIsWithinSelection && mouse.x >= selectionBounds.x2 - 3;
+  const mouseIsOverSelectionTop =
+    mouseIsWithinSelection && mouse.y <= selectionBounds.y1 + 3;
+  const mouseIsOverSelectionBottom =
+    mouseIsWithinSelection && mouse.y >= selectionBounds.y2 - 3;
+  const mouseStartedWithinSelection =
+    mouse.startX >= selectionBounds.x1 - 3 &&
+    mouse.startX <= selectionBounds.x2 + 3 &&
+    mouse.startY >= selectionBounds.y1 - 3 &&
+    mouse.startY <= selectionBounds.y2 + 3;
+  const mouseStartedOverSelectionLeft =
+    mouseStartedWithinSelection && mouse.startX <= selectionBounds.x1 + 3;
+  const mouseStartedOverSelectionRight =
+    mouseStartedWithinSelection && mouse.startX >= selectionBounds.x2 - 3;
+  const mouseStartedOverSelectionTop =
+    mouseStartedWithinSelection && mouse.startY <= selectionBounds.y1 + 3;
+  const mouseStartedOverSelectionBottom =
+    mouseStartedWithinSelection && mouse.startY >= selectionBounds.y2 - 3;
+  let transformedLayers = state.doc.layers;
+  switch (mouse.status) {
+    case "resize":
+      transformedLayers = transformLayers(
+        transformedLayers,
+        {
+          w:
+            mouseStartedOverSelectionLeft || mouseStartedOverSelectionRight
+              ? (mouse.x - mouse.startX) *
+                (mouseStartedOverSelectionLeft ? -1 : 1)
+              : undefined,
+          h:
+            mouseStartedOverSelectionTop || mouseStartedOverSelectionBottom
+              ? (mouse.y - mouse.startY) *
+                (mouseStartedOverSelectionTop ? -1 : 1)
+              : undefined,
+          cx: mouseStartedOverSelectionLeft ? 1 : 0,
+          cy: mouseStartedOverSelectionTop ? 1 : 0,
+          relative: true
+        },
+        layer => state.selection.has(layer.id)
+      );
+      break;
+    case "drag":
+      transformedLayers = transformLayers(
+        transformedLayers,
+        {
+          x: mouse.x - mouse.startX,
+          y: mouse.y - mouse.startY,
+          relative: true
+        },
+        layer => state.selection.has(layer.id)
+      );
+      break;
+    case "pan":
+      transformedLayers = transformLayers(transformedLayers, {
+        x: mouse.x - mouse.startX,
+        y: mouse.y - mouse.startY,
+        relative: true
+      });
+      break;
+    default:
+      break;
+  }
+  transformedLayers = transformLayers(transformedLayers, {
+    x: viewport.x,
+    y: viewport.y,
+    relative: true
+  });
+  const transformedSelectionBounds = getLayerBounds(
+    transformedLayers.filter(layer => selection.has(layer.id))
+  );
+  const display = {
+    layers: transformedLayers.map(
+      ({ id, component: type, x1, y1, x2, y2, options }) => ({
+        id,
+        type,
+        x: x1,
+        y: y1,
+        scale: viewport.scale,
+        width: x2 - x1,
+        height: y2 - y1,
+        options
+      })
+    )
+  };
   const transformSelection = (transform, storeSnapshot = true) => {
     setState(
       current => ({
@@ -263,7 +356,7 @@ const Editor = () => {
         doc: {
           ...current.doc,
           layers: transformLayers(current.doc.layers, transform, layer =>
-            view.selection.has(layer.id)
+            current.selection.has(layer.id)
           )
         }
       }),
@@ -274,60 +367,27 @@ const Editor = () => {
     window.postMessage(
       {
         type: "sketchbook_update_render_layers",
-        layers: state.doc.layers.map(
-          ({ id, component: type, x1, y1, x2, y2, options }) => ({
-            id,
-            type,
-            x:
-              state.view.transform.x +
-              x1 +
-              (state.view.mouse.status === "drag" &&
-              state.view.selection.has(id)
-                ? state.view.mouse.x - state.view.mouse.startX
-                : state.view.mouse.status === "pan"
-                ? state.view.mouse.x - state.view.mouse.startX
-                : 0),
-            y:
-              state.view.transform.y +
-              y1 +
-              (state.view.mouse.status === "drag" &&
-              state.view.selection.has(id)
-                ? state.view.mouse.y - state.view.mouse.startY
-                : state.view.mouse.status === "pan"
-                ? state.view.mouse.y - state.view.mouse.startY
-                : 0),
-            scale: state.view.transform.scale,
-            width: x2 - x1,
-            height: y2 - y1,
-            options
-          })
-        )
+        layers: display.layers
       },
       "*"
     );
-  }, [state]);
+  }, [display.layers]);
   // TODO: Something more sophisticated than an interval.
   useEffect(() => {
     const interval = setInterval(() => {
       if (canvas.current) {
         const rect = canvas.current.getBoundingClientRect();
-        setState(current => ({
+        setViewport(current => ({
           ...current,
-          view: {
-            ...current.view,
-            width: rect.width,
-            height: rect.height
-          }
+          width: rect.width,
+          height: rect.height
         }));
       }
     }, 1000);
     return () => {
       clearInterval(interval);
     };
-  }, [setState]);
-  const selectionBounds = getLayerBounds(
-    doc.layers.filter(layer => view.selection.has(layer.id))
-  );
+  }, [setViewport]);
   const keys = useKeys({
     keydown: event => {
       const codeBlacklist = set([
@@ -340,7 +400,7 @@ const Editor = () => {
         "ArrowDown"
       ]);
       if (
-        (state.view.selection.size > 0 || event.code === "Backspace") &&
+        (selection.size > 0 || event.code === "Backspace") &&
         codeBlacklist.has(event.code)
       ) {
         event.preventDefault();
@@ -375,19 +435,19 @@ const Editor = () => {
           });
           break;
         case "Backspace":
-          setState(current => ({
-            ...current,
-            view: { ...current.view, selection: set() }
-          }));
-          setState(current => ({
-            ...current,
-            doc: {
-              ...current.doc,
-              layers: current.doc.layers.filter(
-                ({ id }) => !view.selection.has(id)
-              )
-            }
-          }));
+          setState(
+            current => ({
+              ...current,
+              doc: {
+                ...current.doc,
+                layers: current.doc.layers.filter(
+                  ({ id }) => !current.selection.has(id)
+                )
+              },
+              selection: set()
+            }),
+            true
+          );
           break;
         default:
           // console.log(keyCode);
@@ -434,7 +494,7 @@ const Editor = () => {
             <li
               key={id}
               style={{
-                color: view.selection.has(id) ? "#f0f" : null,
+                color: selection.has(id) ? "#f0f" : null,
                 cursor: "pointer",
                 padding: "6px",
                 borderBottom: "1px solid #ddd"
@@ -444,15 +504,12 @@ const Editor = () => {
                 setState(
                   current => ({
                     ...current,
-                    view: {
-                      ...current.view,
-                      selection:
-                        keys.has("ShiftLeft") || keys.has("ShiftRight")
-                          ? current.view.selection.has(id)
-                            ? not(current.view.selection, [id])
-                            : or(current.view.selection, [id])
-                          : set([id])
-                    }
+                    selection:
+                      keys.has("ShiftLeft") || keys.has("ShiftRight")
+                        ? current.selection.has(id)
+                          ? not(current.selection, [id])
+                          : or(current.selection, [id])
+                        : set([id])
                   }),
                   true
                 );
@@ -469,128 +526,109 @@ const Editor = () => {
           overflow: "hidden",
           position: "relative",
           cursor:
-            view.mouse.status === "pan"
+            mouse.status === "pan"
               ? "grabbing"
               : keys.has("Space")
               ? "grab"
+              : (mouseIsOverSelectionLeft && mouseIsOverSelectionTop) ||
+                (mouseIsOverSelectionRight && mouseIsOverSelectionBottom)
+              ? "nwse-resize"
+              : (mouseIsOverSelectionLeft && mouseIsOverSelectionBottom) ||
+                (mouseIsOverSelectionRight && mouseIsOverSelectionTop)
+              ? "nesw-resize"
+              : mouseIsOverSelectionLeft || mouseIsOverSelectionRight
+              ? "ew-resize"
+              : mouseIsOverSelectionTop || mouseIsOverSelectionBottom
+              ? "ns-resize"
               : null
         }}
         onMouseDown={
-          view.mouse.status === "up"
+          mouse.status === "up"
             ? ({ clientX, clientY }) => {
                 const rect = canvas.current.getBoundingClientRect();
-                const x = clientX - rect.x - view.transform.x;
-                const y = clientY - rect.y - view.transform.y;
-                setState(
-                  current => ({
-                    ...current,
-                    view: {
-                      ...current.view,
-                      mouse: {
-                        ...current.view.mouse,
-                        status: "down",
-                        x,
-                        y,
-                        startX: x,
-                        startY: y
-                      }
-                    }
-                  }),
-                  true
-                );
+                const x = clientX - rect.x - viewport.x;
+                const y = clientY - rect.y - viewport.y;
+                setMouse(current => ({
+                  ...current,
+                  status: "down",
+                  x,
+                  y,
+                  startX: x,
+                  startY: y
+                }));
               }
             : null
         }
         onMouseMove={({ clientX, clientY }) => {
           const rect = canvas.current.getBoundingClientRect();
-          const x = clientX - rect.x - view.transform.x;
-          const y = clientY - rect.y - view.transform.y;
-          setState(current => ({
+          const x = clientX - rect.x - viewport.x;
+          const y = clientY - rect.y - viewport.y;
+          setMouse(current => ({
             ...current,
-            view: {
-              ...current.view,
-              mouse: {
-                ...current.view.mouse,
-                x: clientX - rect.x - current.view.transform.x,
-                y: clientY - rect.y - current.view.transform.y
-              }
-            }
+            x: clientX - rect.x - viewport.x,
+            y: clientY - rect.y - viewport.y
           }));
-          if (view.mouse.status === "down") {
-            const dx = x - view.mouse.startX;
-            const dy = y - view.mouse.startY;
+          if (mouse.status === "down") {
+            const dx = x - mouse.startX;
+            const dy = y - mouse.startY;
             const distance = Math.abs(Math.sqrt(dx * dx + dy * dy));
             if (distance > 1) {
               if (keys.has("Space")) {
-                setState(current => ({
+                setMouse(current => ({
                   ...current,
-                  view: {
-                    ...current.view,
-                    mouse: {
-                      ...current.view.mouse,
-                      status: "pan"
-                    }
-                  }
+                  status: "pan"
                 }));
               } else if (
-                selectionBounds.x1 < view.mouse.startX &&
-                selectionBounds.x2 > view.mouse.startX &&
-                selectionBounds.y1 < view.mouse.startY &&
-                selectionBounds.y2 > view.mouse.startY
+                mouseStartedOverSelectionLeft ||
+                mouseStartedOverSelectionRight ||
+                mouseStartedOverSelectionTop ||
+                mouseStartedOverSelectionBottom
               ) {
-                setState(current => ({
+                setMouse(current => ({
                   ...current,
-                  view: {
-                    ...current.view,
-                    mouse: {
-                      ...current.view.mouse,
-                      status: "drag"
-                    }
-                  }
+                  status: "resize"
+                }));
+              } else if (
+                selectionBounds.x1 < mouse.startX &&
+                selectionBounds.x2 > mouse.startX &&
+                selectionBounds.y1 < mouse.startY &&
+                selectionBounds.y2 > mouse.startY
+              ) {
+                setMouse(current => ({
+                  ...current,
+                  status: "drag"
                 }));
               } else {
                 const layersUnderClick = doc.layers.filter(
                   layer =>
-                    layer.x1 < view.mouse.startX &&
-                    layer.x2 > view.mouse.startX &&
-                    layer.y1 < view.mouse.startY &&
-                    layer.y2 > view.mouse.startY
+                    layer.x1 < mouse.startX &&
+                    layer.x2 > mouse.startX &&
+                    layer.y1 < mouse.startY &&
+                    layer.y2 > mouse.startY
                 );
                 if (layersUnderClick.length > 0) {
                   const clickedLayer =
                     layersUnderClick[layersUnderClick.length - 1];
-                  setState(current => ({
-                    ...current,
-                    view: {
-                      ...current.view,
+                  setState(
+                    current => ({
+                      ...current,
                       selection:
                         keys.has("ShiftLeft") || keys.has("ShiftRight")
-                          ? current.view.selection.has(clickedLayer.id)
-                            ? not(current.view.selection, [clickedLayer.id])
-                            : or(current.view.selection, [clickedLayer.id])
+                          ? current.selection.has(clickedLayer.id)
+                            ? not(current.selection, [clickedLayer.id])
+                            : or(current.selection, [clickedLayer.id])
                           : set([clickedLayer.id])
-                    }
-                  }));
-                  setState(current => ({
+                    }),
+                    true
+                  );
+                  setMouse(current => ({
                     ...current,
-                    view: {
-                      ...current.view,
-                      mouse: {
-                        ...current.view.mouse,
-                        status: "drag"
-                      }
-                    }
+                    status: "drag"
                   }));
                 } else {
-                  setState(current => ({
+                  setMouse(current => ({
                     ...current,
-                    view: {
-                      ...current.view,
-                      mouse: {
-                        ...current.view.mouse,
-                        status: "select"
-                      }
-                    }
+                    status: "select"
                   }));
                 }
               }
@@ -598,57 +636,53 @@ const Editor = () => {
           }
         }}
         onMouseUp={
-          view.mouse.status !== "up"
+          mouse.status !== "up"
             ? ({ clientX, clientY }) => {
-                if (view.mouse.status === "down") {
+                if (mouse.status === "down") {
                   const layersUnderClick = doc.layers.filter(
                     layer =>
-                      layer.x1 < view.mouse.x &&
-                      layer.x2 > view.mouse.x &&
-                      layer.y1 < view.mouse.y &&
-                      layer.y2 > view.mouse.y
+                      layer.x1 < mouse.x &&
+                      layer.x2 > mouse.x &&
+                      layer.y1 < mouse.y &&
+                      layer.y2 > mouse.y
                   );
                   if (layersUnderClick.length > 0) {
                     const clickedLayer =
                       layersUnderClick[layersUnderClick.length - 1];
-                    setState(current => ({
-                      ...current,
-                      view: {
-                        ...current.view,
+                    setState(
+                      current => ({
+                        ...current,
                         selection:
                           keys.has("ShiftLeft") || keys.has("ShiftRight")
-                            ? current.view.selection.has(clickedLayer.id)
-                              ? not(current.view.selection, [clickedLayer.id])
-                              : or(current.view.selection, [clickedLayer.id])
+                            ? current.selection.has(clickedLayer.id)
+                              ? not(current.selection, [clickedLayer.id])
+                              : or(current.selection, [clickedLayer.id])
                             : set([clickedLayer.id])
-                      }
-                    }));
+                      }),
+                      true
+                    );
                   } else {
-                    setState(current => ({
-                      ...current,
-                      view: {
-                        ...current.view,
+                    setState(
+                      current => ({
+                        ...current,
                         selection: set([])
-                      }
-                    }));
+                      }),
+                      true
+                    );
                   }
-                } else if (view.mouse.status === "drag") {
-                  transformSelection(
-                    {
-                      x: selectionBounds.x1 + view.mouse.x - view.mouse.startX,
-                      y: selectionBounds.y1 + view.mouse.y - view.mouse.startY
-                    },
-                    false
-                  ); // If true, undoing after dragging will undo the dimensions (x,y coordinates) without moving the component. You will need to undo again will move the component.
-                } else if (view.mouse.status === "select") {
-                  const x1 = Math.min(view.mouse.startX, view.mouse.x);
-                  const y1 = Math.min(view.mouse.startY, view.mouse.y);
-                  const x2 = Math.max(view.mouse.startX, view.mouse.x);
-                  const y2 = Math.max(view.mouse.startY, view.mouse.y);
-                  setState(current => ({
-                    ...current,
-                    view: {
-                      ...current.view,
+                } else if (mouse.status === "drag") {
+                  transformSelection({
+                    x: selectionBounds.x1 + mouse.x - mouse.startX,
+                    y: selectionBounds.y1 + mouse.y - mouse.startY
+                  });
+                } else if (mouse.status === "select") {
+                  const x1 = Math.min(mouse.startX, mouse.x);
+                  const y1 = Math.min(mouse.startY, mouse.y);
+                  const x2 = Math.max(mouse.startX, mouse.x);
+                  const y2 = Math.max(mouse.startY, mouse.y);
+                  setState(
+                    current => ({
+                      ...current,
                       selection: set(
                         doc.layers
                           .filter(
@@ -660,34 +694,40 @@ const Editor = () => {
                           )
                           .map(({ id }) => id)
                       )
-                    }
-                  }));
-                } else if (view.mouse.status === "pan") {
-                  setState(current => ({
+                    }),
+                    true
+                  );
+                } else if (mouse.status === "pan") {
+                  setViewport(current => ({
                     ...current,
-                    view: {
-                      ...current.view,
-                      transform: {
-                        ...current.view.transform,
-                        x:
-                          current.view.transform.x +
-                          (view.mouse.x - view.mouse.startX),
-                        y:
-                          current.view.transform.y +
-                          (view.mouse.y - view.mouse.startY)
-                      }
-                    }
+                    x: current.x + (mouse.x - mouse.startX),
+                    y: current.y + (mouse.y - mouse.startY)
                   }));
+                } else if (mouse.status === "resize") {
+                  transformSelection({
+                    w:
+                      mouseStartedOverSelectionLeft ||
+                      mouseStartedOverSelectionRight
+                        ? selectionBounds.x2 -
+                          selectionBounds.x1 +
+                          (mouse.x - mouse.startX) *
+                            (mouseStartedOverSelectionLeft ? -1 : 1)
+                        : undefined,
+                    h:
+                      mouseStartedOverSelectionTop ||
+                      mouseStartedOverSelectionBottom
+                        ? selectionBounds.y2 -
+                          selectionBounds.y1 +
+                          (mouse.y - mouse.startY) *
+                            (mouseStartedOverSelectionTop ? -1 : 1)
+                        : undefined,
+                    cx: mouseStartedOverSelectionLeft ? 1 : 0,
+                    cy: mouseStartedOverSelectionTop ? 1 : 0
+                  });
                 }
-                setState(current => ({
+                setMouse(current => ({
                   ...current,
-                  view: {
-                    ...current.view,
-                    mouse: {
-                      ...current.view.mouse,
-                      status: "up"
-                    }
-                  }
+                  status: "up"
                 }));
               }
             : null
@@ -698,8 +738,8 @@ const Editor = () => {
           style={{
             pointerEvents: "none",
             userSelect: "none",
-            width: view.width,
-            height: view.height,
+            width: viewport.width,
+            height: viewport.height,
             overflow: "hidden"
           }}
         >
@@ -716,72 +756,142 @@ const Editor = () => {
             bottom: 0,
             right: 0
           }}
-          width={view.width}
-          height={view.height}
+          width={viewport.width}
+          height={viewport.height}
           fill="none"
         >
-          <rect
-            stroke="#f0f"
-            strokeWidth={2}
-            x={
-              selectionBounds.x1 +
-              view.transform.x +
-              (view.mouse.status === "drag" || view.mouse.status === "pan"
-                ? view.mouse.x - view.mouse.startX
-                : 0)
-            }
-            y={
-              selectionBounds.y1 +
-              view.transform.y +
-              (view.mouse.status === "drag" || view.mouse.status === "pan"
-                ? view.mouse.y - view.mouse.startY
-                : 0)
-            }
-            width={selectionBounds.x2 - selectionBounds.x1}
-            height={selectionBounds.y2 - selectionBounds.y1}
-          />
-          {doc.layers
-            .filter(({ id }) => view.selection.has(id))
-            .map(({ id, x1, y1, x2, y2 }) => (
+          {display.layers
+            .filter(({ id }) => selection.has(id))
+            .map(({ id, x, y, width, height }) => (
               <rect
                 key={id}
                 stroke="#f0f"
                 strokeWidth={1}
                 strokeDasharray={[1, 3]}
-                x={
-                  x1 +
-                  view.transform.x +
-                  (view.mouse.status === "drag" || view.mouse.status === "pan"
-                    ? view.mouse.x - view.mouse.startX
-                    : 0) +
-                  0.5
-                }
-                y={
-                  y1 +
-                  view.transform.y +
-                  (view.mouse.status === "drag" || view.mouse.status === "pan"
-                    ? view.mouse.y - view.mouse.startY
-                    : 0) +
-                  0.5
-                }
-                width={x2 - x1 - 1}
-                height={y2 - y1 - 1}
+                x={x + 0.5}
+                y={y + 0.5}
+                width={width - 1}
+                height={height - 1}
               />
             ))}
-          {view.mouse.status === "up"
+          <rect
+            stroke="#f0f"
+            strokeWidth={2}
+            x={transformedSelectionBounds.x1}
+            y={transformedSelectionBounds.y1}
+            width={
+              transformedSelectionBounds.x2 - transformedSelectionBounds.x1
+            }
+            height={
+              transformedSelectionBounds.y2 - transformedSelectionBounds.y1
+            }
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x1 - 2.5}
+            y={transformedSelectionBounds.y1 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x1 - 2.5}
+            y={transformedSelectionBounds.y2 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x2 - 2.5}
+            y={transformedSelectionBounds.y1 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x2 - 2.5}
+            y={transformedSelectionBounds.y2 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={
+              Math.round(
+                transformedSelectionBounds.x1 +
+                  (transformedSelectionBounds.x2 -
+                    transformedSelectionBounds.x1) /
+                    2
+              ) - 2.5
+            }
+            y={transformedSelectionBounds.y1 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={
+              Math.round(
+                transformedSelectionBounds.x1 +
+                  (transformedSelectionBounds.x2 -
+                    transformedSelectionBounds.x1) /
+                    2
+              ) - 2.5
+            }
+            y={transformedSelectionBounds.y2 - 2.5}
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x1 - 2.5}
+            y={
+              Math.round(
+                transformedSelectionBounds.y1 +
+                  (transformedSelectionBounds.y2 -
+                    transformedSelectionBounds.y1) /
+                    2
+              ) - 2.5
+            }
+            width={5}
+            height={5}
+          />
+          <rect
+            stroke="#f0f"
+            fill="#fff"
+            x={transformedSelectionBounds.x2 - 2.5}
+            y={
+              Math.round(
+                transformedSelectionBounds.y1 +
+                  (transformedSelectionBounds.y2 -
+                    transformedSelectionBounds.y1) /
+                    2
+              ) - 2.5
+            }
+            width={5}
+            height={5}
+          />
+          {mouse.status === "up"
             ? [
                 doc.layers
                   .filter(
                     ({ x1, y1, x2, y2 }) =>
-                      view.mouse.x > x1 &&
-                      view.mouse.x < x2 &&
-                      view.mouse.y > y1 &&
-                      view.mouse.y < y2
+                      mouse.x >= x1 &&
+                      mouse.x <= x2 &&
+                      mouse.y >= y1 &&
+                      mouse.y <= y2
                   )
                   .slice(-1)[0]
               ]
                 .filter(Boolean)
-                .filter(({ id }) => !view.selection.has(id))
+                .filter(({ id }) => !selection.has(id))
                 .map(({ id, x1, y1, x2, y2 }) => (
                   <rect
                     key={id}
@@ -790,18 +900,14 @@ const Editor = () => {
                     strokeDasharray={[1, 3]}
                     x={
                       x1 +
-                      view.transform.x +
-                      (view.mouse.status === "drag"
-                        ? view.mouse.x - view.mouse.startX
-                        : 0) +
+                      viewport.x +
+                      (mouse.status === "drag" ? mouse.x - mouse.startX : 0) +
                       0.5
                     }
                     y={
                       y1 +
-                      view.transform.y +
-                      (view.mouse.status === "drag"
-                        ? view.mouse.y - view.mouse.startY
-                        : 0) +
+                      viewport.y +
+                      (mouse.status === "drag" ? mouse.y - mouse.startY : 0) +
                       0.5
                     }
                     width={x2 - x1 - 1}
@@ -809,30 +915,22 @@ const Editor = () => {
                   />
                 ))
             : null}
-          {view.mouse.status === "select" ? (
+          {mouse.status === "select" ? (
             <rect
               stroke="#f0f"
               strokeWidth={1}
               strokeDasharray={[1, 2]}
-              x={
-                view.transform.x +
-                Math.min(view.mouse.startX, view.mouse.x) +
-                0.5
-              }
-              y={
-                view.transform.y +
-                Math.min(view.mouse.startY, view.mouse.y) +
-                0.5
-              }
+              x={viewport.x + Math.min(mouse.startX, mouse.x) + 0.5}
+              y={viewport.y + Math.min(mouse.startY, mouse.y) + 0.5}
               width={Math.max(
-                Math.max(view.mouse.startX, view.mouse.x) -
-                  Math.min(view.mouse.startX, view.mouse.x) -
+                Math.max(mouse.startX, mouse.x) -
+                  Math.min(mouse.startX, mouse.x) -
                   1,
                 0
               )}
               height={Math.max(
-                Math.max(view.mouse.startY, view.mouse.y) -
-                  Math.min(view.mouse.startY, view.mouse.y) -
+                Math.max(mouse.startY, mouse.y) -
+                  Math.min(mouse.startY, mouse.y) -
                   1,
                 0
               )}
@@ -841,7 +939,7 @@ const Editor = () => {
         </svg>
       </div>
       <div style={{ background: "#eee" }}>
-        {view.selection.size === 0 ? (
+        {selection.size === 0 ? (
           <>
             <PanelTitle>Insert</PanelTitle>
             <div
@@ -876,18 +974,15 @@ const Editor = () => {
                                     id,
                                     name: `${component}`,
                                     component,
-                                    x1: -view.transform.x,
-                                    y1: -view.transform.y,
-                                    x2: -view.transform.x + width,
-                                    y2: -view.transform.y + height,
+                                    x1: -viewport.x,
+                                    y1: -viewport.y,
+                                    x2: -viewport.x + width,
+                                    y2: -viewport.y + height,
                                     options: initial?.options
                                   }
                                 ]
                               },
-                              view: {
-                                ...current.view,
-                                selection: set([id])
-                              }
+                              selection: set([id])
                             }),
                             true
                           );
@@ -903,7 +998,7 @@ const Editor = () => {
         ) : (
           <>
             <PanelTitle>Info</PanelTitle>
-            {view.selection.size > 1 ? (
+            {selection.size > 1 ? (
               <div
                 style={{
                   color: "#999",
@@ -928,28 +1023,29 @@ const Editor = () => {
                 <Input
                   id="info-panel-name"
                   style={{
-                    color: view.selection.size !== 1 ? "#ddd" : null
+                    color: selection.size !== 1 ? "#ddd" : null
                   }}
-                  disabled={view.selection.size !== 1}
+                  disabled={selection.size !== 1}
                   value={
-                    doc.layers.find(({ id }) => id === [...view.selection][0])
-                      .name
+                    doc.layers.find(({ id }) => id === [...selection][0]).name
                   }
                   onChange={({ currentTarget: { value } }) => {
-                    setState(current =>
-                      view.selection.size === 1
-                        ? {
-                            ...current,
-                            doc: {
-                              ...current.doc,
-                              layers: current.doc.layers.map(layer =>
-                                layer.id === [...view.selection][0]
-                                  ? { ...layer, name: value }
-                                  : layer
-                              )
+                    setState(
+                      current =>
+                        selection.size === 1
+                          ? {
+                              ...current,
+                              doc: {
+                                ...current.doc,
+                                layers: current.doc.layers.map(layer =>
+                                  layer.id === [...selection][0]
+                                    ? { ...layer, name: value }
+                                    : layer
+                                )
+                              }
                             }
-                          }
-                        : current
+                          : current,
+                      true
                     );
                   }}
                 />
@@ -1021,7 +1117,7 @@ const Editor = () => {
               }}
             >
               <Button
-                disabled={view.selection.size !== 1}
+                disabled={selection.size !== 1}
                 onClick={() => {
                   const {
                     id,
@@ -1030,7 +1126,7 @@ const Editor = () => {
                     y2,
                     options
                   } = state.doc.layers.find(({ id }) =>
-                    state.view.selection.has(id)
+                    state.selection.has(id)
                   );
                   measure(
                     { type, height: y2 - y1, options },
@@ -1059,7 +1155,7 @@ const Editor = () => {
                 Width
               </Button>
               <Button
-                disabled={view.selection.size !== 1}
+                disabled={selection.size !== 1}
                 onClick={() => {
                   const {
                     id,
@@ -1068,7 +1164,7 @@ const Editor = () => {
                     x2,
                     options
                   } = state.doc.layers.find(({ id }) =>
-                    state.view.selection.has(id)
+                    state.selection.has(id)
                   );
                   measure({ type, width: x2 - x1, options }, (_, height) => {
                     setState(
@@ -1094,14 +1190,14 @@ const Editor = () => {
                 Height
               </Button>
               <Button
-                disabled={view.selection.size !== 1}
+                disabled={selection.size !== 1}
                 onClick={() => {
                   const {
                     id,
                     component: type,
                     options
                   } = state.doc.layers.find(({ id }) =>
-                    state.view.selection.has(id)
+                    state.selection.has(id)
                   );
                   measure({ type, options }, (width, height) => {
                     setState(
@@ -1149,7 +1245,7 @@ const Editor = () => {
               ].map(({ label, alignment }) => (
                 <Button
                   key={label}
-                  disabled={view.selection.size < 2}
+                  disabled={selection.size < 2}
                   onClick={() => {
                     setState(
                       current => ({
@@ -1159,7 +1255,7 @@ const Editor = () => {
                           layers: alignLayers(
                             current.doc.layers,
                             alignment,
-                            layer => view.selection.has(layer.id)
+                            layer => selection.has(layer.id)
                           )
                         }
                       }),
@@ -1185,19 +1281,17 @@ const Editor = () => {
               <Button
                 style={{
                   color:
-                    view.selection.size !== 1 ||
+                    selection.size !== 1 ||
                     doc.layers.findIndex(
-                      ({ id }) => id === [...view.selection][0]
+                      ({ id }) => id === [...selection][0]
                     ) ===
                       doc.layers.length - 1
                       ? "#bbb"
                       : null
                 }}
                 disabled={
-                  view.selection.size !== 1 ||
-                  doc.layers.findIndex(
-                    ({ id }) => id === [...view.selection][0]
-                  ) ===
+                  selection.size !== 1 ||
+                  doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
                     doc.layers.length - 1
                 }
                 onClick={() => {
@@ -1209,7 +1303,7 @@ const Editor = () => {
                         layers: reorder(
                           current.doc.layers,
                           current.doc.layers.findIndex(
-                            ({ id }) => id === [...view.selection][0]
+                            ({ id }) => id === [...selection][0]
                           ),
                           current.doc.layers.length - 1
                         )
@@ -1224,19 +1318,17 @@ const Editor = () => {
               <Button
                 style={{
                   color:
-                    view.selection.size !== 1 ||
+                    selection.size !== 1 ||
                     doc.layers.findIndex(
-                      ({ id }) => id === [...view.selection][0]
+                      ({ id }) => id === [...selection][0]
                     ) ===
                       doc.layers.length - 1
                       ? "#bbb"
                       : null
                 }}
                 disabled={
-                  view.selection.size !== 1 ||
-                  doc.layers.findIndex(
-                    ({ id }) => id === [...view.selection][0]
-                  ) ===
+                  selection.size !== 1 ||
+                  doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
                     doc.layers.length - 1
                 }
                 onClick={() => {
@@ -1248,10 +1340,10 @@ const Editor = () => {
                         layers: reorder(
                           current.doc.layers,
                           current.doc.layers.findIndex(
-                            ({ id }) => id === [...view.selection][0]
+                            ({ id }) => id === [...selection][0]
                           ),
                           current.doc.layers.findIndex(
-                            ({ id }) => id === [...view.selection][0]
+                            ({ id }) => id === [...selection][0]
                           ) + 1
                         )
                       }
@@ -1265,18 +1357,17 @@ const Editor = () => {
               <Button
                 style={{
                   color:
-                    view.selection.size !== 1 ||
+                    selection.size !== 1 ||
                     doc.layers.findIndex(
-                      ({ id }) => id === [...view.selection][0]
+                      ({ id }) => id === [...selection][0]
                     ) === 0
                       ? "#bbb"
                       : null
                 }}
                 disabled={
-                  view.selection.size !== 1 ||
-                  doc.layers.findIndex(
-                    ({ id }) => id === [...view.selection][0]
-                  ) === 0
+                  selection.size !== 1 ||
+                  doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
+                    0
                 }
                 onClick={() => {
                   setState(
@@ -1287,10 +1378,10 @@ const Editor = () => {
                         layers: reorder(
                           current.doc.layers,
                           current.doc.layers.findIndex(
-                            ({ id }) => id === [...view.selection][0]
+                            ({ id }) => id === [...selection][0]
                           ),
                           current.doc.layers.findIndex(
-                            ({ id }) => id === [...view.selection][0]
+                            ({ id }) => id === [...selection][0]
                           ) - 1
                         )
                       }
@@ -1304,18 +1395,17 @@ const Editor = () => {
               <Button
                 style={{
                   color:
-                    view.selection.size !== 1 ||
+                    selection.size !== 1 ||
                     doc.layers.findIndex(
-                      ({ id }) => id === [...view.selection][0]
+                      ({ id }) => id === [...selection][0]
                     ) === 0
                       ? "#bbb"
                       : null
                 }}
                 disabled={
-                  view.selection.size !== 1 ||
-                  doc.layers.findIndex(
-                    ({ id }) => id === [...view.selection][0]
-                  ) === 0
+                  selection.size !== 1 ||
+                  doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
+                    0
                 }
                 onClick={() => {
                   setState(
@@ -1326,7 +1416,7 @@ const Editor = () => {
                         layers: reorder(
                           current.doc.layers,
                           current.doc.layers.findIndex(
-                            ({ id }) => id === [...view.selection][0]
+                            ({ id }) => id === [...selection][0]
                           ),
                           0
                         )
@@ -1341,7 +1431,7 @@ const Editor = () => {
             </div>
             <>
               <PanelTitle style={{ marginTop: 6 }}>Options</PanelTitle>
-              {view.selection.size > 1 ? (
+              {selection.size > 1 ? (
                 <div
                   style={{
                     color: "#999",
@@ -1353,11 +1443,11 @@ const Editor = () => {
                 </div>
               ) : (
                 config[
-                  doc.layers.find(({ id }) => id === [...view.selection][0])
+                  doc.layers.find(({ id }) => id === [...selection][0])
                     .component
                 ].options?.map(({ key, input, label }, index) => {
                   const layer = doc.layers.find(
-                    ({ id }) => id === [...view.selection][0]
+                    ({ id }) => id === [...selection][0]
                   );
                   const error = config[layer.component]
                     .validate(layer.options)
@@ -1397,7 +1487,7 @@ const Editor = () => {
                               type="text"
                               value={
                                 doc.layers.find(
-                                  ({ id }) => id === [...view.selection][0]
+                                  ({ id }) => id === [...selection][0]
                                 ).options[key]
                               }
                               onChange={({ currentTarget: { value } }) => {
@@ -1405,7 +1495,7 @@ const Editor = () => {
                                   ...current,
                                   doc: {
                                     layers: current.doc.layers.map(layer =>
-                                      layer.id === [...view.selection][0]
+                                      layer.id === [...selection][0]
                                         ? {
                                             ...layer,
                                             options: {
@@ -1456,7 +1546,7 @@ const Editor = () => {
                               }}
                               value={
                                 doc.layers.find(
-                                  ({ id }) => id === [...view.selection][0]
+                                  ({ id }) => id === [...selection][0]
                                 ).options[key]
                               }
                               onChange={({ currentTarget: { value } }) => {
@@ -1464,7 +1554,7 @@ const Editor = () => {
                                   ...current,
                                   doc: {
                                     layers: current.doc.layers.map(layer =>
-                                      layer.id === [...view.selection][0]
+                                      layer.id === [...selection][0]
                                         ? {
                                             ...layer,
                                             options: {
