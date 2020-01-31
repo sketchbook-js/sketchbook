@@ -1,4 +1,5 @@
 import React from "react";
+import { set } from "set-fns";
 
 const config = {
   "Heading 1": {
@@ -26,7 +27,12 @@ const config = {
         input: "short-string",
         label: "Text"
       }
-    ]
+    ],
+    validate: options => {
+      return options.text.length > 100
+        ? [{ key: "text", message: "Must be less than 100 characters long" }]
+        : null;
+    }
   },
   "Heading 2": {
     render: ({ width, height, options: { text } }) => (
@@ -45,7 +51,12 @@ const config = {
         input: "short-string",
         label: "Text"
       }
-    ]
+    ],
+    validate: options => {
+      return options.text.length > 100
+        ? [{ key: "text", message: "Must be less than 100 characters long" }]
+        : null;
+    }
   },
   Paragraph: {
     render: ({ width, height, options: { text } }) => (
@@ -61,10 +72,15 @@ const config = {
     options: [
       {
         key: "text",
-        input: "short-string",
+        input: "long-string",
         label: "Text"
       }
-    ]
+    ],
+    validate: options => {
+      return options.text.length < 100
+        ? [{ key: "text", message: "Must be more than 100 characters long" }]
+        : null;
+    }
   },
   Image: {
     render: ({ width, height }) => (
@@ -100,7 +116,10 @@ const config = {
           strokeWidth="4"
         />
       </svg>
-    )
+    ),
+    validate: options => {
+      return null;
+    }
   },
   Button: {
     render: ({ width, height, options: { label } }) => (
@@ -123,7 +142,12 @@ const config = {
         label: "Button"
       }
     }),
-    options: [{ key: "label", label: "Label", input: "short-string" }]
+    options: [{ key: "label", label: "Label", input: "short-string" }],
+    validate: options => {
+      return options.label.length > 100
+        ? [{ key: "label", message: "Must be less than 100 characters long" }]
+        : null;
+    }
   },
   Input: {
     render: ({ width, height, options: { label, value } }) => (
@@ -154,7 +178,39 @@ const config = {
     options: [
       { key: "label", label: "Label", input: "short-string" },
       { key: "value", label: "Value", input: "short-string" }
-    ]
+    ],
+    validate: options => {
+      const errors = [];
+
+      const labels = set(["Email", "Password", "Phone", "Credit card"]);
+      if (!labels.has(options.label)) {
+        errors.push({ key: "label", message: "Input label is invalid" });
+      }
+
+      if (options.label === "Email") {
+        // Checks for an @ in the string and at least 1 character to the left and right of the @.
+        const regexPattern = /^\S+@\S+$/;
+        const isValidEmail = regexPattern.test(options.value);
+        if (!isValidEmail) {
+          errors.push({ key: "value", message: "Input is not a valid email" });
+        }
+      }
+
+      if (options.label === "Password" && options.value.length < 8) {
+        errors.push({
+          key: "value",
+          message: "Password must be at least 8 characters long"
+        });
+      }
+      if (options.label === "Phone") {
+        // Implement as required.
+      }
+      if (options.label === "Credit card") {
+        // Implement as required.
+      }
+
+      return errors.length > 0 ? errors : null;
+    }
   }
 };
 
