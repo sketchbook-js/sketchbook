@@ -470,56 +470,52 @@ const Editor = () => {
           break;
         case "KeyV":
           if (controlOrCommandPressed) {
-            // Check if data is in the correct format. If yes, then paste it. Correct fields and no more. More than 1 layer. Do nothing on fail?
-            const getTextFromClipboard = () => {
-              // I have only tested that this works on Chrome. Browser compatibility here. https://developer.mozilla.org/en-US/docs/Web/API/Navigator/clipboard
-              navigator.clipboard
-                .readText()
-                .then(clipboardText => {
-                  try {
-                    const jsonText = JSON.parse(clipboardText);
-                    // FIXME: This validation needs to be fixed.
-                    if (
-                      jsonText.type === "SketchbookDocument" &&
-                      jsonText.version === 0 &&
-                      Array.isArray(jsonText.layers) &&
-                      jsonText.layers.length > 0
-                    ) {
-                      const layers = jsonText.layers;
-                      const newLayers = [];
-                      const newIds = [];
-                      layers.forEach(layer => {
-                        // When a snippet is pasted the ID fields need to be regenerated to prevent clashes with existing nodes.
-                        const id = pushID();
-                        layer.id = id;
-                        newLayers.push(layer);
-                        newIds.push(id);
-                      });
+            // I have only tested that this works on Chrome. Browser compatibility here. https://developer.mozilla.org/en-US/docs/Web/API/Navigator/clipboard
+            navigator.clipboard
+              .readText()
+              .then(clipboardText => {
+                try {
+                  const jsonText = JSON.parse(clipboardText);
+                  // FIXME: This validation needs to be fixed.
+                  if (
+                    jsonText.type === "SketchbookDocument" &&
+                    jsonText.version === 0 &&
+                    Array.isArray(jsonText.layers) &&
+                    jsonText.layers.length > 0
+                  ) {
+                    const layers = jsonText.layers;
+                    const newLayers = [];
+                    const newIds = [];
+                    layers.forEach(layer => {
+                      // When a snippet is pasted the ID fields need to be regenerated to prevent clashes with existing nodes.
+                      const id = pushID();
+                      layer.id = id;
+                      newLayers.push(layer);
+                      newIds.push(id);
+                    });
 
-                      setState(
-                        current => ({
-                          ...current,
-                          doc: {
-                            ...current.doc,
-                            layers: [...current.doc.layers, ...newLayers]
-                          },
-                          view: {
-                            ...current.view,
-                            selection: set(newIds)
-                          }
-                        }),
-                        true
-                      );
-                    }
-                  } catch (error) {
-                    console.error(error);
+                    setState(
+                      current => ({
+                        ...current,
+                        doc: {
+                          ...current.doc,
+                          layers: [...current.doc.layers, ...newLayers]
+                        },
+                        view: {
+                          ...current.view,
+                          selection: set(newIds)
+                        }
+                      }),
+                      true
+                    );
                   }
-                })
-                .catch(err => {
-                  console.error("Failed to read clipboard contents: ", err);
-                });
-            };
-            getTextFromClipboard();
+                } catch (error) {
+                  console.error(error);
+                }
+              })
+              .catch(err => {
+                console.error("Failed to read clipboard contents: ", err);
+              });
           }
           break;
         default:
