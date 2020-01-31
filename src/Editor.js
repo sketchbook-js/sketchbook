@@ -77,16 +77,18 @@ const Input = ({ style, ...props }) => (
   />
 );
 
-const Button = ({ style, ...props }) => (
+const Button = ({ style, disabled, ...props }) => (
   <button
     style={{
       background: "#ddd",
+      color: disabled ? "#bbb" : null,
       minWidth: 24,
       textAlign: "center",
       borderRadius: 3,
       padding: "0 6px",
       ...style
     }}
+    disabled={disabled}
     {...props}
   />
 );
@@ -1032,9 +1034,6 @@ const Editor = () => {
                 <Label>Name</Label>
                 <Input
                   id="info-panel-name"
-                  style={{
-                    color: selection.size !== 1 ? "#ddd" : null
-                  }}
                   disabled={selection.size !== 1}
                   value={
                     doc.layers.find(({ id }) => id === [...selection][0]).name
