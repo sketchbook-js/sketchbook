@@ -401,7 +401,7 @@ const Editor = () => {
         return layers;
       };
 
-      const controlOrCommandPressed =
+      const controlOrCommandKeyPressed =
         and(
           keys,
           set([
@@ -414,40 +414,35 @@ const Editor = () => {
           ])
         ).size === 1;
 
+      const shiftKeyPressed =
+        and(keys, set(["ShiftLeft", "ShiftRight"])).size === 1;
+
       switch (event.code) {
         case "ArrowLeft":
           transformSelection({
-            x:
-              Math.round(selectionBounds.x1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            x: Math.round(selectionBounds.x1) - (shiftKeyPressed ? 10 : 1)
           });
           break;
         case "ArrowUp":
           transformSelection({
-            y:
-              Math.round(selectionBounds.y1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            y: Math.round(selectionBounds.y1) - (shiftKeyPressed ? 10 : 1)
           });
           break;
         case "ArrowRight":
           transformSelection({
-            x:
-              Math.round(selectionBounds.x1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            x: Math.round(selectionBounds.x1) + (shiftKeyPressed ? 10 : 1)
           });
           break;
         case "ArrowDown":
           transformSelection({
-            y:
-              Math.round(selectionBounds.y1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            y: Math.round(selectionBounds.y1) + (shiftKeyPressed ? 10 : 1)
           });
           break;
         case "Backspace":
           deleteSelectedLayers();
           break;
         case "KeyX":
-          if (state.view.selection.size > 0 && controlOrCommandPressed) {
+          if (state.view.selection.size > 0 && controlOrCommandKeyPressed) {
             const cutComponentData = {
               type: "SketchbookDocument",
               version: 0,
@@ -458,7 +453,7 @@ const Editor = () => {
           }
           break;
         case "KeyC":
-          if (state.view.selection.size > 0 && controlOrCommandPressed) {
+          if (state.view.selection.size > 0 && controlOrCommandKeyPressed) {
             const copiedComponentData = {
               type: "SketchbookDocument",
               version: 0,
@@ -469,7 +464,7 @@ const Editor = () => {
           }
           break;
         case "KeyV":
-          if (controlOrCommandPressed) {
+          if (controlOrCommandKeyPressed) {
             // I have only tested that this works on Chrome. Browser compatibility here. https://developer.mozilla.org/en-US/docs/Web/API/Navigator/clipboard
             navigator.clipboard
               .readText()
