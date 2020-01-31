@@ -54,6 +54,20 @@ const measure = ({ type, width, height, options }, callback) => {
   );
 };
 
+const Thumbnail = ({ state }) => (
+  <svg width="120" height="90" viewBox="0 0 120 90" fill="#bbb">
+    <rect width="120" height="90" fill="#fff" />
+    {state.doc.layers.map(({ id, x1, y1, x2, y2 }) => (
+      <rect
+        x={x1 / 20}
+        y={y1 / 20}
+        width={x2 / 20 - x1 / 20}
+        height={y2 / 20 - y1 / 20}
+      />
+    ))}
+  </svg>
+);
+
 const PanelTitle = ({ style, children, ...props }) => (
   <h2
     style={{
@@ -530,6 +544,20 @@ const Editor = () => {
             Redo
           </Button>
         </div>
+        <ol>
+          {snapshots.map(({ id, state, firstChange }, index) => (
+            <li
+              key={id}
+              onClick={() => {
+                setPointer(index);
+              }}
+            >
+              <Thumbnail state={state} />
+              {firstChange}
+              {pointer === index ? " ←" : null}
+            </li>
+          ))}
+        </ol>
         <PanelTitle style={{ marginTop: 6 }}>Layers</PanelTitle>
         <ol>
           {doc.layers.map(({ id, name }) => (
