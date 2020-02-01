@@ -591,6 +591,15 @@ const Editor = () => {
               });
           }
           break;
+        case "KeyZ":
+          const redo = controlOrCommandKeyPressed && shiftKeyPressed;
+          const undo = controlOrCommandKeyPressed;
+          if (redo) {
+            setPointer(pointer + 1);
+          } else if (undo) {
+            setPointer(pointer - 1);
+          }
+          break;
         default:
           break;
       }
@@ -615,20 +624,6 @@ const Editor = () => {
           event.stopPropagation();
         }}
       >
-        <button
-          onClick={() => {
-            setPointer(pointer - 1);
-          }}
-        >
-          Undo
-        </button>
-        <button
-          onClick={() => {
-            setPointer(pointer + 1);
-          }}
-        >
-          Redo
-        </button>
         <PanelTitle>Layers</PanelTitle>
         <ol>
           {doc.layers.map(({ id, name }) => (
