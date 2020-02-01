@@ -7,11 +7,11 @@ import {
 } from "./layers";
 
 describe("transformLayers", () => {
-  test("no layers no-op", () => {
+  test("no layers, no-op", () => {
     expect(transformLayers([], {})).toEqual([]);
   });
 
-  test("single layer no-op", () => {
+  test("single layer, no-op", () => {
     expect(
       transformLayers(
         [
@@ -34,7 +34,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers no-op", () => {
+  test("multiple layers, no-op", () => {
     expect(
       transformLayers(
         [
@@ -69,7 +69,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers translating", () => {
+  test("multiple layers, translating", () => {
     expect(
       transformLayers(
         [
@@ -107,7 +107,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers scaling", () => {
+  test("multiple layers, scaling", () => {
     expect(
       transformLayers(
         [
@@ -145,7 +145,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers translating and scaling", () => {
+  test("multiple layers, translating and scaling", () => {
     expect(
       transformLayers(
         [
@@ -185,7 +185,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("single layer positivly offset from 0 scaling", () => {
+  test("single layer, positivly offset from 0, scaling", () => {
     expect(
       transformLayers(
         [
@@ -211,7 +211,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers positivly offset from 0 scaling", () => {
+  test("multiple layers, positivly offset from 0, scaling", () => {
     expect(
       transformLayers(
         [
@@ -244,6 +244,83 @@ describe("transformLayers", () => {
         y1: 400,
         x2: 280,
         y2: 430
+      }
+    ]);
+  });
+
+  test("multiple layers, positivly offset from 0, scaling, origin middle-right", () => {
+    expect(
+      transformLayers(
+        [
+          {
+            x1: 130,
+            y1: 130,
+            x2: 400,
+            y2: 400
+          },
+          {
+            x1: 400,
+            y1: 400,
+            x2: 430,
+            y2: 430
+          }
+        ],
+        {
+          w: 150,
+          cx: 1
+        }
+      )
+    ).toEqual([
+      {
+        x1: 280,
+        y1: 130,
+        x2: 415,
+        y2: 400
+      },
+      {
+        x1: 415,
+        y1: 400,
+        x2: 430,
+        y2: 430
+      }
+    ]);
+  });
+
+  test("multiple layers, negativly offset from 0, scaling, origin middle-right, relative", () => {
+    expect(
+      transformLayers(
+        [
+          {
+            x1: -70,
+            y1: -70,
+            x2: 200,
+            y2: 200
+          },
+          {
+            x1: 200,
+            y1: 200,
+            x2: 230,
+            y2: 230
+          }
+        ],
+        {
+          w: -150,
+          cx: 1,
+          relative: true
+        }
+      )
+    ).toEqual([
+      {
+        x1: 80,
+        y1: -70,
+        x2: 215,
+        y2: 200
+      },
+      {
+        x1: 215,
+        y1: 200,
+        x2: 230,
+        y2: 230
       }
     ]);
   });
@@ -564,8 +641,6 @@ describe("getLayerBounds", () => {
       y2: -100
     });
   });
-
-  test.todo("inverted x and y");
 
   test.todo("predicate");
 });

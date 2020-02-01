@@ -1,5 +1,11 @@
 const transformLayers = (layers, transform, predicate = () => true) => {
   const bounds = getLayerBounds(layers, predicate);
+  const width = bounds.x2 - bounds.x1;
+  const height = bounds.y2 - bounds.y1;
+  const origin = {
+    x: bounds.x1 + width * (transform.cx ?? 0),
+    y: bounds.y1 + height * (transform.cy ?? 0)
+  };
   return layers.map(layer =>
     predicate(layer)
       ? {
@@ -12,21 +18,27 @@ const transformLayers = (layers, transform, predicate = () => true) => {
                 b: 0,
                 c: 0,
                 d: 1,
-                e: -bounds.x1,
-                f: -bounds.y1
+                e: -origin.x,
+                f: -origin.y
               },
               // scale
               {
                 a:
                   transform.w === undefined
                     ? 1
-                    : Math.max(transform.w, 1) / (bounds.x2 - bounds.x1),
+                    : Math.max(
+                        (transform.relative ? width : 0) + transform.w,
+                        1
+                      ) / width,
                 b: 0,
                 c: 0,
                 d:
                   transform.h === undefined
                     ? 1
-                    : Math.max(transform.h, 1) / (bounds.y2 - bounds.y1),
+                    : Math.max(
+                        (transform.relative ? height : 0) + transform.h,
+                        1
+                      ) / height,
                 e: 0,
                 f: 0
               },
@@ -36,8 +48,14 @@ const transformLayers = (layers, transform, predicate = () => true) => {
                 b: 0,
                 c: 0,
                 d: 1,
-                e: transform.x === undefined ? 0 : transform.x - bounds.x1,
-                f: transform.y === undefined ? 0 : transform.y - bounds.y1
+                e:
+                  transform.x === undefined
+                    ? 0
+                    : transform.x - (transform.relative ? 0 : bounds.x1),
+                f:
+                  transform.y === undefined
+                    ? 0
+                    : transform.y - (transform.relative ? 0 : bounds.y1)
               },
               // reset origin
               {
@@ -45,8 +63,8 @@ const transformLayers = (layers, transform, predicate = () => true) => {
                 b: 0,
                 c: 0,
                 d: 1,
-                e: bounds.x1,
-                f: bounds.y1
+                e: origin.x,
+                f: origin.y
               }
             ],
             layer
@@ -56,6 +74,9 @@ const transformLayers = (layers, transform, predicate = () => true) => {
   );
 };
 
+// TODO: This would be could be a little more "simple" if the x and y values
+// were between 0 and 1 instead of -1 and 1. It'd work like the cx and cy
+// values in the transformLayers() function.
 const alignLayers = (layers, { x, y }, predicate = () => true) => {
   const bounds = getLayerBounds(layers, predicate);
   return layers.map(layer =>
