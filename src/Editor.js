@@ -484,7 +484,10 @@ const Editor = () => {
         "ArrowLeft",
         "ArrowUp",
         "ArrowRight",
-        "ArrowDown"
+        "ArrowDown",
+        "KeyX",
+        "KeyC",
+        "KeyV"
       ]);
       if (
         (selection.size > 0 || event.code === "Backspace") &&
