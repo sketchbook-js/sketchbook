@@ -444,7 +444,7 @@ const Editor = () => {
       const getSelectedLayers = () => {
         const layers = [];
         for (let i = 0; i < state.doc.layers.length; i++) {
-          if (state.view.selection.has(state.doc.layers[i].id)) {
+          if (state.selection.has(state.doc.layers[i].id)) {
             const layer = state.doc.layers[i];
             layer.x1 = Math.round(layer.x1);
             layer.x2 = Math.round(layer.x2);
@@ -453,7 +453,7 @@ const Editor = () => {
 
             layers.push(layer);
 
-            if (layers.length === state.view.selection.size) {
+            if (layers.length === state.selection.size) {
               break;
             }
           }
@@ -517,7 +517,7 @@ const Editor = () => {
           deleteSelectedLayers();
           break;
         case "KeyX":
-          if (state.view.selection.size > 0 && controlOrCommandKeyPressed) {
+          if (state.selection.size > 0 && controlOrCommandKeyPressed) {
             const cutComponentData = {
               type: "SketchbookDocument",
               version: 0,
@@ -528,7 +528,7 @@ const Editor = () => {
           }
           break;
         case "KeyC":
-          if (state.view.selection.size > 0 && controlOrCommandKeyPressed) {
+          if (state.selection.size > 0 && controlOrCommandKeyPressed) {
             const copiedComponentData = {
               type: "SketchbookDocument",
               version: 0,
