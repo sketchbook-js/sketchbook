@@ -165,7 +165,7 @@ const config = {
             padding: "3px",
             width
           }}
-          value={value}
+          defaultValue={value}
         />
       </div>
     ),
