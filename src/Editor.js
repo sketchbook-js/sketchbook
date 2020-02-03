@@ -665,7 +665,9 @@ const Editor = () => {
                     setState(
                       current => ({
                         ...current,
-                        selection: set([])
+                        selection: mouseIsWithinSelection
+                          ? current.selection
+                          : set()
                       }),
                       true
                     );
