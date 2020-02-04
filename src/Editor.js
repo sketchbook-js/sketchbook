@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { Fragment, useState, useEffect, useRef } from "react";
 import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 
@@ -99,7 +99,7 @@ const Textarea = ({ style, ...props }) => (
       resize: "none",
       ...style
     }}
-    spellcheck="false"
+    spellCheck="false"
     {...props}
   />
 );
@@ -674,7 +674,9 @@ const Editor = () => {
                     setState(
                       current => ({
                         ...current,
-                        selection: set([])
+                        selection: mouseIsWithinSelection
+                          ? current.selection
+                          : set()
                       }),
                       true
                     );
@@ -1465,7 +1467,7 @@ const Editor = () => {
                   switch (input) {
                     case "short-string":
                       return (
-                        <>
+                        <Fragment key={key}>
                           {error ? (
                             <OptionsErrorMessage
                               style={{
@@ -1477,7 +1479,6 @@ const Editor = () => {
                             </OptionsErrorMessage>
                           ) : null}
                           <div
-                            key={key}
                             id={`option-${key}`}
                             type="text"
                             style={{
@@ -1519,11 +1520,11 @@ const Editor = () => {
                               }}
                             />
                           </div>
-                        </>
+                        </Fragment>
                       );
                     case "long-string":
                       return (
-                        <>
+                        <Fragment key={key}>
                           {error ? (
                             <OptionsErrorMessage
                               style={{
@@ -1535,7 +1536,6 @@ const Editor = () => {
                             </OptionsErrorMessage>
                           ) : null}
                           <div
-                            key={key}
                             style={{
                               display: "grid",
                               gridTemplateColumns: "repeat(1, min-content 1fr)",
@@ -1551,7 +1551,7 @@ const Editor = () => {
                               id={`option-${key}`}
                               type="text"
                               style={{
-                                "min-height": "8em"
+                                minHeight: "8em"
                               }}
                               value={
                                 doc.layers.find(
@@ -1578,7 +1578,7 @@ const Editor = () => {
                               }}
                             />
                           </div>
-                        </>
+                        </Fragment>
                       );
                     default:
                       return null;
