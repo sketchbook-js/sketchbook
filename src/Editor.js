@@ -1,6 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from "react";
 import { set, or, not } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
+import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
 import config from "./config";
 import useKeys from "./useKeys";
@@ -482,6 +483,7 @@ const Editor = () => {
           Undo
         </button>
         <button
+          draggable
           onClick={() => {
             setPointer(pointer + 1);
           }}
@@ -489,36 +491,57 @@ const Editor = () => {
           Redo
         </button>
         <PanelTitle>Layers</PanelTitle>
-        <ol>
-          {doc.layers.map(({ id, name }) => (
-            <li
-              key={id}
-              style={{
-                color: selection.has(id) ? "#f0f" : null,
-                cursor: "pointer",
-                padding: "6px",
-                borderBottom: "1px solid #ddd"
-              }}
-              onClick={event => {
-                event.stopPropagation();
-                setState(
-                  current => ({
-                    ...current,
-                    selection:
-                      keys.has("ShiftLeft") || keys.has("ShiftRight")
-                        ? current.selection.has(id)
-                          ? not(current.selection, [id])
-                          : or(current.selection, [id])
-                        : set([id])
-                  }),
-                  true
-                );
-              }}
-            >
-              {name}
-            </li>
-          ))}
-        </ol>
+        <DragDropContext
+          onDragStart={() => console.log("start")}
+          onDragUpdate={() => console.log("update")}
+          onDragEnd={result => console.log("end")}
+        >
+          <Droppable droppableId={"id"}>
+            {provided => (
+              <ul ref={provided.innerRef} {...provided.droppableProps}>
+                {doc.layers.map(({ id, name }, i) => (
+                  <li
+                    key={id}
+                    style={{
+                      color: selection.has(id) ? "#f0f" : null,
+                      cursor: "pointer",
+                      padding: "6px",
+                      borderBottom: "1px solid #ddd"
+                    }}
+                    onClick={event => {
+                      event.stopPropagation();
+                      setState(
+                        current => ({
+                          ...current,
+                          selection:
+                            keys.has("ShiftLeft") || keys.has("ShiftRight")
+                              ? current.selection.has(id)
+                                ? not(current.selection, [id])
+                                : or(current.selection, [id])
+                              : set([id])
+                        }),
+                        true
+                      );
+                    }}
+                  >
+                    <Draggable draggableId={id} index={i}>
+                      {provided => (
+                        <div
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          ref={provided.innerRef}
+                        >
+                          {name}
+                        </div>
+                      )}
+                    </Draggable>
+                  </li>
+                ))}
+                {provided.placeholder}
+              </ul>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
       <div
         ref={canvas}
