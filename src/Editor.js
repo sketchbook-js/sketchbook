@@ -115,6 +115,7 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
 
 const Editor = () => {
   const canvas = useRef(null);
+  const [elementBeingDraggedId, setElementBeingDraggedId] = useState("");
   const [viewport, setViewport] = useState({
     x: 0,
     y: 0,
@@ -249,7 +250,7 @@ const Editor = () => {
           }
         ]
       },
-      selection: set(["1", "2"])
+      selection: set()
     },
     false,
     100
@@ -492,11 +493,23 @@ const Editor = () => {
         </button>
         <PanelTitle>Layers</PanelTitle>
         <DragDropContext
-          onDragStart={() => console.log("start")}
-          onDragUpdate={() => console.log("update")}
+          onDragStart={result => {
+            const { source, draggableId } = result;
+            setElementBeingDraggedId(draggableId);
+            setState(current => {
+              return {
+                ...current,
+                selection:
+                  current.selection.size === 0
+                    ? set([draggableId])
+                    : current.selection
+              };
+            });
+          }}
           onDragEnd={result => {
             const { destination, source, draggableId } = result;
 
+            setElementBeingDraggedId("");
             // destination may be null if you drag outside of the droppable area.
             if (
               !destination ||
@@ -506,14 +519,24 @@ const Editor = () => {
               return;
             }
 
-            const layers = [...state.doc.layers];
-            const draggedLayer = layers[source.index];
-            layers.splice(source.index, 1);
+            const layers = [...doc.layers];
+            const draggedLayer = layers.splice(source.index, 1)[0];
             layers.splice(destination.index, 0, draggedLayer);
+
+            const updatedLayers = layers.filter(
+              layer => !selection.has(layer.id) || draggableId === layer.id
+            );
+            updatedLayers.splice(
+              updatedLayers.findIndex(layer => layer.id === draggableId) + 1,
+              0,
+              ...layers.filter(
+                layer => selection.has(layer.id) && draggableId !== layer.id
+              )
+            );
 
             setState(current => ({
               ...current,
-              doc: { ...current.doc, layers }
+              doc: { ...current.doc, layers: updatedLayers }
             }));
 
             console.log("end");
@@ -526,7 +549,12 @@ const Editor = () => {
                   <div
                     key={id}
                     style={{
-                      color: selection.has(id) ? "#f0f" : null,
+                      color:
+                        elementBeingDraggedId && selection.has(id)
+                          ? "#e07aff"
+                          : selection.has(id)
+                          ? "#f0f"
+                          : null,
                       cursor: "pointer",
                       padding: "6px",
                       minHeight: "37px",
@@ -557,11 +585,18 @@ const Editor = () => {
                             // Inline styles must be applied by extending the draggableProps.style object and the new styles must be applied after provided.draggableProps is applied. https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/api/draggable.md#extending-draggablepropsstyle
                             style={{
                               border: "1px solid black",
+                              display: "flex",
+                              justifyContent: "space-between",
                               ...provided.draggableProps.style
                             }}
                             ref={provided.innerRef}
                           >
-                            {name}
+                            <span>{name}</span>
+                            <span>
+                              {elementBeingDraggedId === id &&
+                                state.selection.size > 1 &&
+                                state.selection.size}
+                            </span>
                           </div>
                         );
                       }}
