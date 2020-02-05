@@ -494,18 +494,42 @@ const Editor = () => {
         <DragDropContext
           onDragStart={() => console.log("start")}
           onDragUpdate={() => console.log("update")}
-          onDragEnd={result => console.log("end")}
+          onDragEnd={result => {
+            const { destination, source, draggableId } = result;
+
+            // destination may be null if you drag outside of the droppable area.
+            if (
+              !destination ||
+              (destination.droppableId === source.droppableId &&
+                destination.index === source.index)
+            ) {
+              return;
+            }
+
+            const layers = [...state.doc.layers];
+            const draggedLayer = layers[source.index];
+            layers.splice(source.index, 1);
+            layers.splice(destination.index, 0, draggedLayer);
+
+            setState(current => ({
+              ...current,
+              doc: { ...current.doc, layers }
+            }));
+
+            console.log("end");
+          }}
         >
           <Droppable droppableId={"id"}>
             {provided => (
-              <ul ref={provided.innerRef} {...provided.droppableProps}>
+              <div {...provided.droppableProps} ref={provided.innerRef}>
                 {doc.layers.map(({ id, name }, i) => (
-                  <li
+                  <div
                     key={id}
                     style={{
                       color: selection.has(id) ? "#f0f" : null,
                       cursor: "pointer",
                       padding: "6px",
+                      minHeight: "37px",
                       borderBottom: "1px solid #ddd"
                     }}
                     onClick={event => {
@@ -525,20 +549,27 @@ const Editor = () => {
                     }}
                   >
                     <Draggable draggableId={id} index={i}>
-                      {provided => (
-                        <div
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          ref={provided.innerRef}
-                        >
-                          {name}
-                        </div>
-                      )}
+                      {provided => {
+                        return (
+                          <div
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            // Inline styles must be applied by extending the draggableProps.style object and the new styles must be applied after provided.draggableProps is applied. https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/api/draggable.md#extending-draggablepropsstyle
+                            style={{
+                              border: "1px solid black",
+                              ...provided.draggableProps.style
+                            }}
+                            ref={provided.innerRef}
+                          >
+                            {name}
+                          </div>
+                        );
+                      }}
                     </Draggable>
-                  </li>
+                  </div>
                 ))}
                 {provided.placeholder}
-              </ul>
+              </div>
             )}
           </Droppable>
         </DragDropContext>
