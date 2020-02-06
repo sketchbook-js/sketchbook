@@ -455,6 +455,29 @@ const Editor = () => {
       }
     }
   });
+  const resizeLayerByExtreme = (baseSelectedLayer, extreme) => {
+    setState(current => ({
+      ...current,
+      doc: {
+        ...current.doc,
+        layers: current.doc.layers.map(layer => {
+          if (selection.has(layer.id)) {
+            const updatedLayer = layer;
+            if (extreme === "narrowest" || extreme === "widest") {
+              updatedLayer.x1 = baseSelectedLayer.x1;
+              updatedLayer.x2 = baseSelectedLayer.x2;
+            } else {
+              updatedLayer.y1 = baseSelectedLayer.y1;
+              updatedLayer.y2 = baseSelectedLayer.y2;
+            }
+            return updatedLayer;
+          }
+
+          return layer;
+        })
+      }
+    }));
+  };
   return (
     <div
       style={{
@@ -1251,22 +1274,7 @@ const Editor = () => {
                     }
                   });
 
-                  setState(current => ({
-                    ...current,
-                    doc: {
-                      ...current.doc,
-                      layers: current.doc.layers.map(layer => {
-                        if (selection.has(layer.id)) {
-                          const updatedLayer = layer;
-                          updatedLayer.x1 = widestSelectedLayer.x1;
-                          updatedLayer.x2 = widestSelectedLayer.x2;
-                          return updatedLayer;
-                        }
-
-                        return layer;
-                      })
-                    }
-                  }));
+                  resizeLayerByExtreme(widestSelectedLayer, "widest");
                 }}
               >
                 Fit Widest
@@ -1286,22 +1294,7 @@ const Editor = () => {
                     }
                   });
 
-                  setState(current => ({
-                    ...current,
-                    doc: {
-                      ...current.doc,
-                      layers: current.doc.layers.map(layer => {
-                        if (selection.has(layer.id)) {
-                          const updatedLayer = layer;
-                          updatedLayer.x1 = narrowestSelectedLayer.x1;
-                          updatedLayer.x2 = narrowestSelectedLayer.x2;
-                          return updatedLayer;
-                        }
-
-                        return layer;
-                      })
-                    }
-                  }));
+                  resizeLayerByExtreme(narrowestSelectedLayer, "narrowest");
                 }}
               >
                 Fit Narrowest
@@ -1321,22 +1314,7 @@ const Editor = () => {
                     }
                   });
 
-                  setState(current => ({
-                    ...current,
-                    doc: {
-                      ...current.doc,
-                      layers: current.doc.layers.map(layer => {
-                        if (selection.has(layer.id)) {
-                          const updatedLayer = layer;
-                          updatedLayer.y1 = tallestSelectedLayer.y1;
-                          updatedLayer.y2 = tallestSelectedLayer.y2;
-                          return updatedLayer;
-                        }
-
-                        return layer;
-                      })
-                    }
-                  }));
+                  resizeLayerByExtreme(tallestSelectedLayer, "tallest");
                 }}
               >
                 Fit Tallest
@@ -1356,22 +1334,7 @@ const Editor = () => {
                     }
                   });
 
-                  setState(current => ({
-                    ...current,
-                    doc: {
-                      ...current.doc,
-                      layers: current.doc.layers.map(layer => {
-                        if (selection.has(layer.id)) {
-                          const updatedLayer = layer;
-                          updatedLayer.y1 = shortestSelectedLayer.y1;
-                          updatedLayer.y2 = shortestSelectedLayer.y2;
-                          return updatedLayer;
-                        }
-
-                        return layer;
-                      })
-                    }
-                  }));
+                  resizeLayerByExtreme(shortestSelectedLayer, "shortest");
                 }}
               >
                 Fit Shortest
