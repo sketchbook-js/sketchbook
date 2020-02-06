@@ -1226,6 +1226,157 @@ const Editor = () => {
                 Width{" "}&{" "}Height
               </Button>
             </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, min-content)",
+                alignItems: "center",
+                justifyItems: "center",
+                gap: 6,
+                padding: 6
+              }}
+            >
+              <Button
+                disabled={selection.size < 2}
+                onClick={() => {
+                  let widestSelectedLayer = null;
+                  doc.layers.forEach(layer => {
+                    if (
+                      selection.has(layer.id) &&
+                      (!widestSelectedLayer ||
+                        widestSelectedLayer.x2 - widestSelectedLayer.x1 <
+                          layer.x2 - layer.x1)
+                    ) {
+                      widestSelectedLayer = layer;
+                    }
+                  });
+
+                  setState(current => ({
+                    ...current,
+                    doc: {
+                      ...current.doc,
+                      layers: current.doc.layers.map(layer => {
+                        if (selection.has(layer.id)) {
+                          const updatedLayer = layer;
+                          updatedLayer.x1 = widestSelectedLayer.x1;
+                          updatedLayer.x2 = widestSelectedLayer.x2;
+                          return updatedLayer;
+                        }
+
+                        return layer;
+                      })
+                    }
+                  }));
+                }}
+              >
+                Fit Widest
+              </Button>
+              <Button
+                disabled={selection.size < 2}
+                onClick={() => {
+                  let narrowestSelectedLayer = null;
+                  doc.layers.forEach(layer => {
+                    if (
+                      selection.has(layer.id) &&
+                      (!narrowestSelectedLayer ||
+                        narrowestSelectedLayer.x2 - narrowestSelectedLayer.x1 >
+                          layer.x2 - layer.x1)
+                    ) {
+                      narrowestSelectedLayer = layer;
+                    }
+                  });
+
+                  setState(current => ({
+                    ...current,
+                    doc: {
+                      ...current.doc,
+                      layers: current.doc.layers.map(layer => {
+                        if (selection.has(layer.id)) {
+                          const updatedLayer = layer;
+                          updatedLayer.x1 = narrowestSelectedLayer.x1;
+                          updatedLayer.x2 = narrowestSelectedLayer.x2;
+                          return updatedLayer;
+                        }
+
+                        return layer;
+                      })
+                    }
+                  }));
+                }}
+              >
+                Fit Narrowest
+              </Button>
+              <Button
+                disabled={selection.size < 2}
+                onClick={() => {
+                  let tallestSelectedLayer = null;
+                  doc.layers.forEach(layer => {
+                    if (
+                      selection.has(layer.id) &&
+                      (!tallestSelectedLayer ||
+                        tallestSelectedLayer.y2 - tallestSelectedLayer.y1 <
+                          layer.y2 - layer.y1)
+                    ) {
+                      tallestSelectedLayer = layer;
+                    }
+                  });
+
+                  setState(current => ({
+                    ...current,
+                    doc: {
+                      ...current.doc,
+                      layers: current.doc.layers.map(layer => {
+                        if (selection.has(layer.id)) {
+                          const updatedLayer = layer;
+                          updatedLayer.y1 = tallestSelectedLayer.y1;
+                          updatedLayer.y2 = tallestSelectedLayer.y2;
+                          return updatedLayer;
+                        }
+
+                        return layer;
+                      })
+                    }
+                  }));
+                }}
+              >
+                Fit Tallest
+              </Button>
+              <Button
+                disabled={selection.size < 2}
+                onClick={() => {
+                  let shortestSelectedLayer = null;
+                  doc.layers.forEach(layer => {
+                    if (
+                      selection.has(layer.id) &&
+                      (!shortestSelectedLayer ||
+                        shortestSelectedLayer.y2 - shortestSelectedLayer.y1 >
+                          layer.y2 - layer.y1)
+                    ) {
+                      shortestSelectedLayer = layer;
+                    }
+                  });
+
+                  setState(current => ({
+                    ...current,
+                    doc: {
+                      ...current.doc,
+                      layers: current.doc.layers.map(layer => {
+                        if (selection.has(layer.id)) {
+                          const updatedLayer = layer;
+                          updatedLayer.y1 = shortestSelectedLayer.y1;
+                          updatedLayer.y2 = shortestSelectedLayer.y2;
+                          return updatedLayer;
+                        }
+
+                        return layer;
+                      })
+                    }
+                  }));
+                }}
+              >
+                Fit Shortest
+              </Button>
+            </div>
             <PanelTitle style={{ marginTop: 6 }}>Align</PanelTitle>
             <div
               style={{
