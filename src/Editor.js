@@ -248,7 +248,7 @@ const Editor = () => {
           }
         ]
       },
-      selection: set(["1", "2"])
+      selection: set()
     },
     false,
     100
@@ -553,15 +553,19 @@ const Editor = () => {
               ? "grabbing"
               : keys.has("Space")
               ? "grab"
-              : (mouseIsOverSelectionLeft && mouseIsOverSelectionTop) ||
-                (mouseIsOverSelectionRight && mouseIsOverSelectionBottom)
+              : state.selection.size > 0 &&
+                ((mouseIsOverSelectionLeft && mouseIsOverSelectionTop) ||
+                  (mouseIsOverSelectionRight && mouseIsOverSelectionBottom))
               ? "nwse-resize"
-              : (mouseIsOverSelectionLeft && mouseIsOverSelectionBottom) ||
-                (mouseIsOverSelectionRight && mouseIsOverSelectionTop)
+              : state.selection.size > 0 &&
+                ((mouseIsOverSelectionLeft && mouseIsOverSelectionBottom) ||
+                  (mouseIsOverSelectionRight && mouseIsOverSelectionTop))
               ? "nesw-resize"
-              : mouseIsOverSelectionLeft || mouseIsOverSelectionRight
+              : state.selection.size > 0 &&
+                (mouseIsOverSelectionLeft || mouseIsOverSelectionRight)
               ? "ew-resize"
-              : mouseIsOverSelectionTop || mouseIsOverSelectionBottom
+              : state.selection.size > 0 &&
+                (mouseIsOverSelectionTop || mouseIsOverSelectionBottom)
               ? "ns-resize"
               : null
         }}
@@ -799,110 +803,114 @@ const Editor = () => {
                 height={height - 1}
               />
             ))}
-          <rect
-            stroke="#f0f"
-            strokeWidth={2}
-            x={transformedSelectionBounds.x1}
-            y={transformedSelectionBounds.y1}
-            width={
-              transformedSelectionBounds.x2 - transformedSelectionBounds.x1
-            }
-            height={
-              transformedSelectionBounds.y2 - transformedSelectionBounds.y1
-            }
-          />
-          <rect
-            stroke="#f0f"
-            fill="#fff"
-            x={transformedSelectionBounds.x1 - 2.5}
-            y={transformedSelectionBounds.y1 - 2.5}
-            width={5}
-            height={5}
-          />
-          <rect
-            stroke="#f0f"
-            fill="#fff"
-            x={transformedSelectionBounds.x1 - 2.5}
-            y={transformedSelectionBounds.y2 - 2.5}
-            width={5}
-            height={5}
-          />
-          <rect
-            stroke="#f0f"
-            fill="#fff"
-            x={transformedSelectionBounds.x2 - 2.5}
-            y={transformedSelectionBounds.y1 - 2.5}
-            width={5}
-            height={5}
-          />
-          <rect
-            stroke="#f0f"
-            fill="#fff"
-            x={transformedSelectionBounds.x2 - 2.5}
-            y={transformedSelectionBounds.y2 - 2.5}
-            width={5}
-            height={5}
-          />
-          <rect
-            stroke="#f0f"
-            fill="#fff"
-            x={
-              Math.round(
-                transformedSelectionBounds.x1 +
-                  (transformedSelectionBounds.x2 -
-                    transformedSelectionBounds.x1) /
-                    2
-              ) - 2.5
-            }
-            y={transformedSelectionBounds.y1 - 2.5}
-            width={5}
-            height={5}
-          />
-          <rect
-            stroke="#f0f"
-            fill="#fff"
-            x={
-              Math.round(
-                transformedSelectionBounds.x1 +
-                  (transformedSelectionBounds.x2 -
-                    transformedSelectionBounds.x1) /
-                    2
-              ) - 2.5
-            }
-            y={transformedSelectionBounds.y2 - 2.5}
-            width={5}
-            height={5}
-          />
-          <rect
-            stroke="#f0f"
-            fill="#fff"
-            x={transformedSelectionBounds.x1 - 2.5}
-            y={
-              Math.round(
-                transformedSelectionBounds.y1 +
-                  (transformedSelectionBounds.y2 -
-                    transformedSelectionBounds.y1) /
-                    2
-              ) - 2.5
-            }
-            width={5}
-            height={5}
-          />
-          <rect
-            stroke="#f0f"
-            fill="#fff"
-            x={transformedSelectionBounds.x2 - 2.5}
-            y={
-              Math.round(
-                transformedSelectionBounds.y1 +
-                  (transformedSelectionBounds.y2 -
-                    transformedSelectionBounds.y1) /
-                    2
-              ) - 2.5
-            }
-            width={5}
-            height={5}
-          />
+          {state.selection.size > 0 ? (
+            <>
+              <rect
+                stroke="#f0f"
+                strokeWidth={2}
+                x={transformedSelectionBounds.x1}
+                y={transformedSelectionBounds.y1}
+                width={
+                  transformedSelectionBounds.x2 - transformedSelectionBounds.x1
+                }
+                height={
+                  transformedSelectionBounds.y2 - transformedSelectionBounds.y1
+                }
+              />
+              <rect
+                stroke="#f0f"
+                fill="#fff"
+                x={transformedSelectionBounds.x1 - 2.5}
+                y={transformedSelectionBounds.y1 - 2.5}
+                width={5}
+                height={5}
+              />
+              <rect
+                stroke="#f0f"
+                fill="#fff"
+                x={transformedSelectionBounds.x1 - 2.5}
+                y={transformedSelectionBounds.y2 - 2.5}
+                width={5}
+                height={5}
+              />
+              <rect
+                stroke="#f0f"
+                fill="#fff"
+                x={transformedSelectionBounds.x2 - 2.5}
+                y={transformedSelectionBounds.y1 - 2.5}
+                width={5}
+                height={5}
+              />
+              <rect
+                stroke="#f0f"
+                fill="#fff"
+                x={transformedSelectionBounds.x2 - 2.5}
+                y={transformedSelectionBounds.y2 - 2.5}
+                width={5}
+                height={5}
+              />
+              <rect
+                stroke="#f0f"
+                fill="#fff"
+                x={
+                  Math.round(
+                    transformedSelectionBounds.x1 +
+                      (transformedSelectionBounds.x2 -
+                        transformedSelectionBounds.x1) /
+                        2
+                  ) - 2.5
+                }
+                y={transformedSelectionBounds.y1 - 2.5}
+                width={5}
+                height={5}
+              />
+              <rect
+                stroke="#f0f"
+                fill="#fff"
+                x={
+                  Math.round(
+                    transformedSelectionBounds.x1 +
+                      (transformedSelectionBounds.x2 -
+                        transformedSelectionBounds.x1) /
+                        2
+                  ) - 2.5
+                }
+                y={transformedSelectionBounds.y2 - 2.5}
+                width={5}
+                height={5}
+              />
+              <rect
+                stroke="#f0f"
+                fill="#fff"
+                x={transformedSelectionBounds.x1 - 2.5}
+                y={
+                  Math.round(
+                    transformedSelectionBounds.y1 +
+                      (transformedSelectionBounds.y2 -
+                        transformedSelectionBounds.y1) /
+                        2
+                  ) - 2.5
+                }
+                width={5}
+                height={5}
+              />
+              <rect
+                stroke="#f0f"
+                fill="#fff"
+                x={transformedSelectionBounds.x2 - 2.5}
+                y={
+                  Math.round(
+                    transformedSelectionBounds.y1 +
+                      (transformedSelectionBounds.y2 -
+                        transformedSelectionBounds.y1) /
+                        2
+                  ) - 2.5
+                }
+                width={5}
+                height={5}
+              />
+            </>
+          ) : null}
           {mouse.status === "up"
             ? [
                 doc.layers
