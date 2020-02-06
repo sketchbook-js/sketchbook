@@ -494,7 +494,7 @@ const Editor = () => {
         <PanelTitle>Layers</PanelTitle>
         <DragDropContext
           onDragStart={result => {
-            const { source, draggableId } = result;
+            const { draggableId } = result;
             setElementBeingDraggedId(draggableId);
             setState(current => {
               return {
