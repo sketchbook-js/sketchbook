@@ -374,20 +374,17 @@ const Editor = () => {
       );
       break;
     case "drag":
-      const gradient =
-        and(keys, ["ShiftLeft", "ShiftRight"]).size > 0 &&
-        (mouse.y - mouse.startY) / (mouse.x - mouse.startX);
+      const lockedAxis =
+        and(keys, ["ShiftLeft", "ShiftRight"]).size !== 1
+          ? null
+          : Math.abs(mouse.x - mouse.startX) > Math.abs(mouse.y - mouse.startY)
+          ? "x"
+          : "y";
       transformedLayers = transformLayers(
         transformedLayers,
         {
-          x:
-            gradient && gradient <= 1 && gradient >= -1
-              ? mouse.x - mouse.startX
-              : undefined,
-          y:
-            gradient && gradient <= 1 && gradient >= -1
-              ? undefined
-              : mouse.y - mouse.startY,
+          x: !lockedAxis || lockedAxis === "x" ? mouse.x - mouse.startX : null,
+          y: !lockedAxis || lockedAxis === "y" ? mouse.y - mouse.startY : null,
           relative: true
         },
         layer => state.selection.has(layer.id)
