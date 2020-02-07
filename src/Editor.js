@@ -1,5 +1,5 @@
 import React, { Fragment, useState, useEffect, useRef } from "react";
-import { set, or, not } from "set-fns";
+import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 
 import config from "./config";
@@ -259,6 +259,73 @@ const Editor = () => {
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => selection.has(layer.id))
   );
+  const keys = useKeys({
+    keydown: event => {
+      const codeBlacklist = set([
+        "Backspace",
+        "ShiftLeft",
+        "ShiftRight",
+        "ArrowLeft",
+        "ArrowUp",
+        "ArrowRight",
+        "ArrowDown"
+      ]);
+      if (
+        (selection.size > 0 || event.code === "Backspace") &&
+        codeBlacklist.has(event.code)
+      ) {
+        event.preventDefault();
+      }
+      switch (event.code) {
+        case "ArrowLeft":
+          transformSelection({
+            x:
+              Math.round(selectionBounds.x1) -
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+          });
+          break;
+        case "ArrowUp":
+          transformSelection({
+            y:
+              Math.round(selectionBounds.y1) -
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+          });
+          break;
+        case "ArrowRight":
+          transformSelection({
+            x:
+              Math.round(selectionBounds.x1) +
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+          });
+          break;
+        case "ArrowDown":
+          transformSelection({
+            y:
+              Math.round(selectionBounds.y1) +
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+          });
+          break;
+        case "Backspace":
+          setState(
+            current => ({
+              ...current,
+              doc: {
+                ...current.doc,
+                layers: current.doc.layers.filter(
+                  ({ id }) => !current.selection.has(id)
+                )
+              },
+              selection: set()
+            }),
+            true
+          );
+          break;
+        default:
+          console.log(event.code);
+          break;
+      }
+    }
+  });
   const mouseIsWithinSelection =
     mouse.x >= selectionBounds.x1 - 3 &&
     mouse.x <= selectionBounds.x2 + 3 &&
@@ -285,6 +352,12 @@ const Editor = () => {
     mouseStartedWithinSelection && mouse.startY <= selectionBounds.y1 + 3;
   const mouseStartedOverSelectionBottom =
     mouseStartedWithinSelection && mouse.startY >= selectionBounds.y2 - 3;
+  const lockedAxis =
+    and(keys, ["ShiftLeft", "ShiftRight"]).size !== 1
+      ? null
+      : Math.abs(mouse.x - mouse.startX) > Math.abs(mouse.y - mouse.startY)
+      ? "x"
+      : "y";
   let transformedLayers = state.doc.layers;
   switch (mouse.status) {
     case "resize":
@@ -312,8 +385,8 @@ const Editor = () => {
       transformedLayers = transformLayers(
         transformedLayers,
         {
-          x: mouse.x - mouse.startX,
-          y: mouse.y - mouse.startY,
+          x: !lockedAxis || lockedAxis === "x" ? mouse.x - mouse.startX : null,
+          y: !lockedAxis || lockedAxis === "y" ? mouse.y - mouse.startY : null,
           relative: true
         },
         layer => state.selection.has(layer.id)
@@ -390,73 +463,6 @@ const Editor = () => {
       clearInterval(interval);
     };
   }, [setViewport]);
-  const keys = useKeys({
-    keydown: event => {
-      const codeBlacklist = set([
-        "Backspace",
-        "ShiftLeft",
-        "ShiftRight",
-        "ArrowLeft",
-        "ArrowUp",
-        "ArrowRight",
-        "ArrowDown"
-      ]);
-      if (
-        (selection.size > 0 || event.code === "Backspace") &&
-        codeBlacklist.has(event.code)
-      ) {
-        event.preventDefault();
-      }
-      switch (event.code) {
-        case "ArrowLeft":
-          transformSelection({
-            x:
-              Math.round(selectionBounds.x1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
-          break;
-        case "ArrowUp":
-          transformSelection({
-            y:
-              Math.round(selectionBounds.y1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
-          break;
-        case "ArrowRight":
-          transformSelection({
-            x:
-              Math.round(selectionBounds.x1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
-          break;
-        case "ArrowDown":
-          transformSelection({
-            y:
-              Math.round(selectionBounds.y1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
-          break;
-        case "Backspace":
-          setState(
-            current => ({
-              ...current,
-              doc: {
-                ...current.doc,
-                layers: current.doc.layers.filter(
-                  ({ id }) => !current.selection.has(id)
-                )
-              },
-              selection: set()
-            }),
-            true
-          );
-          break;
-        default:
-          // console.log(keyCode);
-          break;
-      }
-    }
-  });
   return (
     <div
       style={{
@@ -694,8 +700,18 @@ const Editor = () => {
                   }
                 } else if (mouse.status === "drag") {
                   transformSelection({
-                    x: selectionBounds.x1 + mouse.x - mouse.startX,
-                    y: selectionBounds.y1 + mouse.y - mouse.startY
+                    x:
+                      !lockedAxis || lockedAxis === "x"
+                        ? selectionBounds.x1 + mouse.x - mouse.startX
+                        : lockedAxis === "y"
+                        ? selectionBounds.x1
+                        : null,
+                    y:
+                      !lockedAxis || lockedAxis === "y"
+                        ? selectionBounds.y1 + mouse.y - mouse.startY
+                        : lockedAxis === "x"
+                        ? selectionBounds.y1
+                        : null
                   });
                 } else if (mouse.status === "select") {
                   const x1 = Math.min(mouse.startX, mouse.x);
