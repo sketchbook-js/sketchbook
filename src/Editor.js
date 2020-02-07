@@ -1,5 +1,5 @@
 import React, { Fragment, useState, useEffect, useRef } from "react";
-import { set, or, not } from "set-fns";
+import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 
 import config from "./config";
@@ -82,16 +82,18 @@ const Input = ({ style, ...props }) => (
   />
 );
 
-const Button = ({ style, ...props }) => (
+const Button = ({ style, disabled, ...props }) => (
   <button
     style={{
       background: "#ddd",
+      color: disabled ? "#bbb" : null,
       minWidth: 24,
       textAlign: "center",
       borderRadius: 3,
       padding: "0 6px",
       ...style
     }}
+    disabled={disabled}
     {...props}
   />
 );
@@ -133,7 +135,7 @@ const Editor = () => {
     startX: 0,
     startY: 0
   });
-  const [state, setState, pointer, setPointer] = useStateSnapshots(
+  const [state, setState, pointer, setPointer, snapshots] = useStateSnapshots(
     {
       doc: {
         layers: [
@@ -262,6 +264,73 @@ const Editor = () => {
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => selection.has(layer.id))
   );
+  const keys = useKeys({
+    keydown: event => {
+      const codeBlacklist = set([
+        "Backspace",
+        "ShiftLeft",
+        "ShiftRight",
+        "ArrowLeft",
+        "ArrowUp",
+        "ArrowRight",
+        "ArrowDown"
+      ]);
+      if (
+        (selection.size > 0 || event.code === "Backspace") &&
+        codeBlacklist.has(event.code)
+      ) {
+        event.preventDefault();
+      }
+      switch (event.code) {
+        case "ArrowLeft":
+          transformSelection({
+            x:
+              Math.round(selectionBounds.x1) -
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+          });
+          break;
+        case "ArrowUp":
+          transformSelection({
+            y:
+              Math.round(selectionBounds.y1) -
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+          });
+          break;
+        case "ArrowRight":
+          transformSelection({
+            x:
+              Math.round(selectionBounds.x1) +
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+          });
+          break;
+        case "ArrowDown":
+          transformSelection({
+            y:
+              Math.round(selectionBounds.y1) +
+              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+          });
+          break;
+        case "Backspace":
+          setState(
+            current => ({
+              ...current,
+              doc: {
+                ...current.doc,
+                layers: current.doc.layers.filter(
+                  ({ id }) => !current.selection.has(id)
+                )
+              },
+              selection: set()
+            }),
+            true
+          );
+          break;
+        default:
+          console.log(event.code);
+          break;
+      }
+    }
+  });
   const mouseIsWithinSelection =
     mouse.x >= selectionBounds.x1 - 3 &&
     mouse.x <= selectionBounds.x2 + 3 &&
@@ -288,6 +357,12 @@ const Editor = () => {
     mouseStartedWithinSelection && mouse.startY <= selectionBounds.y1 + 3;
   const mouseStartedOverSelectionBottom =
     mouseStartedWithinSelection && mouse.startY >= selectionBounds.y2 - 3;
+  const lockedAxis =
+    and(keys, ["ShiftLeft", "ShiftRight"]).size !== 1
+      ? null
+      : Math.abs(mouse.x - mouse.startX) > Math.abs(mouse.y - mouse.startY)
+      ? "x"
+      : "y";
   let transformedLayers = state.doc.layers;
   switch (mouse.status) {
     case "resize":
@@ -315,8 +390,8 @@ const Editor = () => {
       transformedLayers = transformLayers(
         transformedLayers,
         {
-          x: mouse.x - mouse.startX,
-          y: mouse.y - mouse.startY,
+          x: !lockedAxis || lockedAxis === "x" ? mouse.x - mouse.startX : null,
+          y: !lockedAxis || lockedAxis === "y" ? mouse.y - mouse.startY : null,
           relative: true
         },
         layer => state.selection.has(layer.id)
@@ -393,73 +468,6 @@ const Editor = () => {
       clearInterval(interval);
     };
   }, [setViewport]);
-  const keys = useKeys({
-    keydown: event => {
-      const codeBlacklist = set([
-        "Backspace",
-        "ShiftLeft",
-        "ShiftRight",
-        "ArrowLeft",
-        "ArrowUp",
-        "ArrowRight",
-        "ArrowDown"
-      ]);
-      if (
-        (selection.size > 0 || event.code === "Backspace") &&
-        codeBlacklist.has(event.code)
-      ) {
-        event.preventDefault();
-      }
-      switch (event.code) {
-        case "ArrowLeft":
-          transformSelection({
-            x:
-              Math.round(selectionBounds.x1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
-          break;
-        case "ArrowUp":
-          transformSelection({
-            y:
-              Math.round(selectionBounds.y1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
-          break;
-        case "ArrowRight":
-          transformSelection({
-            x:
-              Math.round(selectionBounds.x1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
-          break;
-        case "ArrowDown":
-          transformSelection({
-            y:
-              Math.round(selectionBounds.y1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
-          break;
-        case "Backspace":
-          setState(
-            current => ({
-              ...current,
-              doc: {
-                ...current.doc,
-                layers: current.doc.layers.filter(
-                  ({ id }) => !current.selection.has(id)
-                )
-              },
-              selection: set()
-            }),
-            true
-          );
-          break;
-        default:
-          // console.log(keyCode);
-          break;
-      }
-    }
-  });
   const resizeLayerByExtreme = (layers, extreme, predicate = () => true) => {
     const allSelectedLayers = layers.filter(predicate);
     const dimensionsToUpdateTo = allSelectedLayers.reduce(
@@ -520,21 +528,35 @@ const Editor = () => {
           event.stopPropagation();
         }}
       >
-        <button
-          onClick={() => {
-            setPointer(pointer - 1);
+        <PanelTitle style={{ marginTop: 6 }}>History</PanelTitle>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, min-content)",
+            alignItems: "center",
+            justifyItems: "center",
+            gap: 6,
+            padding: 6
           }}
         >
-          Undo
-        </button>
-        <button
-          onClick={() => {
-            setPointer(pointer + 1);
-          }}
-        >
-          Redo
-        </button>
-        <PanelTitle>Layers</PanelTitle>
+          <Button
+            disabled={pointer === 0}
+            onClick={() => {
+              setPointer(pointer - 1);
+            }}
+          >
+            Undo
+          </Button>
+          <Button
+            disabled={pointer === snapshots.length - 1}
+            onClick={() => {
+              setPointer(pointer + 1);
+            }}
+          >
+            Redo
+          </Button>
+        </div>
+        <PanelTitle style={{ marginTop: 6 }}>Layers</PanelTitle>
         <ol>
           {doc.layers.map(({ id, name }) => (
             <li
@@ -724,8 +746,18 @@ const Editor = () => {
                   }
                 } else if (mouse.status === "drag") {
                   transformSelection({
-                    x: selectionBounds.x1 + mouse.x - mouse.startX,
-                    y: selectionBounds.y1 + mouse.y - mouse.startY
+                    x:
+                      !lockedAxis || lockedAxis === "x"
+                        ? selectionBounds.x1 + mouse.x - mouse.startX
+                        : lockedAxis === "y"
+                        ? selectionBounds.x1
+                        : null,
+                    y:
+                      !lockedAxis || lockedAxis === "y"
+                        ? selectionBounds.y1 + mouse.y - mouse.startY
+                        : lockedAxis === "x"
+                        ? selectionBounds.y1
+                        : null
                   });
                 } else if (mouse.status === "select") {
                   const x1 = Math.min(mouse.startX, mouse.x);
@@ -1078,9 +1110,6 @@ const Editor = () => {
                 <Label>Name</Label>
                 <Input
                   id="info-panel-name"
-                  style={{
-                    color: selection.size !== 1 ? "#ddd" : null
-                  }}
                   disabled={selection.size !== 1}
                   value={
                     doc.layers.find(({ id }) => id === [...selection][0]).name
