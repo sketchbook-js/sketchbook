@@ -6,7 +6,12 @@ import config from "./config";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
-import { getLayerBounds, transformLayers, alignLayers } from "./layers";
+import {
+  getLayerBounds,
+  transformLayers,
+  alignLayers,
+  updateLayersDimensions
+} from "./layers";
 
 import Canvas from "./Canvas";
 
@@ -455,26 +460,44 @@ const Editor = () => {
       }
     }
   });
-  const resizeLayerByExtreme = (baseSelectedLayer, extreme) => {
+  const resizeLayerByExtreme = (layers, extreme, predicate = () => true) => {
+    const allSelectedLayers = layers.filter(predicate);
+    const dimensionsToUpdateTo = allSelectedLayers.reduce(
+      (mostExtremeDimensionsFoundSoFar, layer) => {
+        const { x1, x2, y1, y2 } = mostExtremeDimensionsFoundSoFar;
+        switch (extreme) {
+          case "widest":
+            return x2 - x1 < layer.x2 - layer.x1
+              ? { x1: layer.x1, x2: layer.x2 }
+              : { x1, x2 };
+          case "narrowest":
+            return x2 - x1 > layer.x2 - layer.x1
+              ? { x1: layer.x1, x2: layer.x2 }
+              : { x1, x2 };
+          case "tallest":
+            return y2 - y1 < layer.y2 - layer.y1
+              ? { y1: layer.y1, y2: layer.y2 }
+              : { y1, y2 };
+          case "shortest":
+            return y2 - y1 > layer.y2 - layer.y1
+              ? { y1: layer.y1, y2: layer.y2 }
+              : { y1, y2 };
+          default:
+            return { x1: layer.x1, x2: layer.x2, y1: layer.y1, y2: layer.y2 };
+        }
+      },
+      { x1: 0, x2: 0, y1: 0, y2: 0 }
+    );
+
     setState(current => ({
       ...current,
       doc: {
         ...current.doc,
-        layers: current.doc.layers.map(layer => {
-          if (selection.has(layer.id)) {
-            const updatedLayer = { ...layer };
-            if (extreme === "narrowest" || extreme === "widest") {
-              updatedLayer.x1 = baseSelectedLayer.x1;
-              updatedLayer.x2 = baseSelectedLayer.x2;
-            } else {
-              updatedLayer.y1 = baseSelectedLayer.y1;
-              updatedLayer.y2 = baseSelectedLayer.y2;
-            }
-            return updatedLayer;
-          }
-
-          return layer;
-        })
+        layers: updateLayersDimensions(
+          doc.layers,
+          selection,
+          dimensionsToUpdateTo
+        )
       }
     }));
   };
@@ -1270,19 +1293,9 @@ const Editor = () => {
               <Button
                 disabled={selection.size < 2}
                 onClick={() => {
-                  let widestSelectedLayer = null;
-                  doc.layers.forEach(layer => {
-                    if (
-                      selection.has(layer.id) &&
-                      (!widestSelectedLayer ||
-                        widestSelectedLayer.x2 - widestSelectedLayer.x1 <
-                          layer.x2 - layer.x1)
-                    ) {
-                      widestSelectedLayer = layer;
-                    }
-                  });
-
-                  resizeLayerByExtreme(widestSelectedLayer, "widest");
+                  resizeLayerByExtreme(doc.layers, "widest", layer =>
+                    selection.has(layer.id)
+                  );
                 }}
               >
                 Fit Widest
@@ -1290,19 +1303,9 @@ const Editor = () => {
               <Button
                 disabled={selection.size < 2}
                 onClick={() => {
-                  let narrowestSelectedLayer = null;
-                  doc.layers.forEach(layer => {
-                    if (
-                      selection.has(layer.id) &&
-                      (!narrowestSelectedLayer ||
-                        narrowestSelectedLayer.x2 - narrowestSelectedLayer.x1 >
-                          layer.x2 - layer.x1)
-                    ) {
-                      narrowestSelectedLayer = layer;
-                    }
-                  });
-
-                  resizeLayerByExtreme(narrowestSelectedLayer, "narrowest");
+                  resizeLayerByExtreme(doc.layers, "narrowest", layer =>
+                    selection.has(layer.id)
+                  );
                 }}
               >
                 Fit Narrowest
@@ -1310,19 +1313,9 @@ const Editor = () => {
               <Button
                 disabled={selection.size < 2}
                 onClick={() => {
-                  let tallestSelectedLayer = null;
-                  doc.layers.forEach(layer => {
-                    if (
-                      selection.has(layer.id) &&
-                      (!tallestSelectedLayer ||
-                        tallestSelectedLayer.y2 - tallestSelectedLayer.y1 <
-                          layer.y2 - layer.y1)
-                    ) {
-                      tallestSelectedLayer = layer;
-                    }
-                  });
-
-                  resizeLayerByExtreme(tallestSelectedLayer, "tallest");
+                  resizeLayerByExtreme(doc.layers, "tallest", layer =>
+                    selection.has(layer.id)
+                  );
                 }}
               >
                 Fit Tallest
@@ -1330,19 +1323,9 @@ const Editor = () => {
               <Button
                 disabled={selection.size < 2}
                 onClick={() => {
-                  let shortestSelectedLayer = null;
-                  doc.layers.forEach(layer => {
-                    if (
-                      selection.has(layer.id) &&
-                      (!shortestSelectedLayer ||
-                        shortestSelectedLayer.y2 - shortestSelectedLayer.y1 >
-                          layer.y2 - layer.y1)
-                    ) {
-                      shortestSelectedLayer = layer;
-                    }
-                  });
-
-                  resizeLayerByExtreme(shortestSelectedLayer, "shortest");
+                  resizeLayerByExtreme(doc.layers, "shortest", layer =>
+                    selection.has(layer.id)
+                  );
                 }}
               >
                 Fit Shortest
