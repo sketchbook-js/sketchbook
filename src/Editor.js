@@ -350,6 +350,12 @@ const Editor = () => {
     mouseStartedWithinSelection && mouse.startY <= selectionBounds.y1 + 3;
   const mouseStartedOverSelectionBottom =
     mouseStartedWithinSelection && mouse.startY >= selectionBounds.y2 - 3;
+  const lockedAxis =
+    and(keys, ["ShiftLeft", "ShiftRight"]).size !== 1
+      ? null
+      : Math.abs(mouse.x - mouse.startX) > Math.abs(mouse.y - mouse.startY)
+      ? "x"
+      : "y";
   let transformedLayers = state.doc.layers;
   switch (mouse.status) {
     case "resize":
@@ -374,12 +380,6 @@ const Editor = () => {
       );
       break;
     case "drag":
-      const lockedAxis =
-        and(keys, ["ShiftLeft", "ShiftRight"]).size !== 1
-          ? null
-          : Math.abs(mouse.x - mouse.startX) > Math.abs(mouse.y - mouse.startY)
-          ? "x"
-          : "y";
       transformedLayers = transformLayers(
         transformedLayers,
         {
@@ -684,8 +684,18 @@ const Editor = () => {
                   }
                 } else if (mouse.status === "drag") {
                   transformSelection({
-                    x: selectionBounds.x1 + mouse.x - mouse.startX,
-                    y: selectionBounds.y1 + mouse.y - mouse.startY
+                    x:
+                      !lockedAxis || lockedAxis === "x"
+                        ? selectionBounds.x1 + mouse.x - mouse.startX
+                        : lockedAxis === "y"
+                        ? selectionBounds.x1
+                        : null,
+                    y:
+                      !lockedAxis || lockedAxis === "y"
+                        ? selectionBounds.y1 + mouse.y - mouse.startY
+                        : lockedAxis === "x"
+                        ? selectionBounds.y1
+                        : null
                   });
                 } else if (mouse.status === "select") {
                   const x1 = Math.min(mouse.startX, mouse.x);
