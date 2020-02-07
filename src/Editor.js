@@ -116,7 +116,7 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
 
 const Editor = () => {
   const canvas = useRef(null);
-  const [editableListItemId, setEditableListItemId] = useState("");
+  const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);
   const [viewport, setViewport] = useState({
     x: 0,
     y: 0,
@@ -537,27 +537,23 @@ const Editor = () => {
                   true
                 );
               }}
-              onDoubleClick={() => setEditableListItemId(id)}
-              onBlur={() => setEditableListItemId("")}
+              onDoubleClick={() => setIdOfLayerBeingEdited(id)}
+              onBlur={() => setIdOfLayerBeingEdited(null)}
             >
-              {editableListItemId === id ? (
+              {idOfLayerBeingEdited === id ? (
                 <input
                   type="text"
                   autoFocus
                   onChange={event => {
-                    event.persist();
                     const updatedName = event.currentTarget.value;
                     setState(current => ({
                       ...current,
                       doc: {
                         ...current.doc,
                         layers: current.doc.layers.map(layer => {
-                          if (layer.id === id) {
-                            const updatedLayer = layer;
-                            updatedLayer.name = updatedName;
-                            return updatedLayer;
-                          }
-                          return layer;
+                          return layer.id === id
+                            ? { ...layer, name: updatedName }
+                            : layer;
                         })
                       }
                     }));
@@ -565,7 +561,7 @@ const Editor = () => {
                   value={name}
                 />
               ) : (
-                <>{name}</>
+                name
               )}
             </li>
           ))}
