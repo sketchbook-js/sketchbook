@@ -462,7 +462,7 @@ const Editor = () => {
         ...current.doc,
         layers: current.doc.layers.map(layer => {
           if (selection.has(layer.id)) {
-            const updatedLayer = layer;
+            const updatedLayer = { ...layer };
             if (extreme === "narrowest" || extreme === "widest") {
               updatedLayer.x1 = baseSelectedLayer.x1;
               updatedLayer.x2 = baseSelectedLayer.x2;

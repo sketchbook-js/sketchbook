@@ -164,10 +164,30 @@ const transformPoints = (matrices, points) =>
     )
   );
 
+const updateLayersDimensions = (layers, selection, dimensionsToUpdateTo) => {
+  if (selection.size < 2) {
+    return layers;
+  }
+  return layers.map(layer => {
+    if (selection.has(layer.id)) {
+      const updatedLayer = { ...layer };
+      const { x1, x2, y1, y2 } = dimensionsToUpdateTo;
+      updatedLayer.x1 = x1 || layer.x1;
+      updatedLayer.x2 = x2 || layer.x2;
+      updatedLayer.y1 = y1 || layer.y1;
+      updatedLayer.y2 = y2 || layer.y2;
+      return updatedLayer;
+    }
+
+    return layer;
+  });
+};
+
 export {
   transformLayers,
   alignLayers,
   getLayerBounds,
   transformBounds,
-  transformPoints
+  transformPoints,
+  updateLayersDimensions
 };
