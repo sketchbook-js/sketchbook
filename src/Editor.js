@@ -77,16 +77,18 @@ const Input = ({ style, ...props }) => (
   />
 );
 
-const Button = ({ style, ...props }) => (
+const Button = ({ style, disabled, ...props }) => (
   <button
     style={{
       background: "#ddd",
+      color: disabled ? "#bbb" : null,
       minWidth: 24,
       textAlign: "center",
       borderRadius: 3,
       padding: "0 6px",
       ...style
     }}
+    disabled={disabled}
     {...props}
   />
 );
@@ -128,7 +130,7 @@ const Editor = () => {
     startX: 0,
     startY: 0
   });
-  const [state, setState, pointer, setPointer] = useStateSnapshots(
+  const [state, setState, pointer, setPointer, snapshots] = useStateSnapshots(
     {
       doc: {
         layers: [
@@ -480,21 +482,35 @@ const Editor = () => {
           event.stopPropagation();
         }}
       >
-        <button
-          onClick={() => {
-            setPointer(pointer - 1);
+        <PanelTitle style={{ marginTop: 6 }}>History</PanelTitle>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, min-content)",
+            alignItems: "center",
+            justifyItems: "center",
+            gap: 6,
+            padding: 6
           }}
         >
-          Undo
-        </button>
-        <button
-          onClick={() => {
-            setPointer(pointer + 1);
-          }}
-        >
-          Redo
-        </button>
-        <PanelTitle>Layers</PanelTitle>
+          <Button
+            disabled={pointer === 0}
+            onClick={() => {
+              setPointer(pointer - 1);
+            }}
+          >
+            Undo
+          </Button>
+          <Button
+            disabled={pointer === snapshots.length - 1}
+            onClick={() => {
+              setPointer(pointer + 1);
+            }}
+          >
+            Redo
+          </Button>
+        </div>
+        <PanelTitle style={{ marginTop: 6 }}>Layers</PanelTitle>
         <ol>
           {doc.layers.map(({ id, name }) => (
             <li
@@ -1048,9 +1064,6 @@ const Editor = () => {
                 <Label>Name</Label>
                 <Input
                   id="info-panel-name"
-                  style={{
-                    color: selection.size !== 1 ? "#ddd" : null
-                  }}
                   disabled={selection.size !== 1}
                   value={
                     doc.layers.find(({ id }) => id === [...selection][0]).name
