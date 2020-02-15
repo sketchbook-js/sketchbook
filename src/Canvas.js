@@ -3,8 +3,6 @@ import React from "react";
 import config from "./config";
 import useCanvasLayers from "./useCanvasLayers";
 
-import "./reset.css";
-
 const Canvas = () => {
   const layers = useCanvasLayers(config);
   return layers.map(

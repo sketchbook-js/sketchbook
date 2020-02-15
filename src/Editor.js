@@ -19,7 +19,6 @@ import AlignLeft from "./icons/AlignLeft";
 import AlignRight from "./icons/AlignRight";
 import AlignTop from "./icons/AlignTop";
 import AlignVerticalMiddle from "./icons/AlignVerticalMiddle";
-import Canvas from "./Canvas";
 import FitContent from "./icons/FitContent";
 import FitContentHeight from "./icons/FitContentHeight";
 import FitContentWidth from "./icons/FitContentWidth";
@@ -27,8 +26,6 @@ import MoveBackward from "./icons/MoveBackward";
 import MoveForward from "./icons/MoveForward";
 import MoveToBack from "./icons/MoveToBack";
 import MoveToFront from "./icons/MoveToFront";
-
-import "./reset.css";
 
 const measure = ({ type, width, height, options }, callback) => {
   const id = pushID();
@@ -460,14 +457,16 @@ const Editor = () => {
     );
   };
   useEffect(() => {
-    window.postMessage(
-      {
-        type: "sketchbook_update_render_layers",
-        layers: display.layers
-      },
-      "*"
-    );
-  }, [display.layers]);
+    if (canvas.current) {
+      canvas.current.contentWindow.postMessage(
+        {
+          type: "sketchbook_update_render_layers",
+          layers: display.layers
+        },
+        "*"
+      );
+    }
+  }, [canvas, display.layers]);
   // TODO: Something more sophisticated than an interval.
   useEffect(() => {
     const interval = setInterval(() => {
@@ -475,8 +474,8 @@ const Editor = () => {
         const rect = canvas.current.getBoundingClientRect();
         setViewport(current => ({
           ...current,
-          width: rect.width,
-          height: rect.height
+          width: Math.ceil(rect.width),
+          height: Math.ceil(rect.height)
         }));
       }
     }, 1000);
@@ -590,7 +589,6 @@ const Editor = () => {
         </ol>
       </div>
       <div
-        ref={canvas}
         style={{
           overflow: "hidden",
           position: "relative",
@@ -818,19 +816,19 @@ const Editor = () => {
             : null
         }
       >
-        {/* IFRAME START */}
-        <div
+        <iframe
+          title="Canvas"
+          ref={canvas}
+          src="/canvas/index.html"
           style={{
+            border: "none",
+            height: "100%",
+            overflow: "hidden",
             pointerEvents: "none",
             userSelect: "none",
-            width: viewport.width,
-            height: viewport.height,
-            overflow: "hidden"
+            width: "100%"
           }}
-        >
-          <Canvas />
-        </div>
-        {/* IFRAME END */}
+        ></iframe>
         <svg
           style={{
             pointerEvents: "none",
