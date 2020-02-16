@@ -164,23 +164,72 @@ const transformPoints = (matrices, points) =>
     )
   );
 
-const updateLayersDimensions = (layers, selection, dimensionsToUpdateTo) => {
-  if (selection.size < 2) {
-    return layers;
-  }
-  return layers.map(layer => {
-    if (selection.has(layer.id)) {
-      const updatedLayer = { ...layer };
-      const { x1, x2, y1, y2 } = dimensionsToUpdateTo;
-      updatedLayer.x1 = x1 || layer.x1;
-      updatedLayer.x2 = x2 || layer.x2;
-      updatedLayer.y1 = y1 || layer.y1;
-      updatedLayer.y2 = y2 || layer.y2;
-      return updatedLayer;
-    }
+// const updateLayersDimensions = (
+//   layers,
+//   selection,
+//   dimensionsToUpdateTo,
+//   predicate
+// ) => {
+//   return layers.map(layer => {
+//     if (predicate(layer)) {
+//       return {
+//         ...layer,
+//         x1: dimensionsToUpdateTo.x1 || layer.x1,
+//         x2: dimensionsToUpdateTo.x2 || layer.x2,
+//         y1: dimensionsToUpdateTo.y1 || layer.y1,
+//         y2: dimensionsToUpdateTo.y2 || layer.y2
+//       };
+//     }
 
-    return layer;
-  });
+//     return layer;
+//   });
+// };
+
+const getExtremeBounds = (layers, extreme, predicate = () => true) => {
+  if (layers.length === 0) return null;
+  const filteredLayers = layers.filter(predicate);
+  switch (extreme) {
+    case "widest":
+      return filteredLayers.reduce(
+        (result, { x1, x2 }) =>
+          x2 - x1 > result.x2 - result.x1 ? { x1, x2 } : result,
+        { x1: 0, x2: 0 }
+      );
+    case "narrowest":
+      return filteredLayers.reduce(
+        (result, { x1, x2 }) =>
+          x2 - x1 < result.x2 - result.x1 ? { x1, x2 } : result,
+        { x1: 0, x2: Infinity }
+      );
+    case "tallest":
+      return filteredLayers.reduce(
+        (result, { y1, y2 }) =>
+          y2 - y1 > result.y2 - result.y1 ? { y1, y2 } : result,
+        { y1: 0, y2: 0 }
+      );
+    case "shortest":
+      return filteredLayers.reduce(
+        (result, { y1, y2 }) =>
+          y2 - y1 < result.y2 - result.y1 ? { y1, y2 } : result,
+        { y1: 0, y2: Infinity }
+      );
+    default:
+      return null;
+  }
+};
+
+const resizeLayersToExtreme = (layers, extreme, predicate = () => true) => {
+  const extremeBounds = getExtremeBounds(layers, extreme, predicate);
+  return extremeBounds
+    ? layers.map(layer =>
+        predicate(layer)
+          ? {
+              ...layer,
+              ...extremeBounds
+            }
+          : layer
+      )
+    : layers;
 };
 
 export {
@@ -189,5 +238,7 @@ export {
   getLayerBounds,
   transformBounds,
   transformPoints,
-  updateLayersDimensions
+  // updateLayersDimensions,
+  getExtremeBounds,
+  resizeLayersToExtreme
 };
