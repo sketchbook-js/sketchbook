@@ -560,6 +560,8 @@ const Editor = () => {
                   }}
                   value={name}
                 />
+              ) : name.trim() === "" ? (
+                "Unnamed layer"
               ) : (
                 name
               )}
