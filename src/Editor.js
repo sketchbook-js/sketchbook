@@ -136,6 +136,7 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
 
 const Editor = () => {
   const canvas = useRef(null);
+  const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);
   const [viewport, setViewport] = useState({
     x: 0,
     y: 0,
@@ -556,8 +557,34 @@ const Editor = () => {
                   true
                 );
               }}
+              onDoubleClick={() => setIdOfLayerBeingEdited(id)}
+              onBlur={() => setIdOfLayerBeingEdited(null)}
             >
-              {name}
+              {idOfLayerBeingEdited === id ? (
+                <input
+                  type="text"
+                  autoFocus
+                  onChange={event => {
+                    const updatedName = event.currentTarget.value;
+                    setState(current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: current.doc.layers.map(layer => {
+                          return layer.id === id
+                            ? { ...layer, name: updatedName }
+                            : layer;
+                        })
+                      }
+                    }));
+                  }}
+                  value={name}
+                />
+              ) : name.trim() === "" ? (
+                "Unnamed layer"
+              ) : (
+                name
+              )}
             </li>
           ))}
         </ol>
