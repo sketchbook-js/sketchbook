@@ -8,7 +8,20 @@ import reorder from "./reorder";
 import pushID from "./pushID";
 import { getLayerBounds, transformLayers, alignLayers } from "./layers";
 
+import AlignBottom from "./icons/AlignBottom";
+import AlignHorizontalMiddle from "./icons/AlignHorizontalMiddle";
+import AlignLeft from "./icons/AlignLeft";
+import AlignRight from "./icons/AlignRight";
+import AlignTop from "./icons/AlignTop";
+import AlignVerticalMiddle from "./icons/AlignVerticalMiddle";
 import Canvas from "./Canvas";
+import FitContent from "./icons/FitContent";
+import FitContentHeight from "./icons/FitContentHeight";
+import FitContentWidth from "./icons/FitContentWidth";
+import MoveBackward from "./icons/MoveBackward";
+import MoveForward from "./icons/MoveForward";
+import MoveToBack from "./icons/MoveToBack";
+import MoveToFront from "./icons/MoveToFront";
 
 import "./reset.css";
 
@@ -77,20 +90,22 @@ const Input = ({ style, ...props }) => (
   />
 );
 
-const Button = ({ style, disabled, ...props }) => (
+const Button = ({ style, disabled, Icon, children, ...props }) => (
   <button
     style={{
       background: "#ddd",
+      borderRadius: 2,
       color: disabled ? "#bbb" : null,
-      minWidth: 24,
+      minWidth: 15,
+      padding: 5,
       textAlign: "center",
-      borderRadius: 3,
-      padding: "0 6px",
       ...style
     }}
     disabled={disabled}
     {...props}
-  />
+  >
+    {Icon ? <Icon color={disabled ? "#bbb" : undefined} /> : children}
+  </button>
 );
 
 const Textarea = ({ style, ...props }) => (
@@ -1217,8 +1232,9 @@ const Editor = () => {
                     }
                   );
                 }}
+                Icon={FitContentWidth}
               >
-                Width
+                Fit content width
               </Button>
               <Button
                 disabled={selection.size !== 1}
@@ -1252,8 +1268,9 @@ const Editor = () => {
                     );
                   });
                 }}
+                Icon={FitContentHeight}
               >
-                Height
+                Fit content height
               </Button>
               <Button
                 disabled={selection.size !== 1}
@@ -1286,8 +1303,9 @@ const Editor = () => {
                     );
                   });
                 }}
+                Icon={FitContent}
               >
-                Width{" "}&{" "}Height
+                Fit content
               </Button>
             </div>
             <PanelTitle style={{ marginTop: 6 }}>Align</PanelTitle>
@@ -1302,15 +1320,39 @@ const Editor = () => {
               }}
             >
               {[
-                { label: "←", alignment: { x: -1 } },
-                { label: "↔︎", alignment: { x: 0 } },
-                { label: "→", alignment: { x: 1 } },
-                { label: "↑", alignment: { y: -1 } },
-                { label: "↕︎", alignment: { y: 0 } },
-                { label: "↓", alignment: { y: 1 } }
-              ].map(({ label, alignment }) => (
+                {
+                  title: "Align left",
+                  icon: AlignLeft,
+                  alignment: { x: -1 }
+                },
+                {
+                  title: "Align horizontal middle",
+                  icon: AlignHorizontalMiddle,
+                  alignment: { x: 0 }
+                },
+                {
+                  title: "Align right",
+                  icon: AlignRight,
+                  alignment: { x: 1 }
+                },
+                {
+                  title: "Align top",
+                  icon: AlignTop,
+                  alignment: { y: -1 }
+                },
+                {
+                  title: "Align vertical middle",
+                  icon: AlignVerticalMiddle,
+                  alignment: { y: 0 }
+                },
+                {
+                  title: "Align bottom",
+                  icon: AlignBottom,
+                  alignment: { y: 1 }
+                }
+              ].map(({ title, icon, alignment }) => (
                 <Button
-                  key={label}
+                  key={title}
                   disabled={selection.size < 2}
                   onClick={() => {
                     setState(
@@ -1328,8 +1370,9 @@ const Editor = () => {
                       true
                     );
                   }}
+                  Icon={icon}
                 >
-                  {label}
+                  {title}
                 </Button>
               ))}
             </div>
@@ -1345,16 +1388,6 @@ const Editor = () => {
               }}
             >
               <Button
-                style={{
-                  color:
-                    selection.size !== 1 ||
-                    doc.layers.findIndex(
-                      ({ id }) => id === [...selection][0]
-                    ) ===
-                      doc.layers.length - 1
-                      ? "#bbb"
-                      : null
-                }}
                 disabled={
                   selection.size !== 1 ||
                   doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
@@ -1378,20 +1411,11 @@ const Editor = () => {
                     true
                   );
                 }}
+                Icon={MoveToFront}
               >
-                ⤒
+                Move to front
               </Button>
               <Button
-                style={{
-                  color:
-                    selection.size !== 1 ||
-                    doc.layers.findIndex(
-                      ({ id }) => id === [...selection][0]
-                    ) ===
-                      doc.layers.length - 1
-                      ? "#bbb"
-                      : null
-                }}
                 disabled={
                   selection.size !== 1 ||
                   doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
@@ -1417,19 +1441,11 @@ const Editor = () => {
                     true
                   );
                 }}
+                Icon={MoveForward}
               >
-                ↑
+                Move forward
               </Button>
               <Button
-                style={{
-                  color:
-                    selection.size !== 1 ||
-                    doc.layers.findIndex(
-                      ({ id }) => id === [...selection][0]
-                    ) === 0
-                      ? "#bbb"
-                      : null
-                }}
                 disabled={
                   selection.size !== 1 ||
                   doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
@@ -1455,19 +1471,11 @@ const Editor = () => {
                     true
                   );
                 }}
+                Icon={MoveBackward}
               >
-                ↓
+                Move backward
               </Button>
               <Button
-                style={{
-                  color:
-                    selection.size !== 1 ||
-                    doc.layers.findIndex(
-                      ({ id }) => id === [...selection][0]
-                    ) === 0
-                      ? "#bbb"
-                      : null
-                }}
                 disabled={
                   selection.size !== 1 ||
                   doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
@@ -1491,8 +1499,9 @@ const Editor = () => {
                     true
                   );
                 }}
+                Icon={MoveToBack}
               >
-                ⤓
+                Move to back
               </Button>
             </div>
             <>
