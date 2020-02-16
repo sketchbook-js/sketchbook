@@ -4,9 +4,9 @@ import {
   getLayerBounds,
   transformBounds,
   transformPoints,
-  updateLayersDimensions
+  getExtremeBounds,
+  resizeLayersToExtreme
 } from "./layers";
-import { set } from "set-fns";
 
 describe("transformLayers", () => {
   test("no layers, no-op", () => {
@@ -843,7 +843,85 @@ describe("transformPoints", () => {
   });
 });
 
-describe("updateLayersDimensions", () => {
+// describe("updateLayersDimensions", () => {
+//   const layers = [
+//     {
+//       id: "-LyqdJBMdrVihqnJOOo8",
+//       name: "Input",
+//       component: "Input",
+//       x1: 100,
+//       y1: 666,
+//       x2: 500,
+//       y2: 722,
+//       options: { label: "Email", value: "" }
+//     },
+//     {
+//       id: "-LyqdsUuufs_UM05V3My",
+//       name: "Button",
+//       component: "Button",
+//       x1: 417.78125,
+//       y1: 732,
+//       x2: 500,
+//       y2: 768,
+//       options: { label: "Subscribe" }
+//     },
+//     {
+//       id: "-LyqduQ0G84esGuBLiC4",
+//       name: "Image",
+//       component: "Image",
+//       x1: 100,
+//       y1: 156,
+//       x2: 340,
+//       y2: 336
+//     }
+//   ];
+
+//   test("nothing selected", () => {
+//     expect(
+//       updateLayersDimensions(layers, set(), {
+//         x1: layers[0].x1,
+//         x2: layers[0].x2
+//       })
+//     ).toEqual(layers);
+//   });
+
+//   test("one layer selected", () => {
+//     expect(
+//       updateLayersDimensions(layers, set(["-LyqdJBMdrVihqnJOOo8"]), {
+//         x1: layers[0].x1,
+//         x2: layers[0].x2
+//       })
+//     ).toEqual(layers);
+//   });
+
+//   test("changing x axis dimensions with two layers selected", () => {
+//     const updatedLayers = layers;
+//     updatedLayers[1].x1 = layers[0].x1;
+//     updatedLayers[1].x2 = layers[0].x2;
+//     expect(
+//       updateLayersDimensions(
+//         layers,
+//         set(["-LyqdJBMdrVihqnJOOo8", "-LyqdsUuufs_UM05V3My"]),
+//         { x1: layers[0].x1, x2: layers[0].x2 }
+//       )
+//     ).toEqual(updatedLayers);
+//   });
+
+//   test("changing y axis dimensions with two layers selected", () => {
+//     const updatedLayers = layers;
+//     updatedLayers[1].y1 = layers[0].y1;
+//     updatedLayers[1].y2 = layers[0].y2;
+//     expect(
+//       updateLayersDimensions(
+//         layers,
+//         set(["-LyqdJBMdrVihqnJOOo8", "-LyqdsUuufs_UM05V3My"]),
+//         { y1: layers[0].y1, y2: layers[0].y2 }
+//       )
+//     ).toEqual(updatedLayers);
+//   });
+// });
+
+describe("GetExtremeBounds", () => {
   const layers = [
     {
       id: "-LyqdJBMdrVihqnJOOo8",
@@ -859,11 +937,52 @@ describe("updateLayersDimensions", () => {
       id: "-LyqdsUuufs_UM05V3My",
       name: "Button",
       component: "Button",
-      x1: 417.78125,
+      x1: 400,
       y1: 732,
       x2: 500,
       y2: 768,
       options: { label: "Subscribe" }
+    }
+  ];
+
+  test("no extreme", () => {
+    expect(getExtremeBounds(layers, null)).toEqual(null);
+  });
+
+  test("no layers", () => {
+    expect(getExtremeBounds([], "widest")).toEqual(null);
+  });
+
+  test("find widest bounds", () => {
+    expect(getExtremeBounds(layers, "widest")).toEqual({ x1: 100, x2: 500 });
+  });
+
+  test("find narrowest bounds", () => {
+    expect(getExtremeBounds(layers, "narrowest")).toEqual({ x1: 400, x2: 500 });
+  });
+
+  test("find tallest bounds", () => {
+    expect(getExtremeBounds(layers, "tallest")).toEqual({ y1: 666, y2: 722 });
+  });
+
+  test("find shortest bounds", () => {
+    expect(getExtremeBounds(layers, "shortest")).toEqual({ y1: 732, y2: 768 });
+  });
+
+  test.todo("predicate");
+});
+
+describe("ResizeLayersToExtreme", () => {
+  const layers = [
+    {
+      id: "-LyqdJBMdrVihqnJOOo8",
+      name: "Input",
+      component: "Input",
+      x1: 100,
+      y1: 666,
+      x2: 500,
+      y2: 722,
+      options: { label: "Email", value: "" }
     },
     {
       id: "-LyqduQ0G84esGuBLiC4",
@@ -876,47 +995,109 @@ describe("updateLayersDimensions", () => {
     }
   ];
 
-  test("nothing selected", () => {
-    expect(
-      updateLayersDimensions(layers, set(), {
-        x1: layers[0].x1,
-        x2: layers[0].x2
-      })
-    ).toEqual(layers);
+  test("no layers", () => {
+    expect(resizeLayersToExtreme([], "widest")).toEqual([]);
   });
 
-  test("one layer selected", () => {
-    expect(
-      updateLayersDimensions(layers, set(["-LyqdJBMdrVihqnJOOo8"]), {
-        x1: layers[0].x1,
-        x2: layers[0].x2
-      })
-    ).toEqual(layers);
+  test("no extreme", () => {
+    expect(resizeLayersToExtreme(layers, null)).toEqual(layers);
   });
 
-  test("changing x axis dimensions with two layers selected", () => {
-    const updatedLayers = layers;
-    updatedLayers[1].x1 = layers[0].x1;
-    updatedLayers[1].x2 = layers[0].x2;
-    expect(
-      updateLayersDimensions(
-        layers,
-        set(["-LyqdJBMdrVihqnJOOo8", "-LyqdsUuufs_UM05V3My"]),
-        { x1: layers[0].x1, x2: layers[0].x2 }
-      )
-    ).toEqual(updatedLayers);
+  test("resize layers to widest", () => {
+    expect(resizeLayersToExtreme(layers, "widest")).toEqual([
+      {
+        id: "-LyqdJBMdrVihqnJOOo8",
+        name: "Input",
+        component: "Input",
+        x1: 100,
+        y1: 666,
+        x2: 500,
+        y2: 722,
+        options: { label: "Email", value: "" }
+      },
+      {
+        id: "-LyqduQ0G84esGuBLiC4",
+        name: "Image",
+        component: "Image",
+        x1: 100,
+        y1: 156,
+        x2: 500,
+        y2: 336
+      }
+    ]);
   });
 
-  test("changing y axis dimensions with two layers selected", () => {
-    const updatedLayers = layers;
-    updatedLayers[1].y1 = layers[0].y1;
-    updatedLayers[1].y2 = layers[0].y2;
-    expect(
-      updateLayersDimensions(
-        layers,
-        set(["-LyqdJBMdrVihqnJOOo8", "-LyqdsUuufs_UM05V3My"]),
-        { y1: layers[0].y1, y2: layers[0].y2 }
-      )
-    ).toEqual(updatedLayers);
+  test("resize layers to narrowest", () => {
+    expect(resizeLayersToExtreme(layers, "narrowest")).toEqual([
+      {
+        id: "-LyqdJBMdrVihqnJOOo8",
+        name: "Input",
+        component: "Input",
+        x1: 100,
+        y1: 666,
+        x2: 340,
+        y2: 722,
+        options: { label: "Email", value: "" }
+      },
+      {
+        id: "-LyqduQ0G84esGuBLiC4",
+        name: "Image",
+        component: "Image",
+        x1: 100,
+        y1: 156,
+        x2: 340,
+        y2: 336
+      }
+    ]);
   });
+
+  test("resize layers to tallest", () => {
+    expect(resizeLayersToExtreme(layers, "tallest")).toEqual([
+      {
+        id: "-LyqdJBMdrVihqnJOOo8",
+        name: "Input",
+        component: "Input",
+        x1: 100,
+        y1: 156,
+        x2: 500,
+        y2: 336,
+        options: { label: "Email", value: "" }
+      },
+      {
+        id: "-LyqduQ0G84esGuBLiC4",
+        name: "Image",
+        component: "Image",
+        x1: 100,
+        y1: 156,
+        x2: 340,
+        y2: 336
+      }
+    ]);
+  });
+
+  test("resize layers to shortest", () => {
+    expect(resizeLayersToExtreme(layers, "shortest")).toEqual([
+      {
+        id: "-LyqdJBMdrVihqnJOOo8",
+        name: "Input",
+        component: "Input",
+        x1: 100,
+        y1: 666,
+        x2: 500,
+        y2: 722,
+        options: { label: "Email", value: "" }
+      },
+      {
+        id: "-LyqduQ0G84esGuBLiC4",
+        name: "Image",
+        component: "Image",
+        x1: 100,
+        y1: 666,
+        x2: 340,
+        y2: 722
+      }
+    ]);
+  });
+
+  test.todo("predicate");
 });
