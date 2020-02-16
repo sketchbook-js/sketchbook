@@ -10,7 +10,7 @@ import {
   getLayerBounds,
   transformLayers,
   alignLayers,
-  updateLayersDimensions
+  resizeLayersToExtreme
 } from "./layers";
 
 import Canvas from "./Canvas";
@@ -468,47 +468,6 @@ const Editor = () => {
       clearInterval(interval);
     };
   }, [setViewport]);
-  const resizeLayerByExtreme = (layers, extreme, predicate = () => true) => {
-    const allSelectedLayers = layers.filter(predicate);
-    const dimensionsToUpdateTo = allSelectedLayers.reduce(
-      (mostExtremeDimensionsFoundSoFar, layer) => {
-        const { x1, x2, y1, y2 } = mostExtremeDimensionsFoundSoFar;
-        switch (extreme) {
-          case "widest":
-            return x2 - x1 < layer.x2 - layer.x1
-              ? { x1: layer.x1, x2: layer.x2 }
-              : { x1, x2 };
-          case "narrowest":
-            return x2 - x1 > layer.x2 - layer.x1
-              ? { x1: layer.x1, x2: layer.x2 }
-              : { x1, x2 };
-          case "tallest":
-            return y2 - y1 < layer.y2 - layer.y1
-              ? { y1: layer.y1, y2: layer.y2 }
-              : { y1, y2 };
-          case "shortest":
-            return y2 - y1 > layer.y2 - layer.y1
-              ? { y1: layer.y1, y2: layer.y2 }
-              : { y1, y2 };
-          default:
-            return { x1: layer.x1, x2: layer.x2, y1: layer.y1, y2: layer.y2 };
-        }
-      },
-      { x1: 0, x2: 0, y1: 0, y2: 0 }
-    );
-
-    setState(current => ({
-      ...current,
-      doc: {
-        ...current.doc,
-        layers: updateLayersDimensions(
-          doc.layers,
-          selection,
-          dimensionsToUpdateTo
-        )
-      }
-    }));
-  };
   return (
     <div
       style={{
@@ -1319,46 +1278,32 @@ const Editor = () => {
                 padding: 6
               }}
             >
-              <Button
-                disabled={selection.size < 2}
-                onClick={() => {
-                  resizeLayerByExtreme(doc.layers, "widest", layer =>
-                    selection.has(layer.id)
-                  );
-                }}
-              >
-                Fit Widest
-              </Button>
-              <Button
-                disabled={selection.size < 2}
-                onClick={() => {
-                  resizeLayerByExtreme(doc.layers, "narrowest", layer =>
-                    selection.has(layer.id)
-                  );
-                }}
-              >
-                Fit Narrowest
-              </Button>
-              <Button
-                disabled={selection.size < 2}
-                onClick={() => {
-                  resizeLayerByExtreme(doc.layers, "tallest", layer =>
-                    selection.has(layer.id)
-                  );
-                }}
-              >
-                Fit Tallest
-              </Button>
-              <Button
-                disabled={selection.size < 2}
-                onClick={() => {
-                  resizeLayerByExtreme(doc.layers, "shortest", layer =>
-                    selection.has(layer.id)
-                  );
-                }}
-              >
-                Fit Shortest
-              </Button>
+              {[
+                { label: "Fit widest", extreme: "widest" },
+                { label: "Fit narrowest", extreme: "narrowest" },
+                { label: "Fit tallest", extreme: "tallest" },
+                { label: "Fit shortest", extreme: "shortest" }
+              ].map(({ label, extreme }) => (
+                <Button
+                  key={label}
+                  disabled={selection.size < 2}
+                  onClick={() => {
+                    setState(current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: resizeLayersToExtreme(
+                          doc.layers,
+                          extreme,
+                          ({ id }) => selection.has(id)
+                        )
+                      }
+                    }));
+                  }}
+                >
+                  {label}
+                </Button>
+              ))}
             </div>
             <PanelTitle style={{ marginTop: 6 }}>Align</PanelTitle>
             <div
