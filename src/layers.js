@@ -164,27 +164,6 @@ const transformPoints = (matrices, points) =>
     )
   );
 
-// const updateLayersDimensions = (
-//   layers,
-//   selection,
-//   dimensionsToUpdateTo,
-//   predicate
-// ) => {
-//   return layers.map(layer => {
-//     if (predicate(layer)) {
-//       return {
-//         ...layer,
-//         x1: dimensionsToUpdateTo.x1 || layer.x1,
-//         x2: dimensionsToUpdateTo.x2 || layer.x2,
-//         y1: dimensionsToUpdateTo.y1 || layer.y1,
-//         y2: dimensionsToUpdateTo.y2 || layer.y2
-//       };
-//     }
-
-//     return layer;
-//   });
-// };
-
 const getExtremeBounds = (layers, extreme, predicate = () => true) => {
   if (layers.length === 0) return null;
   const filteredLayers = layers.filter(predicate);
@@ -238,7 +217,6 @@ export {
   getLayerBounds,
   transformBounds,
   transformPoints,
-  // updateLayersDimensions,
   getExtremeBounds,
   resizeLayersToExtreme
 };
