@@ -15,19 +15,16 @@ describe("Reorder", () => {
     expect(reorder(testList, 1, 3)).toEqual(["a", "c", "d", "b"]);
   });
 
-  test("reorders correctly end index < start index", () => {
+  test("reorders 1 element correctly end index < start index", () => {
     expect(reorder(testList, 3, 1)).toEqual(["a", "d", "b", "c"]);
   });
 
-  test("reorders correctly start index === end index", () => {
+  test("reorders 1 element correctly start index === end index", () => {
     expect(reorder(testList, 2, 2)).toEqual(testList);
   });
 
-  test("reorders 1 element when only unshiftedElementsPredicate is not specified but shiftedElementsPredicate is", () => {
+  test("reorders 1 element when only one predicate is specified", () => {
     expect(reorder(testList, 1, 3, () => true)).toEqual(["a", "c", "d", "b"]);
-  });
-
-  test("reorders 1 element when only shiftedElementsPredicate is not specified but unshiftedElementsPredicate is", () => {
     expect(reorder(testList, 1, 3, null, () => true)).toEqual([
       "a",
       "c",
