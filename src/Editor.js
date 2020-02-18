@@ -540,10 +540,9 @@ const Editor = () => {
             setState(current => {
               return {
                 ...current,
-                selection:
-                  current.selection.size === 0
-                    ? set([draggableId])
-                    : current.selection
+                selection: current.selection.has(draggableId)
+                  ? current.selection
+                  : set([draggableId])
               };
             });
           }}
