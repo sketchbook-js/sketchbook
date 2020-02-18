@@ -6,7 +6,12 @@ import config from "./config";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
-import { getLayerBounds, transformLayers, alignLayers } from "./layers";
+import {
+  getLayerBounds,
+  transformLayers,
+  alignLayers,
+  resizeLayersToExtreme
+} from "./layers";
 
 import AlignBottom from "./icons/AlignBottom";
 import AlignHorizontalMiddle from "./icons/AlignHorizontalMiddle";
@@ -1307,6 +1312,43 @@ const Editor = () => {
               >
                 Fit content
               </Button>
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, min-content)",
+                alignItems: "center",
+                justifyItems: "center",
+                gap: 6,
+                padding: 6
+              }}
+            >
+              {[
+                { label: "Fit widest", extreme: "widest" },
+                { label: "Fit narrowest", extreme: "narrowest" },
+                { label: "Fit tallest", extreme: "tallest" },
+                { label: "Fit shortest", extreme: "shortest" }
+              ].map(({ label, extreme }) => (
+                <Button
+                  key={label}
+                  disabled={selection.size < 2}
+                  onClick={() => {
+                    setState(current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: resizeLayersToExtreme(
+                          doc.layers,
+                          extreme,
+                          ({ id }) => selection.has(id)
+                        )
+                      }
+                    }));
+                  }}
+                >
+                  {label}
+                </Button>
+              ))}
             </div>
             <PanelTitle style={{ marginTop: 6 }}>Align</PanelTitle>
             <div

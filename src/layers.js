@@ -164,10 +164,59 @@ const transformPoints = (matrices, points) =>
     )
   );
 
+const getExtremeBounds = (layers, extreme, predicate = () => true) => {
+  if (layers.length === 0) return null;
+  const filteredLayers = layers.filter(predicate);
+  switch (extreme) {
+    case "widest":
+      return filteredLayers.reduce(
+        (result, { x1, x2 }) =>
+          x2 - x1 > result.x2 - result.x1 ? { x1, x2 } : result,
+        { x1: 0, x2: 0 }
+      );
+    case "narrowest":
+      return filteredLayers.reduce(
+        (result, { x1, x2 }) =>
+          x2 - x1 < result.x2 - result.x1 ? { x1, x2 } : result,
+        { x1: 0, x2: Infinity }
+      );
+    case "tallest":
+      return filteredLayers.reduce(
+        (result, { y1, y2 }) =>
+          y2 - y1 > result.y2 - result.y1 ? { y1, y2 } : result,
+        { y1: 0, y2: 0 }
+      );
+    case "shortest":
+      return filteredLayers.reduce(
+        (result, { y1, y2 }) =>
+          y2 - y1 < result.y2 - result.y1 ? { y1, y2 } : result,
+        { y1: 0, y2: Infinity }
+      );
+    default:
+      return null;
+  }
+};
+
+const resizeLayersToExtreme = (layers, extreme, predicate = () => true) => {
+  const extremeBounds = getExtremeBounds(layers, extreme, predicate);
+  return extremeBounds
+    ? layers.map(layer =>
+        predicate(layer)
+          ? {
+              ...layer,
+              ...extremeBounds
+            }
+          : layer
+      )
+    : layers;
+};
+
 export {
   transformLayers,
   alignLayers,
   getLayerBounds,
   transformBounds,
-  transformPoints
+  transformPoints,
+  getExtremeBounds,
+  resizeLayersToExtreme
 };
