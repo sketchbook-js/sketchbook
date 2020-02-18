@@ -22,7 +22,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      inject: true,
+      inject: false,
       template: path.resolve(__dirname, "../public/index.html"),
       minify: {
         removeComments: true,
