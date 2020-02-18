@@ -134,7 +134,7 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
 
 const Editor = () => {
   const canvas = useRef(null);
-  const [elementBeingDraggedId, setElementBeingDraggedId] = useState("");
+  const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
   const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);
   const [viewport, setViewport] = useState({
     x: 0,
@@ -550,7 +550,7 @@ const Editor = () => {
           onDragEnd={result => {
             const { destination, source, draggableId } = result;
 
-            setElementBeingDraggedId("");
+            setElementBeingDraggedId(null);
             // destination may be null if you drag outside of the droppable area.
             if (
               !destination ||
@@ -560,24 +560,18 @@ const Editor = () => {
               return;
             }
 
-            const layers = [...doc.layers];
-            const draggedLayer = layers.splice(source.index, 1)[0];
-            layers.splice(destination.index, 0, draggedLayer);
-
-            const updatedLayers = layers.filter(
-              layer => !selection.has(layer.id) || draggableId === layer.id
-            );
-            updatedLayers.splice(
-              updatedLayers.findIndex(layer => layer.id === draggableId) + 1,
-              0,
-              ...layers.filter(
-                layer => selection.has(layer.id) && draggableId !== layer.id
-              )
-            );
-
             setState(current => ({
               ...current,
-              doc: { ...current.doc, layers: updatedLayers }
+              doc: {
+                ...current.doc,
+                layers: reorder(
+                  doc.layers,
+                  source.index,
+                  destination.index,
+                  layer => !selection.has(layer.id) || draggableId === layer.id,
+                  layer => selection.has(layer.id) && draggableId !== layer.id
+                )
+              }
             }));
           }}
         >
