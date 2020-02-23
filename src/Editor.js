@@ -559,32 +559,22 @@ const Editor = () => {
               return;
             }
 
-            let orderedDraggedIndexes = null;
-            if (selection.size > 1) {
-              let leadElementIndex = null;
-              const draggedIndexes = [...selection].map((layerId, i) => {
-                const layerIndex = doc.layers.findIndex(
-                  layer => layer.id === layerId
-                );
-                if (layerIndex === source.index) {
-                  leadElementIndex = i;
-                }
-                return layerIndex;
-              });
-              orderedDraggedIndexes = reorder(
-                draggedIndexes,
-                leadElementIndex,
-                0
-              );
-            }
-
             setState(current => ({
               ...current,
               doc: {
                 ...current.doc,
                 layers: reorder(
                   doc.layers,
-                  orderedDraggedIndexes || source.index,
+                  [
+                    source.index,
+                    ...current.doc.layers
+                      .map(({ id }, index) => ({ id, index }))
+                      .filter(
+                        ({ id, index }) =>
+                          selection.has(id) && index !== source.index
+                      )
+                      .map(({ index }) => index)
+                  ] || source.index,
                   destination.index
                 )
               }
