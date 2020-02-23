@@ -547,7 +547,7 @@ const Editor = () => {
             });
           }}
           onDragEnd={result => {
-            const { destination, source, draggableId } = result;
+            const { destination, source } = result;
 
             setElementBeingDraggedId(null);
             // destination may be null if you drag outside of the droppable area.
@@ -559,16 +559,33 @@ const Editor = () => {
               return;
             }
 
+            let orderedDraggedIndexes = null;
+            if (selection.size > 1) {
+              let leadElementIndex = null;
+              const draggedIndexes = [...selection].map((layerId, i) => {
+                const layerIndex = doc.layers.findIndex(
+                  layer => layer.id === layerId
+                );
+                if (layerIndex === source.index) {
+                  leadElementIndex = i;
+                }
+                return layerIndex;
+              });
+              orderedDraggedIndexes = reorder(
+                draggedIndexes,
+                leadElementIndex,
+                0
+              );
+            }
+
             setState(current => ({
               ...current,
               doc: {
                 ...current.doc,
                 layers: reorder(
                   doc.layers,
-                  source.index,
-                  destination.index,
-                  layer => !selection.has(layer.id) || draggableId === layer.id,
-                  layer => selection.has(layer.id) && draggableId !== layer.id
+                  orderedDraggedIndexes || source.index,
+                  destination.index
                 )
               }
             }));
