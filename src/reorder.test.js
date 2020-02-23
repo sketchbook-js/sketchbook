@@ -3,57 +3,95 @@ import reorder from "./reorder";
 describe("Reorder", () => {
   const testList = ["a", "b", "c", "d"];
 
-  test("start index does not exist in list", () => {
+  test("startIndex does not exist in list", () => {
     expect(reorder(testList, 4, 1)).toEqual(testList);
   });
 
-  test("end index does not exist in list", () => {
+  test("endIndex does not exist in list should fail", () => {
     expect(reorder(testList, 1, 4)).toEqual(testList);
   });
 
-  test("reorders 1 element correctly start index < end index", () => {
+  test("single element, leadIndex < endIndex", () => {
     expect(reorder(testList, 1, 3)).toEqual(["a", "c", "d", "b"]);
   });
 
-  test("reorders 1 element correctly end index < start index", () => {
+  test("single element, leadIndex > endIndex", () => {
     expect(reorder(testList, 3, 1)).toEqual(["a", "d", "b", "c"]);
   });
 
-  test("reorders 1 element correctly start index === end index", () => {
+  test("single element, reorders 1 element correctly leadIndex === endIndex", () => {
     expect(reorder(testList, 2, 2)).toEqual(testList);
   });
 
-  test("reorders 1 element when only one predicate is specified", () => {
-    expect(reorder(testList, 1, 3, () => true)).toEqual(["a", "c", "d", "b"]);
-    expect(reorder(testList, 1, 3, null, () => true)).toEqual([
+  test("multiple elements, move to start", () => {
+    expect(reorder(["a", "b", "c", "d"], [0, 3], 0)).toEqual([
       "a",
-      "c",
       "d",
-      "b"
+      "b",
+      "c"
     ]);
   });
 
-  test("reorders multiple elements correctly", () => {
-    expect(
-      reorder(
-        testList,
-        1,
-        3,
-        elem => ["c", "d"].includes(elem),
-        elem => ["a", "b"].includes(elem)
-      )
-    ).toEqual(["c", "a", "b", "d"]);
+  test("multiple elements, move to middle", () => {
+    expect(reorder(["a", "b", "c", "d"], [0, 3], 1)).toEqual([
+      "b",
+      "a",
+      "d",
+      "c"
+    ]);
   });
 
-  test("predicates cause filter array to return an overlapping value", () => {
-    expect(
-      reorder(
-        testList,
-        1,
-        3,
-        elem => ["b", "c", "d"].includes(elem),
-        elem => ["a", "b"].includes(elem)
-      )
-    ).toEqual("invalid predicate(s)");
+  test("multiple elements, move to end", () => {
+    expect(reorder(["a", "b", "c", "d"], [0, 3], 2)).toEqual([
+      "b",
+      "c",
+      "a",
+      "d"
+    ]);
+  });
+
+  test("multiple elements, secondElementIndex > leadIndex && secondElementIndex > endIndex", () => {
+    expect(reorder(["a", "b", "c", "d"], [0, 3], 2)).toEqual([
+      "b",
+      "c",
+      "a",
+      "d"
+    ]);
+  });
+
+  test("multiple elements, secondElementIndex < leadIndex && secondElementIndex < endIndex", () => {
+    expect(reorder(["a", "b", "c", "d"], [3, 0], 2)).toEqual([
+      "b",
+      "d",
+      "a",
+      "c"
+    ]);
+  });
+
+  test("multiple elements, secondElemIndex < leadIndex && secondElemIndex >= endIndex", () => {
+    expect(reorder(["a", "b", "c", "d"], [3, 1], 0)).toEqual([
+      "d",
+      "b",
+      "a",
+      "c"
+    ]);
+  });
+
+  test("multiple elements, secondElemIndex > leadIndex && secondElemIndex <= endIndex", () => {
+    expect(reorder(["a", "b", "c", "d"], [1, 2], 3)).toEqual([
+      "a",
+      "d",
+      "b",
+      "c"
+    ]);
+  });
+
+  test("ignore duplicates", () => {
+    expect(reorder(["a", "b", "c", "d"], [0, 0], 3)).toEqual([
+      "b",
+      "c",
+      "d",
+      "a"
+    ]);
   });
 });
