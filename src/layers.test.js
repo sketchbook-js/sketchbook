@@ -3,7 +3,9 @@ import {
   alignLayers,
   getLayerBounds,
   transformBounds,
-  transformPoints
+  transformPoints,
+  getExtremeBounds,
+  resizeLayersToExtreme
 } from "./layers";
 
 describe("transformLayers", () => {
@@ -839,4 +841,185 @@ describe("transformPoints", () => {
       [-54, -28]
     ]);
   });
+});
+
+describe("GetExtremeBounds", () => {
+  const layers = [
+    {
+      id: "-LyqdJBMdrVihqnJOOo8",
+      name: "Input",
+      component: "Input",
+      x1: 100,
+      y1: 666,
+      x2: 500,
+      y2: 722,
+      options: { label: "Email", value: "" }
+    },
+    {
+      id: "-LyqdsUuufs_UM05V3My",
+      name: "Button",
+      component: "Button",
+      x1: 400,
+      y1: 732,
+      x2: 500,
+      y2: 768,
+      options: { label: "Subscribe" }
+    }
+  ];
+
+  test("no extreme", () => {
+    expect(getExtremeBounds(layers, null)).toEqual(null);
+  });
+
+  test("no layers", () => {
+    expect(getExtremeBounds([], "widest")).toEqual(null);
+  });
+
+  test("find widest bounds", () => {
+    expect(getExtremeBounds(layers, "widest")).toEqual({ x1: 100, x2: 500 });
+  });
+
+  test("find narrowest bounds", () => {
+    expect(getExtremeBounds(layers, "narrowest")).toEqual({ x1: 400, x2: 500 });
+  });
+
+  test("find tallest bounds", () => {
+    expect(getExtremeBounds(layers, "tallest")).toEqual({ y1: 666, y2: 722 });
+  });
+
+  test("find shortest bounds", () => {
+    expect(getExtremeBounds(layers, "shortest")).toEqual({ y1: 732, y2: 768 });
+  });
+
+  test.todo("predicate");
+});
+
+describe("ResizeLayersToExtreme", () => {
+  const layers = [
+    {
+      id: "-LyqdJBMdrVihqnJOOo8",
+      name: "Input",
+      component: "Input",
+      x1: 100,
+      y1: 666,
+      x2: 500,
+      y2: 722,
+      options: { label: "Email", value: "" }
+    },
+    {
+      id: "-LyqduQ0G84esGuBLiC4",
+      name: "Image",
+      component: "Image",
+      x1: 100,
+      y1: 156,
+      x2: 340,
+      y2: 336
+    }
+  ];
+
+  test("no layers", () => {
+    expect(resizeLayersToExtreme([], "widest")).toEqual([]);
+  });
+
+  test("no extreme", () => {
+    expect(resizeLayersToExtreme(layers, null)).toEqual(layers);
+  });
+
+  test("resize layers to widest", () => {
+    expect(resizeLayersToExtreme(layers, "widest")).toEqual([
+      {
+        id: "-LyqdJBMdrVihqnJOOo8",
+        name: "Input",
+        component: "Input",
+        x1: 100,
+        y1: 666,
+        x2: 500,
+        y2: 722,
+        options: { label: "Email", value: "" }
+      },
+      {
+        id: "-LyqduQ0G84esGuBLiC4",
+        name: "Image",
+        component: "Image",
+        x1: 100,
+        y1: 156,
+        x2: 500,
+        y2: 336
+      }
+    ]);
+  });
+
+  test("resize layers to narrowest", () => {
+    expect(resizeLayersToExtreme(layers, "narrowest")).toEqual([
+      {
+        id: "-LyqdJBMdrVihqnJOOo8",
+        name: "Input",
+        component: "Input",
+        x1: 100,
+        y1: 666,
+        x2: 340,
+        y2: 722,
+        options: { label: "Email", value: "" }
+      },
+      {
+        id: "-LyqduQ0G84esGuBLiC4",
+        name: "Image",
+        component: "Image",
+        x1: 100,
+        y1: 156,
+        x2: 340,
+        y2: 336
+      }
+    ]);
+  });
+
+  test("resize layers to tallest", () => {
+    expect(resizeLayersToExtreme(layers, "tallest")).toEqual([
+      {
+        id: "-LyqdJBMdrVihqnJOOo8",
+        name: "Input",
+        component: "Input",
+        x1: 100,
+        y1: 156,
+        x2: 500,
+        y2: 336,
+        options: { label: "Email", value: "" }
+      },
+      {
+        id: "-LyqduQ0G84esGuBLiC4",
+        name: "Image",
+        component: "Image",
+        x1: 100,
+        y1: 156,
+        x2: 340,
+        y2: 336
+      }
+    ]);
+  });
+
+  test("resize layers to shortest", () => {
+    expect(resizeLayersToExtreme(layers, "shortest")).toEqual([
+      {
+        id: "-LyqdJBMdrVihqnJOOo8",
+        name: "Input",
+        component: "Input",
+        x1: 100,
+        y1: 666,
+        x2: 500,
+        y2: 722,
+        options: { label: "Email", value: "" }
+      },
+      {
+        id: "-LyqduQ0G84esGuBLiC4",
+        name: "Image",
+        component: "Image",
+        x1: 100,
+        y1: 666,
+        x2: 340,
+        y2: 722
+      }
+    ]);
+  });
+
+  test.todo("predicate");
 });

@@ -6,7 +6,12 @@ import config from "./config";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
-import { getLayerBounds, transformLayers, alignLayers } from "./layers";
+import {
+  getLayerBounds,
+  transformLayers,
+  alignLayers,
+  resizeLayersToExtreme
+} from "./layers";
 
 import AlignBottom from "./icons/AlignBottom";
 import AlignHorizontalMiddle from "./icons/AlignHorizontalMiddle";
@@ -14,7 +19,6 @@ import AlignLeft from "./icons/AlignLeft";
 import AlignRight from "./icons/AlignRight";
 import AlignTop from "./icons/AlignTop";
 import AlignVerticalMiddle from "./icons/AlignVerticalMiddle";
-import Canvas from "./Canvas";
 import FitContent from "./icons/FitContent";
 import FitContentHeight from "./icons/FitContentHeight";
 import FitContentWidth from "./icons/FitContentWidth";
@@ -22,8 +26,6 @@ import MoveBackward from "./icons/MoveBackward";
 import MoveForward from "./icons/MoveForward";
 import MoveToBack from "./icons/MoveToBack";
 import MoveToFront from "./icons/MoveToFront";
-
-import "./reset.css";
 
 const measure = ({ type, width, height, options }, callback) => {
   const id = pushID();
@@ -131,6 +133,7 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
 
 const Editor = () => {
   const canvas = useRef(null);
+  const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);
   const [viewport, setViewport] = useState({
     x: 0,
     y: 0,
@@ -454,14 +457,16 @@ const Editor = () => {
     );
   };
   useEffect(() => {
-    window.postMessage(
-      {
-        type: "sketchbook_update_render_layers",
-        layers: display.layers
-      },
-      "*"
-    );
-  }, [display.layers]);
+    if (canvas.current) {
+      canvas.current.contentWindow.postMessage(
+        {
+          type: "sketchbook_update_render_layers",
+          layers: display.layers
+        },
+        "*"
+      );
+    }
+  }, [canvas, display.layers]);
   // TODO: Something more sophisticated than an interval.
   useEffect(() => {
     const interval = setInterval(() => {
@@ -469,8 +474,8 @@ const Editor = () => {
         const rect = canvas.current.getBoundingClientRect();
         setViewport(current => ({
           ...current,
-          width: rect.width,
-          height: rect.height
+          width: Math.ceil(rect.width),
+          height: Math.ceil(rect.height)
         }));
       }
     }, 1000);
@@ -551,14 +556,39 @@ const Editor = () => {
                   true
                 );
               }}
+              onDoubleClick={() => setIdOfLayerBeingEdited(id)}
+              onBlur={() => setIdOfLayerBeingEdited(null)}
             >
-              {name}
+              {idOfLayerBeingEdited === id ? (
+                <input
+                  type="text"
+                  autoFocus
+                  onChange={event => {
+                    const updatedName = event.currentTarget.value;
+                    setState(current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: current.doc.layers.map(layer => {
+                          return layer.id === id
+                            ? { ...layer, name: updatedName }
+                            : layer;
+                        })
+                      }
+                    }));
+                  }}
+                  value={name}
+                />
+              ) : name.trim() === "" ? (
+                "Unnamed layer"
+              ) : (
+                name
+              )}
             </li>
           ))}
         </ol>
       </div>
       <div
-        ref={canvas}
         style={{
           overflow: "hidden",
           position: "relative",
@@ -786,19 +816,19 @@ const Editor = () => {
             : null
         }
       >
-        {/* IFRAME START */}
-        <div
+        <iframe
+          title="Canvas"
+          ref={canvas}
+          src="/canvas/index.html"
           style={{
+            border: "none",
+            height: "100%",
+            overflow: "hidden",
             pointerEvents: "none",
             userSelect: "none",
-            width: viewport.width,
-            height: viewport.height,
-            overflow: "hidden"
+            width: "100%"
           }}
-        >
-          <Canvas />
-        </div>
-        {/* IFRAME END */}
+        ></iframe>
         <svg
           style={{
             pointerEvents: "none",
@@ -1280,6 +1310,43 @@ const Editor = () => {
               >
                 Fit content
               </Button>
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, min-content)",
+                alignItems: "center",
+                justifyItems: "center",
+                gap: 6,
+                padding: 6
+              }}
+            >
+              {[
+                { label: "Fit widest", extreme: "widest" },
+                { label: "Fit narrowest", extreme: "narrowest" },
+                { label: "Fit tallest", extreme: "tallest" },
+                { label: "Fit shortest", extreme: "shortest" }
+              ].map(({ label, extreme }) => (
+                <Button
+                  key={label}
+                  disabled={selection.size < 2}
+                  onClick={() => {
+                    setState(current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: resizeLayersToExtreme(
+                          doc.layers,
+                          extreme,
+                          ({ id }) => selection.has(id)
+                        )
+                      }
+                    }));
+                  }}
+                >
+                  {label}
+                </Button>
+              ))}
             </div>
             <PanelTitle style={{ marginTop: 6 }}>Align</PanelTitle>
             <div
