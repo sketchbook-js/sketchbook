@@ -20,8 +20,7 @@ const useCanvasLayers = config => {
     const receiveMessage = event => {
       switch (event.data.type) {
         case "sketchbook_update_render_layers": {
-          console.log("layers", event.data.layers);
-          setLayersToRender([...event.data.layers].reverse());
+          setLayersToRender(event.data.layers.reverse());
           break;
         }
         case "sketchbook_measure_layer_request": {
