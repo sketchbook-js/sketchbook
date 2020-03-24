@@ -3,14 +3,6 @@ import reorder from "./reorder";
 describe("Reorder", () => {
   const testList = ["a", "b", "c", "d"];
 
-  test("startIndex does not exist in list", () => {
-    expect(reorder(testList, 4, 1)).toEqual(testList);
-  });
-
-  test("endIndex does not exist in list should fail", () => {
-    expect(reorder(testList, 1, 4)).toEqual(testList);
-  });
-
   test("single element, leadIndex < endIndex", () => {
     expect(reorder(testList, 1, 3)).toEqual(["a", "c", "d", "b"]);
   });
@@ -21,6 +13,14 @@ describe("Reorder", () => {
 
   test("single element, reorders 1 element correctly leadIndex === endIndex", () => {
     expect(reorder(testList, 2, 2)).toEqual(testList);
+  });
+
+  test("consecutive elements, move to end", () => {
+    expect(reorder(["a", "b", "c"], [0, 1], 1)).toEqual(["c", "a", "b"]);
+  });
+
+  test("consecutive elements reordered, move to end", () => {
+    expect(reorder(["a", "b", "c"], [1, 0], 1)).toEqual(["c", "b", "a"]);
   });
 
   test("multiple elements, move to start", () => {
@@ -62,9 +62,9 @@ describe("Reorder", () => {
   test("multiple elements, secondElementIndex < leadIndex && secondElementIndex < endIndex", () => {
     expect(reorder(["a", "b", "c", "d"], [3, 0], 2)).toEqual([
       "b",
+      "c",
       "d",
-      "a",
-      "c"
+      "a"
     ]);
   });
 
@@ -83,15 +83,6 @@ describe("Reorder", () => {
       "d",
       "b",
       "c"
-    ]);
-  });
-
-  test("ignore duplicates", () => {
-    expect(reorder(["a", "b", "c", "d"], [0, 0], 3)).toEqual([
-      "b",
-      "c",
-      "d",
-      "a"
     ]);
   });
 });
