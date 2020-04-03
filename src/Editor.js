@@ -1,6 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from "react";
 import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
+import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
 import config from "./config";
 import useKeys from "./useKeys";
@@ -133,6 +134,7 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
 
 const Editor = () => {
   const canvas = useRef(null);
+  const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
   const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);
   const [viewport, setViewport] = useState({
     x: 0,
@@ -531,62 +533,144 @@ const Editor = () => {
           </Button>
         </div>
         <PanelTitle style={{ marginTop: 6 }}>Layers</PanelTitle>
-        <ol>
-          {doc.layers.map(({ id, name }) => (
-            <li
-              key={id}
-              style={{
-                color: selection.has(id) ? "#f0f" : null,
-                cursor: "pointer",
-                padding: "6px",
-                borderBottom: "1px solid #ddd"
-              }}
-              onClick={event => {
-                event.stopPropagation();
-                setState(
-                  current => ({
-                    ...current,
-                    selection:
-                      keys.has("ShiftLeft") || keys.has("ShiftRight")
-                        ? current.selection.has(id)
-                          ? not(current.selection, [id])
-                          : or(current.selection, [id])
-                        : set([id])
-                  }),
-                  true
-                );
-              }}
-              onDoubleClick={() => setIdOfLayerBeingEdited(id)}
-              onBlur={() => setIdOfLayerBeingEdited(null)}
-            >
-              {idOfLayerBeingEdited === id ? (
-                <input
-                  type="text"
-                  autoFocus
-                  onChange={event => {
-                    const updatedName = event.currentTarget.value;
-                    setState(current => ({
-                      ...current,
-                      doc: {
-                        ...current.doc,
-                        layers: current.doc.layers.map(layer => {
-                          return layer.id === id
-                            ? { ...layer, name: updatedName }
-                            : layer;
-                        })
-                      }
-                    }));
-                  }}
-                  value={name}
-                />
-              ) : name.trim() === "" ? (
-                "Unnamed layer"
-              ) : (
-                name
-              )}
-            </li>
-          ))}
-        </ol>
+        <DragDropContext
+          onDragStart={result => {
+            const { draggableId } = result;
+            setElementBeingDraggedId(draggableId);
+            setState(current => {
+              return {
+                ...current,
+                selection: current.selection.has(draggableId)
+                  ? current.selection
+                  : set([draggableId])
+              };
+            });
+          }}
+          onDragEnd={result => {
+            const { destination, source } = result;
+
+            setElementBeingDraggedId(null);
+            // destination may be null if you drag outside of the droppable area.
+            if (
+              !destination ||
+              (destination.droppableId === source.droppableId &&
+                destination.index === source.index)
+            ) {
+              return;
+            }
+
+            setState(current => ({
+              ...current,
+              doc: {
+                ...current.doc,
+                layers: reorder(
+                  doc.layers,
+                  [
+                    source.index,
+                    ...current.doc.layers
+                      .map(({ id }, index) => ({ id, index }))
+                      .filter(
+                        ({ id, index }) =>
+                          selection.has(id) && index !== source.index
+                      )
+                      .map(({ index }) => index)
+                  ] || source.index,
+                  destination.index
+                )
+              }
+            }));
+          }}
+        >
+          <Droppable droppableId={"id"}>
+            {provided => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {doc.layers.map(({ id, name }, i) => (
+                  <div
+                    key={id}
+                    style={{
+                      color:
+                        elementBeingDraggedId && selection.has(id)
+                          ? "#e07aff"
+                          : selection.has(id)
+                          ? "#f0f"
+                          : null,
+                      cursor: "pointer",
+                      padding: "6px",
+                      minHeight: "37px",
+                      borderBottom: "1px solid #ddd"
+                    }}
+                    onClick={event => {
+                      event.stopPropagation();
+                      setState(
+                        current => ({
+                          ...current,
+                          selection:
+                            keys.has("ShiftLeft") || keys.has("ShiftRight")
+                              ? current.selection.has(id)
+                                ? not(current.selection, [id])
+                                : or(current.selection, [id])
+                              : set([id])
+                        }),
+                        true
+                      );
+                    }}
+                    onDoubleClick={() => setIdOfLayerBeingEdited(id)}
+                    onBlur={() => setIdOfLayerBeingEdited(null)}
+                  >
+                    <Draggable draggableId={id} index={i}>
+                      {provided => {
+                        return idOfLayerBeingEdited === id ? (
+                          <input
+                            type="text"
+                            autoFocus
+                            onChange={event => {
+                              const updatedName = event.currentTarget.value;
+                              setState(current => ({
+                                ...current,
+                                doc: {
+                                  ...current.doc,
+                                  layers: current.doc.layers.map(layer => {
+                                    return layer.id === id
+                                      ? { ...layer, name: updatedName }
+                                      : layer;
+                                  })
+                                }
+                              }));
+                            }}
+                            value={name}
+                          />
+                        ) : (
+                          <div
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            // Inline styles must be applied by extending the draggableProps.style object and the new styles must be applied after provided.draggableProps is applied. https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/api/draggable.md#extending-draggablepropsstyle
+                            style={{
+                              border: "1px solid black",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              ...provided.draggableProps.style
+                            }}
+                            ref={provided.innerRef}
+                          >
+                            <span>
+                              {name.trim() === "" ? "Unnamed layer" : name}
+                            </span>
+                            <span>
+                              {elementBeingDraggedId === id &&
+                                state.selection.size > 1 &&
+                                state.selection.size}
+                            </span>
+                          </div>
+                        );
+                      }}
+                    </Draggable>
+                  </div>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
       <div
         style={{
