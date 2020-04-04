@@ -3,7 +3,6 @@ import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
-import config from "./config";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
@@ -132,7 +131,7 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
   );
 };
 
-const Editor = () => {
+const Editor = ({ config }) => {
   const canvas = useRef(null);
   const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
   const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);

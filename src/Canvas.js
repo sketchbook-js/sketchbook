@@ -1,9 +1,8 @@
 import React from "react";
 
-import config from "./config";
 import useCanvasLayers from "./useCanvasLayers";
 
-const Canvas = () => {
+const Canvas = ({ config }) => {
   const layers = useCanvasLayers(config);
   return layers.map(
     ({ Component, id, x, y, width, height, scale, options }) => (

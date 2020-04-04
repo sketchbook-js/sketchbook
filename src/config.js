@@ -1,7 +1,8 @@
 import React from "react";
 import { set } from "set-fns";
 
-const config = {
+// eslint-disable-next-line no-undef
+initSketchbook({
   "Heading 1": {
     render: ({ width, height, options: { text } }) => (
       <h1
@@ -212,6 +213,4 @@ const config = {
       return errors.length > 0 ? errors : null;
     }
   }
-};
-
-export default config;
+});

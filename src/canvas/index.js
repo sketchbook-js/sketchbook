@@ -4,10 +4,12 @@ import ReactDOM from "react-dom";
 import Canvas from "../Canvas";
 import Reset from "../Reset";
 
-ReactDOM.render(
-  <>
-    <Reset />
-    <Canvas />
-  </>,
-  document.getElementById("root")
-);
+window.initSketchbook = config => {
+  ReactDOM.render(
+    <>
+      <Reset />
+      <Canvas config={config} />
+    </>,
+    document.getElementById("root")
+  );
+};
