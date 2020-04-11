@@ -19,6 +19,19 @@ const labelOutput = (label, color, output) =>
 fs.emptyDirSync(path.resolve(__dirname, "../build"));
 fs.ensureFileSync(path.resolve(__dirname, "../build/index.html"));
 
+fs.copySync(
+  path.resolve(__dirname, "../public"),
+  path.resolve(__dirname, "../build"),
+  {
+    dereference: true,
+    filter: file =>
+      ![
+        path.resolve(__dirname, "../public/index.html"),
+        path.resolve(__dirname, "../public/canvas/index.html")
+      ].includes(file) && path.basename(file) !== ".DS_Store"
+  }
+);
+
 [
   {
     name: "Canvas Build",
@@ -36,15 +49,6 @@ fs.ensureFileSync(path.resolve(__dirname, "../build/index.html"));
       "--watch",
       "--config",
       path.resolve(__dirname, "../config/webpack.editor.js")
-    ])
-  },
-  {
-    name: "Config Build",
-    color: "#00ff99",
-    process: spawn("webpack", [
-      "--watch",
-      "--config",
-      path.resolve(__dirname, "../config/webpack.config.js")
     ])
   },
   {

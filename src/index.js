@@ -4,12 +4,14 @@ import ReactDOM from "react-dom";
 import Editor from "./Editor";
 import Reset from "./Reset";
 
-window.initSketchbook = config => {
-  ReactDOM.render(
-    <>
-      <Reset />
-      <Editor config={config} />
-    </>,
-    document.getElementById("root")
-  );
+window.Sketchbook = {
+  init: config => {
+    ReactDOM.render(
+      <>
+        <Reset />
+        <Editor config={config} />
+      </>,
+      document.getElementById("root")
+    );
+  }
 };
