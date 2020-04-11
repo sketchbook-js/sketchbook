@@ -1499,7 +1499,7 @@ const Editor = ({ config }) => {
                 </Button>
               ))}
             </div>
-            <PanelTitle style={{ marginTop: 6 }}>Arrange</PanelTitle>
+            <PanelTitle style={{ marginTop: 6 }}>Order</PanelTitle>
             <div
               style={{
                 display: "grid",
@@ -1514,7 +1514,7 @@ const Editor = ({ config }) => {
                 disabled={
                   selection.size !== 1 ||
                   doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
-                    doc.layers.length - 1
+                    0
                 }
                 onClick={() => {
                   setState(
@@ -1527,7 +1527,7 @@ const Editor = ({ config }) => {
                           current.doc.layers.findIndex(
                             ({ id }) => id === [...selection][0]
                           ),
-                          current.doc.layers.length - 1
+                          0
                         )
                       }
                     }),
@@ -1537,36 +1537,6 @@ const Editor = ({ config }) => {
                 Icon={MoveToFront}
               >
                 Move to front
-              </Button>
-              <Button
-                disabled={
-                  selection.size !== 1 ||
-                  doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
-                    doc.layers.length - 1
-                }
-                onClick={() => {
-                  setState(
-                    current => ({
-                      ...current,
-                      doc: {
-                        ...current.doc,
-                        layers: reorder(
-                          current.doc.layers,
-                          current.doc.layers.findIndex(
-                            ({ id }) => id === [...selection][0]
-                          ),
-                          current.doc.layers.findIndex(
-                            ({ id }) => id === [...selection][0]
-                          ) + 1
-                        )
-                      }
-                    }),
-                    true
-                  );
-                }}
-                Icon={MoveForward}
-              >
-                Move forward
               </Button>
               <Button
                 disabled={
@@ -1594,15 +1564,15 @@ const Editor = ({ config }) => {
                     true
                   );
                 }}
-                Icon={MoveBackward}
+                Icon={MoveForward}
               >
-                Move backward
+                Move forward
               </Button>
               <Button
                 disabled={
                   selection.size !== 1 ||
                   doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
-                    0
+                    doc.layers.length - 1
                 }
                 onClick={() => {
                   setState(
@@ -1615,7 +1585,37 @@ const Editor = ({ config }) => {
                           current.doc.layers.findIndex(
                             ({ id }) => id === [...selection][0]
                           ),
-                          0
+                          current.doc.layers.findIndex(
+                            ({ id }) => id === [...selection][0]
+                          ) + 1
+                        )
+                      }
+                    }),
+                    true
+                  );
+                }}
+                Icon={MoveBackward}
+              >
+                Move backward
+              </Button>
+              <Button
+                disabled={
+                  selection.size !== 1 ||
+                  doc.layers.findIndex(({ id }) => id === [...selection][0]) ===
+                    doc.layers.length - 1
+                }
+                onClick={() => {
+                  setState(
+                    current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: reorder(
+                          current.doc.layers,
+                          current.doc.layers.findIndex(
+                            ({ id }) => id === [...selection][0]
+                          ),
+                          current.doc.layers.length - 1
                         )
                       }
                     }),
