@@ -3,6 +3,8 @@ import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
+import useCanvasConnection from "./editor/useCanvasConnection";
+import exampleDoc from "./editor/exampleDoc";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
@@ -26,33 +28,6 @@ import MoveBackward from "./icons/MoveBackward";
 import MoveForward from "./icons/MoveForward";
 import MoveToBack from "./icons/MoveToBack";
 import MoveToFront from "./icons/MoveToFront";
-
-const measure = ({ type, width, height, options }, callback) => {
-  const id = pushID();
-  const receiveMessage = event => {
-    if (
-      event.data.type === "sketchbook_measure_layer_response" &&
-      event.data.id === id
-    ) {
-      callback(event.data.width, event.data.height);
-      window.removeEventListener("message", receiveMessage);
-    }
-  };
-  window.addEventListener("message", receiveMessage);
-  window.postMessage(
-    {
-      type: "sketchbook_measure_layer_request",
-      layer: {
-        id,
-        type,
-        width,
-        height,
-        options
-      }
-    },
-    "*"
-  );
-};
 
 const PanelTitle = ({ style, children, ...props }) => (
   <h2
@@ -138,9 +113,7 @@ const Editor = ({ config }) => {
   const [viewport, setViewport] = useState({
     x: 0,
     y: 0,
-    scale: 1,
-    width: 0,
-    height: 0
+    scale: 1
   });
   const [mouse, setMouse] = useState({
     status: "up", // "up", "down", "drag", "select", "pan" or "resize"
@@ -151,124 +124,7 @@ const Editor = ({ config }) => {
   });
   const [state, setState, pointer, setPointer, snapshots] = useStateSnapshots(
     {
-      doc: {
-        layers: [
-          {
-            id: "-LyqdJBMdrVihqnJOOo8",
-            name: "Input",
-            component: "Input",
-            x1: 100,
-            y1: 666,
-            x2: 500,
-            y2: 722,
-            options: { label: "Email", value: "" }
-          },
-          {
-            id: "-LyqdsUuufs_UM05V3My",
-            name: "Button",
-            component: "Button",
-            x1: 417.78125,
-            y1: 732,
-            x2: 500,
-            y2: 768,
-            options: { label: "Subscribe" }
-          },
-          {
-            id: "-LyqduQ0G84esGuBLiC4",
-            name: "Image",
-            component: "Image",
-            x1: 100,
-            y1: 156,
-            x2: 340,
-            y2: 336
-          },
-          {
-            id: "-Lyr1QcLkjIhPrr7ojKV",
-            name: "Heading 1",
-            component: "Heading 1",
-            x1: 100,
-            y1: 100,
-            x2: 392.75,
-            y2: 136,
-            options: { text: "Example Website" }
-          },
-          {
-            id: "-Lyr1U4LM637a9qwzp8I",
-            name: "Heading 2",
-            component: "Heading 2",
-            x1: 350,
-            y1: 156,
-            x2: 498.34375,
-            y2: 180,
-            options: { text: "Lorem ipsum" }
-          },
-          {
-            id: "-Lyr1aKzs3cjCk5yyD1R",
-            name: "Paragraph",
-            component: "Paragraph",
-            x1: 350,
-            y1: 190,
-            x2: 750,
-            y2: 310,
-            options: {
-              text:
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
-            }
-          },
-          {
-            id: "-Lyr2YAEGxGezgs2k5sV",
-            name: "Image",
-            component: "Image",
-            x1: 510,
-            y1: 356,
-            x2: 750,
-            y2: 536
-          },
-          {
-            id: "-Lyr2n5QEWuXLOBwMjlt",
-            name: "Heading 2",
-            component: "Heading 2",
-            x1: 100,
-            y1: 356,
-            x2: 248.34375,
-            y2: 380,
-            options: { text: "Lorem ipsum" }
-          },
-          {
-            id: "-Lyr2pytYlfINHOHjB37",
-            name: "Paragraph",
-            component: "Paragraph",
-            x1: 100,
-            y1: 390,
-            x2: 500,
-            y2: 510,
-            options: {
-              text:
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
-            }
-          },
-          {
-            id: "-Lyr2zBoU64dhef9SyDI",
-            name: "Heading 2",
-            component: "Heading 2",
-            x1: 100,
-            y1: 632,
-            x2: 248.34375,
-            y2: 656,
-            options: { text: "Lorem ipsum" }
-          },
-          {
-            id: "-Lyr7tPI3CN8t_0-x0X0",
-            name: "Heading 1",
-            component: "Heading 1",
-            x1: 100,
-            y1: 576,
-            x2: 340.640625,
-            y2: 612,
-            options: { text: "Example Form" }
-          }
-        ]
-      },
+      doc: exampleDoc,
       selection: set()
     },
     false,
@@ -340,7 +196,6 @@ const Editor = ({ config }) => {
           );
           break;
         default:
-          console.log(event.code);
           break;
       }
     }
@@ -378,6 +233,7 @@ const Editor = ({ config }) => {
       ? "x"
       : "y";
   let transformedLayers = state.doc.layers;
+  // TODO: Filter out layers that don't intersect the viewport using canvas.current.getBoundingClientRect()
   switch (mouse.status) {
     case "resize":
       transformedLayers = transformLayers(
@@ -431,9 +287,10 @@ const Editor = ({ config }) => {
   );
   const display = {
     layers: transformedLayers.map(
-      ({ id, component: type, x1, y1, x2, y2, options }) => ({
+      ({ id, type, name, x1, y1, x2, y2, options }) => ({
         id,
         type,
+        name,
         x: x1,
         y: y1,
         scale: viewport.scale,
@@ -457,33 +314,11 @@ const Editor = ({ config }) => {
       storeSnapshot
     );
   };
-  useEffect(() => {
-    if (canvas.current) {
-      canvas.current.contentWindow.postMessage(
-        {
-          type: "sketchbook_update_render_layers",
-          layers: display.layers
-        },
-        "*"
-      );
-    }
-  }, [canvas, display.layers]);
-  // TODO: Something more sophisticated than an interval.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (canvas.current) {
-        const rect = canvas.current.getBoundingClientRect();
-        setViewport(current => ({
-          ...current,
-          width: Math.ceil(rect.width),
-          height: Math.ceil(rect.height)
-        }));
-      }
-    }, 1000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [setViewport]);
+  const { measureComponent } = useCanvasConnection(
+    window,
+    canvas,
+    display.layers
+  );
   return (
     <div
       style={{
@@ -919,11 +754,9 @@ const Editor = ({ config }) => {
             position: "absolute",
             top: 0,
             left: 0,
-            bottom: 0,
-            right: 0
+            height: "100%",
+            width: "100%"
           }}
-          width={viewport.width}
-          height={viewport.height}
           fill="none"
         >
           {display.layers
@@ -1121,48 +954,44 @@ const Editor = ({ config }) => {
                 padding: 6
               }}
             >
-              {Object.keys(config)
-                .sort((a, b) => a.localeCompare(b))
-                .map(component => (
-                  <Button
-                    key={component}
-                    onClick={() => {
-                      const id = pushID();
-                      const initial =
-                        config[component].init && config[component].init();
-                      measure(
-                        { type: component, ...initial },
-                        (width, height) => {
-                          setState(
-                            current => ({
-                              ...current,
-                              doc: {
-                                ...current.doc,
-                                layers: [
-                                  ...current.doc.layers,
-                                  {
-                                    id,
-                                    name: `${component}`,
-                                    component,
-                                    x1: -viewport.x,
-                                    y1: -viewport.y,
-                                    x2: -viewport.x + width,
-                                    y2: -viewport.y + height,
-                                    options: initial?.options
-                                  }
-                                ]
-                              },
-                              selection: set([id])
-                            }),
-                            true
-                          );
-                        }
-                      );
-                    }}
-                  >
-                    {component}
-                  </Button>
-                ))}
+              {config.components.map(component => (
+                <Button
+                  key={component.type}
+                  onClick={async () => {
+                    const id = pushID();
+                    const initial = component.init && component.init();
+                    const { width, height } = await measureComponent({
+                      type: component.type,
+                      ...initial
+                    });
+                    setState(
+                      current => ({
+                        ...current,
+                        doc: {
+                          ...current.doc,
+                          layers: [
+                            ...current.doc.layers,
+                            {
+                              id,
+                              name: `${component.type}`,
+                              type: component.type,
+                              x1: -viewport.x,
+                              y1: -viewport.y,
+                              x2: -viewport.x + width,
+                              y2: -viewport.y + height,
+                              options: initial?.options
+                            }
+                          ]
+                        },
+                        selection: set([id])
+                      }),
+                      true
+                    );
+                  }}
+                >
+                  {component.type}
+                </Button>
+              ))}
             </div>
           </>
         ) : (
@@ -1285,37 +1114,37 @@ const Editor = ({ config }) => {
             >
               <Button
                 disabled={selection.size !== 1}
-                onClick={() => {
+                onClick={async () => {
                   const {
                     id,
-                    component: type,
+                    type,
                     y1,
                     y2,
                     options
                   } = state.doc.layers.find(({ id }) =>
                     state.selection.has(id)
                   );
-                  measure(
-                    { type, height: y2 - y1, options },
-                    (width, height) => {
-                      setState(
-                        current => ({
-                          ...current,
-                          doc: {
-                            ...current.doc,
-                            layers: current.doc.layers.map(layer =>
-                              layer.id === id
-                                ? {
-                                    ...layer,
-                                    x2: layer.x1 + width
-                                  }
-                                : layer
-                            )
-                          }
-                        }),
-                        true
-                      );
-                    }
+                  const { width } = await measureComponent({
+                    type,
+                    height: y2 - y1,
+                    options
+                  });
+                  setState(
+                    current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: current.doc.layers.map(layer =>
+                          layer.id === id
+                            ? {
+                                ...layer,
+                                x2: layer.x1 + width
+                              }
+                            : layer
+                        )
+                      }
+                    }),
+                    true
                   );
                 }}
                 Icon={FitContentWidth}
@@ -1324,35 +1153,38 @@ const Editor = ({ config }) => {
               </Button>
               <Button
                 disabled={selection.size !== 1}
-                onClick={() => {
+                onClick={async () => {
                   const {
                     id,
-                    component: type,
+                    type,
                     x1,
                     x2,
                     options
                   } = state.doc.layers.find(({ id }) =>
                     state.selection.has(id)
                   );
-                  measure({ type, width: x2 - x1, options }, (_, height) => {
-                    setState(
-                      current => ({
-                        ...current,
-                        doc: {
-                          ...current.doc,
-                          layers: current.doc.layers.map(layer =>
-                            layer.id === id
-                              ? {
-                                  ...layer,
-                                  y2: layer.y1 + height
-                                }
-                              : layer
-                          )
-                        }
-                      }),
-                      true
-                    );
+                  const { height } = await measureComponent({
+                    type,
+                    width: x2 - x1,
+                    options
                   });
+                  setState(
+                    current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: current.doc.layers.map(layer =>
+                          layer.id === id
+                            ? {
+                                ...layer,
+                                y2: layer.y1 + height
+                              }
+                            : layer
+                        )
+                      }
+                    }),
+                    true
+                  );
                 }}
                 Icon={FitContentHeight}
               >
@@ -1360,34 +1192,36 @@ const Editor = ({ config }) => {
               </Button>
               <Button
                 disabled={selection.size !== 1}
-                onClick={() => {
+                onClick={async () => {
                   const {
                     id,
-                    component: type,
+                    type,
                     options
                   } = state.doc.layers.find(({ id }) =>
                     state.selection.has(id)
                   );
-                  measure({ type, options }, (width, height) => {
-                    setState(
-                      current => ({
-                        ...current,
-                        doc: {
-                          ...current.doc,
-                          layers: current.doc.layers.map(layer =>
-                            layer.id === id
-                              ? {
-                                  ...layer,
-                                  x2: layer.x1 + width,
-                                  y2: layer.y1 + height
-                                }
-                              : layer
-                          )
-                        }
-                      }),
-                      true
-                    );
+                  const { width, height } = await measureComponent({
+                    type,
+                    options
                   });
+                  setState(
+                    current => ({
+                      ...current,
+                      doc: {
+                        ...current.doc,
+                        layers: current.doc.layers.map(layer =>
+                          layer.id === id
+                            ? {
+                                ...layer,
+                                x2: layer.x1 + width,
+                                y2: layer.y1 + height
+                              }
+                            : layer
+                        )
+                      }
+                    }),
+                    true
+                  );
                 }}
                 Icon={FitContent}
               >
@@ -1640,137 +1474,143 @@ const Editor = ({ config }) => {
                   Multiple layers selected
                 </div>
               ) : (
-                config[
-                  doc.layers.find(({ id }) => id === [...selection][0])
-                    .component
-                ].options?.map(({ key, input, label }, index) => {
-                  const layer = doc.layers.find(
-                    ({ id }) => id === [...selection][0]
-                  );
-                  const error = config[layer.component]
-                    .validate(layer.options)
-                    ?.filter(error => error.key === key)
-                    .find(() => true);
-                  switch (input) {
-                    case "short-string":
-                      return (
-                        <Fragment key={key}>
-                          {error ? (
-                            <OptionsErrorMessage
-                              style={{
-                                paddingTop: index === 0 ? "4px" : "0px",
-                                paddingLeft: "6px"
-                              }}
-                            >
-                              {error.message}
-                            </OptionsErrorMessage>
-                          ) : null}
-                          <div
-                            id={`option-${key}`}
-                            type="text"
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: "repeat(1, min-content 1fr)",
-                              alignItems: "center",
-                              justifyItems: "center",
-                              gap: 6,
-                              padding: 6
-                            }}
-                          >
-                            <Label htmlFor={`option-${key}`}>{label}</Label>
-                            <Input
-                              key={key}
-                              id={`option-${key}`}
-                              type="text"
-                              value={
-                                doc.layers.find(
-                                  ({ id }) => id === [...selection][0]
-                                ).options[key]
-                              }
-                              onChange={({ currentTarget: { value } }) => {
-                                setState(current => ({
-                                  ...current,
-                                  doc: {
-                                    layers: current.doc.layers.map(layer =>
-                                      layer.id === [...selection][0]
-                                        ? {
-                                            ...layer,
-                                            options: {
-                                              ...layer.options,
-                                              [key]: value
-                                            }
-                                          }
-                                        : layer
-                                    )
-                                  }
-                                }));
-                              }}
-                            />
-                          </div>
-                        </Fragment>
-                      );
-                    case "long-string":
-                      return (
-                        <Fragment key={key}>
-                          {error ? (
-                            <OptionsErrorMessage
-                              style={{
-                                paddingTop: index === 0 ? "4px" : "0px",
-                                paddingLeft: "6px"
-                              }}
-                            >
-                              {error.message}
-                            </OptionsErrorMessage>
-                          ) : null}
-                          <div
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: "repeat(1, min-content 1fr)",
-                              alignItems: "center",
-                              justifyItems: "center",
-                              gap: 6,
-                              padding: 6
-                            }}
-                          >
-                            <Label htmlFor={`option-${key}`}>{label}</Label>
-                            <Textarea
-                              key={key}
+                config.components
+                  .find(
+                    ({ type }) =>
+                      type ===
+                      doc.layers.find(({ id }) => selection.has(id)).type
+                  )
+                  .options?.map(({ key, input, label }, index) => {
+                    const layer = doc.layers.find(({ id }) =>
+                      selection.has(id)
+                    );
+                    const error = config.components
+                      .find(({ type }) => type === layer.type)
+                      .validate?.(layer.options)
+                      ?.filter(error => error.key === key)
+                      .find(() => true);
+                    switch (input) {
+                      case "short-string":
+                        return (
+                          <Fragment key={key}>
+                            {error ? (
+                              <OptionsErrorMessage
+                                style={{
+                                  paddingTop: index === 0 ? "4px" : "0px",
+                                  paddingLeft: "6px"
+                                }}
+                              >
+                                {error.message}
+                              </OptionsErrorMessage>
+                            ) : null}
+                            <div
                               id={`option-${key}`}
                               type="text"
                               style={{
-                                minHeight: "8em"
+                                display: "grid",
+                                gridTemplateColumns:
+                                  "repeat(1, min-content 1fr)",
+                                alignItems: "center",
+                                justifyItems: "center",
+                                gap: 6,
+                                padding: 6
                               }}
-                              value={
-                                doc.layers.find(
-                                  ({ id }) => id === [...selection][0]
-                                ).options[key]
-                              }
-                              onChange={({ currentTarget: { value } }) => {
-                                setState(current => ({
-                                  ...current,
-                                  doc: {
-                                    layers: current.doc.layers.map(layer =>
-                                      layer.id === [...selection][0]
-                                        ? {
-                                            ...layer,
-                                            options: {
-                                              ...layer.options,
-                                              [key]: value
+                            >
+                              <Label htmlFor={`option-${key}`}>{label}</Label>
+                              <Input
+                                key={key}
+                                id={`option-${key}`}
+                                type="text"
+                                value={
+                                  doc.layers.find(
+                                    ({ id }) => id === [...selection][0]
+                                  ).options[key]
+                                }
+                                onChange={({ currentTarget: { value } }) => {
+                                  setState(current => ({
+                                    ...current,
+                                    doc: {
+                                      layers: current.doc.layers.map(layer =>
+                                        layer.id === [...selection][0]
+                                          ? {
+                                              ...layer,
+                                              options: {
+                                                ...layer.options,
+                                                [key]: value
+                                              }
                                             }
-                                          }
-                                        : layer
-                                    )
-                                  }
-                                }));
+                                          : layer
+                                      )
+                                    }
+                                  }));
+                                }}
+                              />
+                            </div>
+                          </Fragment>
+                        );
+                      case "long-string":
+                        return (
+                          <Fragment key={key}>
+                            {error ? (
+                              <OptionsErrorMessage
+                                style={{
+                                  paddingTop: index === 0 ? "4px" : "0px",
+                                  paddingLeft: "6px"
+                                }}
+                              >
+                                {error.message}
+                              </OptionsErrorMessage>
+                            ) : null}
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns:
+                                  "repeat(1, min-content 1fr)",
+                                alignItems: "center",
+                                justifyItems: "center",
+                                gap: 6,
+                                padding: 6
                               }}
-                            />
-                          </div>
-                        </Fragment>
-                      );
-                    default:
-                      return null;
-                  }
-                }) ?? (
+                            >
+                              <Label htmlFor={`option-${key}`}>{label}</Label>
+                              <Textarea
+                                key={key}
+                                id={`option-${key}`}
+                                type="text"
+                                style={{
+                                  minHeight: "8em"
+                                }}
+                                value={
+                                  doc.layers.find(
+                                    ({ id }) => id === [...selection][0]
+                                  ).options[key]
+                                }
+                                onChange={({ currentTarget: { value } }) => {
+                                  setState(current => ({
+                                    ...current,
+                                    doc: {
+                                      layers: current.doc.layers.map(layer =>
+                                        layer.id === [...selection][0]
+                                          ? {
+                                              ...layer,
+                                              options: {
+                                                ...layer.options,
+                                                [key]: value
+                                              }
+                                            }
+                                          : layer
+                                      )
+                                    }
+                                  }));
+                                }}
+                              />
+                            </div>
+                          </Fragment>
+                        );
+                      default:
+                        return null;
+                    }
+                  }) ?? (
                   <div
                     style={{
                       color: "#999",

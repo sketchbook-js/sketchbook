@@ -4,7 +4,6 @@ const fs = require("fs-extra");
 
 const canvas = require("../config/webpack.canvas");
 const editor = require("../config/webpack.editor");
-const config = require("../config/webpack.config");
 
 process.env.BABEL_ENV = "production";
 process.env.NODE_ENV = "production";
@@ -27,8 +26,7 @@ fs.copySync(
 webpack(
   [
     { ...canvas, mode: "production" },
-    { ...editor, mode: "production" },
-    { ...config, mode: "production" }
+    { ...editor, mode: "production" }
   ],
   (err, stats) => {
     if (err || stats.hasErrors()) {
