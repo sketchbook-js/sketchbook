@@ -1,42 +1,17 @@
+const process = require("process");
 const path = require("path");
 const { spawn } = require("child_process");
-const chalk = require("chalk");
-const fs = require("fs-extra");
 
-const labelOutput = (label, color, output) =>
-  output
-    .toString()
-    .split("")
-    .reduce(
-      (result, char) => [
-        ...result,
-        char === "\n" ? `\n${chalk.hex(color)(">")} ` : char
-      ],
-      [`\n${chalk.hex(color)(`${label}:\n>`)} `]
-    )
-    .join("");
+const copyPublicFolder = require("./copyPublicFolder");
+const labelOutput = require("./labelOutput");
 
-fs.emptyDirSync(path.resolve(__dirname, "../build"));
-fs.ensureFileSync(path.resolve(__dirname, "../build/index.html"));
+copyPublicFolder();
 
-fs.copySync(
-  path.resolve(__dirname, "../public"),
-  path.resolve(__dirname, "../build"),
-  {
-    dereference: true,
-    filter: file =>
-      ![
-        path.resolve(__dirname, "../public/index.html"),
-        path.resolve(__dirname, "../public/canvas/index.html")
-      ].includes(file) && path.basename(file) !== ".DS_Store"
-  }
-);
-
-[
+const subprocesses = [
   {
     name: "Canvas Build",
     color: "#0099ff",
-    process: spawn("webpack", [
+    subprocess: spawn("webpack", [
       "--watch",
       "--config",
       path.resolve(__dirname, "../config/webpack.canvas.js")
@@ -45,7 +20,7 @@ fs.copySync(
   {
     name: "Editor Build",
     color: "#00ffff",
-    process: spawn("webpack", [
+    subprocess: spawn("webpack", [
       "--watch",
       "--config",
       path.resolve(__dirname, "../config/webpack.editor.js")
@@ -54,23 +29,29 @@ fs.copySync(
   {
     name: "Server",
     color: "#009900",
-    process: spawn("servor", [
-      path.resolve(__dirname, "../build"),
-      "index.html",
-      8080,
-      "--reload",
-      "--browse"
-    ])
+    subprocess: spawn(
+      "node",
+      [path.resolve(__dirname, "../cli/index.js"), "start"],
+      {
+        env: {
+          SKETCHBOOK_CONFIG: "build/config.js",
+          ...process.env
+        }
+      }
+    )
   }
-].forEach(({ name, color, process }) => {
-  console.log(`${chalk.hex(color)(name)}: ${process.pid}`);
-  process.stdout.on("data", data => {
+].map(({ name, color, subprocess }) => {
+  const stdout = data => {
     console.log(labelOutput(name, color, data));
-  });
-  process.stderr.on("data", data => {
+  };
+  const stderr = data => {
     console.error(labelOutput(name, color, data));
-  });
-  process.on("close", code => {
-    console.log(labelOutput(name, color, `exited with code ${code}`));
-  });
+  };
+
+  subprocess.stdout.on("data", stdout);
+  subprocess.stderr.on("data", stderr);
+
+  console.log(labelOutput(name, color, `Process started: ${subprocess.pid}`));
+
+  return { name, color, subprocess, stdout, stderr };
 });

@@ -1,4 +1,4 @@
-Sketchbook.init({
+Sketchbook.config = {
   components: [
     { type: "Rectangle" },
     {
@@ -128,4 +128,4 @@ Sketchbook.init({
       options: [{ key: "value", label: "Value", input: "short-string" }]
     }
   ]
-});
+};

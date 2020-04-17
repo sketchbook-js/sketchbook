@@ -1,6 +1,6 @@
 <div align="center">
   <h1>
-    <img src="logo.png" alt="Sketchbook" width="160" />
+    <img src="logo.png" alt="Sketchbook.js" width="160" />
   </h1>
   <p>The design tool that lives in your repo.</p>
   <p>
@@ -10,24 +10,22 @@
 
 ## Demo
 
-https://sketchbook.particlesystem.com/
+https://sketchbook-js.particlesystem.com/
 
 ![](screenshot.png)
 
 ## Installation
 
-The plan is to make it possible to install Sketchbook from npm, but that's still
-a little way off. In the meantime, your best bet is to clone this repo and
-add your project's repo as a submodule in the `src` directory:
+Sketchbook is still under development and hasn't been published yet. Below is a
+draft on the setup instructions that should work once everything is in place.
 
-```shell
-git submodule add <PATH_TO_YOUR_REPO> src/
-```
+> Sketchbook.js requires Node 10 or newer and a modern browser.
+>
+> 1.  `yarn add sketchbook-js`
+> 2.  `yarn sketchbook init` (generates a `./sketchbook/config.js` file)
+> 3.  `yarn sketchbook start` (uses the `./sketchbook/config.js` file)
 
-If your project's build is compatible you should be able to import
-your own components into the `config.js` file to use them.
-
-## Getting Involved
+## Contributing
 
 Take a look at the roadmap to see what's planned:
 
