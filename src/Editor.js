@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect, useRef } from "react";
+import React, { Fragment, useState, useRef } from "react";
 import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
@@ -287,9 +287,10 @@ const Editor = ({ config }) => {
   );
   const display = {
     layers: transformedLayers.map(
-      ({ id, type, name, x1, y1, x2, y2, options }) => ({
+      ({ id, type, component, name, x1, y1, x2, y2, options }) => ({
         id,
         type,
+        component,
         name,
         x: x1,
         y: y1,
@@ -314,11 +315,7 @@ const Editor = ({ config }) => {
       storeSnapshot
     );
   };
-  const { measureComponent } = useCanvasConnection(
-    window,
-    canvas,
-    display.layers
-  );
+  const { measureLayer } = useCanvasConnection(window, canvas, display.layers);
   return (
     <div
       style={{
@@ -960,8 +957,9 @@ const Editor = ({ config }) => {
                   onClick={async () => {
                     const id = pushID();
                     const initial = component.init && component.init();
-                    const { width, height } = await measureComponent({
-                      type: component.type,
+                    const { width, height } = await measureLayer({
+                      type: "SketchbookComponent",
+                      component: component.type,
                       ...initial
                     });
                     setState(
@@ -973,8 +971,9 @@ const Editor = ({ config }) => {
                             ...current.doc.layers,
                             {
                               id,
-                              name: `${component.type}`,
-                              type: component.type,
+                              type: "SketchbookComponent",
+                              component: component.type,
+                              name: initial?.name ?? component.type,
                               x1: -viewport.x,
                               y1: -viewport.y,
                               x2: -viewport.x + width,
@@ -1117,15 +1116,16 @@ const Editor = ({ config }) => {
                 onClick={async () => {
                   const {
                     id,
-                    type,
+                    component,
                     y1,
                     y2,
                     options
                   } = state.doc.layers.find(({ id }) =>
                     state.selection.has(id)
                   );
-                  const { width } = await measureComponent({
-                    type,
+                  const { width } = await measureLayer({
+                    type: "SketchbookComponent",
+                    component,
                     height: y2 - y1,
                     options
                   });
@@ -1156,15 +1156,16 @@ const Editor = ({ config }) => {
                 onClick={async () => {
                   const {
                     id,
-                    type,
+                    component,
                     x1,
                     x2,
                     options
                   } = state.doc.layers.find(({ id }) =>
                     state.selection.has(id)
                   );
-                  const { height } = await measureComponent({
-                    type,
+                  const { height } = await measureLayer({
+                    type: "SketchbookComponent",
+                    component,
                     width: x2 - x1,
                     options
                   });
@@ -1195,13 +1196,14 @@ const Editor = ({ config }) => {
                 onClick={async () => {
                   const {
                     id,
-                    type,
+                    component,
                     options
                   } = state.doc.layers.find(({ id }) =>
                     state.selection.has(id)
                   );
-                  const { width, height } = await measureComponent({
-                    type,
+                  const { width, height } = await measureLayer({
+                    type: "SketchbookComponent",
+                    component,
                     options
                   });
                   setState(
@@ -1478,19 +1480,19 @@ const Editor = ({ config }) => {
                   .find(
                     ({ type }) =>
                       type ===
-                      doc.layers.find(({ id }) => selection.has(id)).type
+                      doc.layers.find(({ id }) => selection.has(id)).component
                   )
                   .options?.map(({ key, input, label }, index) => {
                     const layer = doc.layers.find(({ id }) =>
                       selection.has(id)
                     );
                     const error = config.components
-                      .find(({ type }) => type === layer.type)
+                      .find(({ type }) => type === layer.component)
                       .validate?.(layer.options)
                       ?.filter(error => error.key === key)
                       .find(() => true);
-                    switch (input) {
-                      case "short-string":
+                    switch (input.type) {
+                      case "String":
                         return (
                           <Fragment key={key}>
                             {error ? (
@@ -1548,7 +1550,7 @@ const Editor = ({ config }) => {
                             </div>
                           </Fragment>
                         );
-                      case "long-string":
+                      case "PlainText":
                         return (
                           <Fragment key={key}>
                             {error ? (

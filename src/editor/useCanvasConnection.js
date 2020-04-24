@@ -46,7 +46,7 @@ const useCanvasRender = (status, canvasRef, layers) => {
 };
 
 const useCanvasMeasure = (status, editorWindow, canvasRef) => {
-  return ({ type, width, height, options }) => {
+  return ({ type, component, width, height, options }) => {
     return new Promise((resolve, reject) => {
       if (status === "ready" && canvasRef.current) {
         const id = pushID();
@@ -66,6 +66,7 @@ const useCanvasMeasure = (status, editorWindow, canvasRef) => {
             layer: {
               id,
               type,
+              component,
               width,
               height,
               options
@@ -83,8 +84,8 @@ const useCanvasMeasure = (status, editorWindow, canvasRef) => {
 const useCanvasConnection = (editorWindow, canvasRef, layers) => {
   const status = useCanvasStatus(editorWindow, canvasRef);
   useCanvasRender(status, canvasRef, layers);
-  const measureComponent = useCanvasMeasure(status, editorWindow, canvasRef);
-  return { measureComponent };
+  const measureLayer = useCanvasMeasure(status, editorWindow, canvasRef);
+  return { measureLayer };
 };
 
 export default useCanvasConnection;

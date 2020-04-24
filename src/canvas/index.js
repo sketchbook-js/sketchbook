@@ -47,8 +47,8 @@ const Canvas = ({ config }) => {
         .map(layer => ({
           ...layer,
           render:
-            config.components.find(({ type }) => type === layer.type).render ??
-            defaultRender
+            config.components.find(({ type }) => type === layer.component)
+              .render ?? defaultRender
         }))
         .map(
           ({
@@ -93,6 +93,7 @@ const Canvas = ({ config }) => {
 
 window.Sketchbook = {
   init: config => {
+    config.initCanvas(document);
     ReactDOM.render(
       <Canvas config={config} />,
       document.getElementById("root")

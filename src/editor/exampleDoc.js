@@ -1,120 +1,142 @@
 import pushID from "../pushID";
 
 const exampleDoc = {
+  type: "SketchbookDocument",
   layers: [
     {
       id: pushID(),
-      type: "Input",
-      name: "Input",
-      x1: 100,
-      y1: 666,
-      x2: 500,
-      y2: 722,
-      options: { value: "" }
-    },
-    {
-      id: pushID(),
-      type: "Button",
-      name: "Button",
-      x1: 417.78125,
-      y1: 732,
-      x2: 500,
-      y2: 768,
-      options: { label: "Subscribe" }
-    },
-    {
-      id: pushID(),
-      type: "Image",
-      name: "Image",
-      x1: 100,
-      y1: 156,
-      x2: 340,
-      y2: 336
-    },
-    {
-      id: pushID(),
-      type: "Heading 1",
+      type: "SketchbookComponent",
+      component: "Heading 1",
       name: "Heading 1",
       x1: 100,
       y1: 100,
-      x2: 392.75,
-      y2: 136,
+      x2: 750,
+      y2: 140,
       options: { text: "Example Website" }
     },
     {
       id: pushID(),
-      type: "Heading 2",
+      type: "SketchbookComponent",
+      component: "Heading 2",
       name: "Heading 2",
       x1: 350,
-      y1: 156,
-      x2: 498.34375,
-      y2: 180,
+      y1: 160,
+      x2: 750,
+      y2: 200,
       options: { text: "Lorem ipsum" }
     },
     {
       id: pushID(),
-      type: "Paragraph",
+      type: "SketchbookComponent",
+      component: "Paragraph",
       name: "Paragraph",
       x1: 350,
-      y1: 190,
+      y1: 210,
       x2: 750,
-      y2: 310,
+      y2: 340,
       options: {
         text:
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
       }
     },
     {
       id: pushID(),
-      type: "Image",
+      type: "SketchbookComponent",
+      component: "Image",
+      name: "Image",
+      x1: 100,
+      y1: 160,
+      x2: 340,
+      y2: 340
+    },
+    {
+      id: pushID(),
+      type: "SketchbookComponent",
+      component: "Heading 2",
+      name: "Heading 2",
+      x1: 100,
+      y1: 360,
+      x2: 500,
+      y2: 400,
+      options: { text: "Lorem ipsum" }
+    },
+    {
+      id: pushID(),
+      type: "SketchbookComponent",
+      component: "Paragraph",
+      name: "Paragraph",
+      x1: 100,
+      y1: 410,
+      x2: 500,
+      y2: 540,
+      options: {
+        text:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+      }
+    },
+    {
+      id: pushID(),
+      type: "SketchbookComponent",
+      component: "Image",
       name: "Image",
       x1: 510,
-      y1: 356,
+      y1: 360,
       x2: 750,
-      y2: 536
+      y2: 540
     },
     {
       id: pushID(),
-      type: "Heading 2",
-      name: "Heading 2",
+      type: "SketchbookComponent",
+      component: "Horizontal Rule",
+      name: "Horizontal Rule",
       x1: 100,
-      y1: 356,
-      x2: 248.34375,
-      y2: 380,
-      options: { text: "Lorem ipsum" }
+      y1: 560,
+      x2: 100 + 650,
+      y2: 560 + 10
     },
     {
       id: pushID(),
-      type: "Paragraph",
-      name: "Paragraph",
-      x1: 100,
-      y1: 390,
-      x2: 500,
-      y2: 510,
-      options: {
-        text:
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
-      }
-    },
-    {
-      id: pushID(),
-      type: "Heading 2",
-      name: "Heading 2",
-      x1: 100,
-      y1: 632,
-      x2: 248.34375,
-      y2: 656,
-      options: { text: "Lorem ipsum" }
-    },
-    {
-      id: pushID(),
-      type: "Heading 1",
+      type: "SketchbookComponent",
+      component: "Heading 1",
       name: "Heading 1",
       x1: 100,
-      y1: 576,
-      x2: 340.640625,
-      y2: 612,
+      y1: 590,
+      x2: 100 + 650,
+      y2: 590 + 40,
       options: { text: "Example Form" }
+    },
+    {
+      id: pushID(),
+      type: "SketchbookComponent",
+      component: "Label",
+      name: "Label",
+      x1: 100,
+      y1: 650,
+      x2: 100 + 650,
+      y2: 650 + 20,
+      options: { text: "Email" }
+    },
+    {
+      id: pushID(),
+      type: "SketchbookComponent",
+      component: "Text Input",
+      name: "Text Input",
+      x1: 100,
+      y1: 680,
+      x2: 100 + 300,
+      y2: 680 + 38,
+      options: { value: "" }
+    },
+    {
+      id: pushID(),
+      type: "SketchbookComponent",
+      component: "Button",
+      name: "Button",
+      x1: 410,
+      y1: 680,
+      x2: 410 + 93,
+      y2: 680 + 38,
+      options: { label: "Subscribe" }
     }
   ]
 };
