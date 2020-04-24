@@ -34,7 +34,7 @@ const subprocesses = [
       [path.resolve(__dirname, "../cli/index.js"), "start"],
       {
         env: {
-          SKETCHBOOK_CONFIG: "build/config.js",
+          SKETCHBOOK_CONFIG: "public/config.js",
           ...process.env
         }
       }
