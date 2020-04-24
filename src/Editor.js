@@ -3,6 +3,8 @@ import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
+import InfoPanel from "./components/InfoPanel";
+
 import useCanvasConnection from "./editor/useCanvasConnection";
 import exampleDoc from "./editor/exampleDoc";
 import useKeys from "./useKeys";
@@ -937,6 +939,19 @@ const Editor = ({ config }) => {
             />
           ) : null}
         </svg>
+        <div
+          style={{
+            pointerEvents: "none",
+            userSelect: "none",
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            background: "#eee9"
+          }}
+        >
+          <InfoPanel mouse={mouse} viewport={viewport} keys={keys} />
+        </div>
       </div>
       <div style={{ background: "#eee" }}>
         {selection.size === 0 ? (
