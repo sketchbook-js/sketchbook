@@ -108,6 +108,16 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
   );
 };
 
+const transformSelection = (current, transform) => ({
+  ...current,
+  doc: {
+    ...current.doc,
+    layers: transformLayers(current.doc.layers, transform, layer =>
+      current.selection.has(layer.id)
+    )
+  }
+});
+
 const Editor = ({ config }) => {
   const canvas = useRef(null);
   const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
@@ -155,28 +165,36 @@ const Editor = ({ config }) => {
       }
       switch (event.code) {
         case "ArrowLeft":
-          transformSelection({
-            x: keys.has("ShiftLeft") || keys.has("ShiftRight") ? -10 : -1,
-            relative: true
-          });
+          setState(current =>
+            transformSelection(current, {
+              x: keys.has("ShiftLeft") || keys.has("ShiftRight") ? -10 : -1,
+              relative: true
+            })
+          );
           break;
         case "ArrowUp":
-          transformSelection({
-            y: keys.has("ShiftLeft") || keys.has("ShiftRight") ? -10 : -1,
-            relative: true
-          });
+          setState(current =>
+            transformSelection(current, {
+              y: keys.has("ShiftLeft") || keys.has("ShiftRight") ? -10 : -1,
+              relative: true
+            })
+          );
           break;
         case "ArrowRight":
-          transformSelection({
-            x: keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1,
-            relative: true
-          });
+          setState(current =>
+            transformSelection(current, {
+              x: keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1,
+              relative: true
+            })
+          );
           break;
         case "ArrowDown":
-          transformSelection({
-            y: keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1,
-            relative: true
-          });
+          setState(current =>
+            transformSelection(current, {
+              y: keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1,
+              relative: true
+            })
+          );
           break;
         case "Backspace":
           setState(
@@ -298,20 +316,6 @@ const Editor = ({ config }) => {
         options
       })
     )
-  };
-  const transformSelection = (transform, storeSnapshot = true) => {
-    setState(
-      current => ({
-        ...current,
-        doc: {
-          ...current.doc,
-          layers: transformLayers(current.doc.layers, transform, layer =>
-            current.selection.has(layer.id)
-          )
-        }
-      }),
-      storeSnapshot
-    );
   };
   const { measureLayer } = useCanvasConnection(window, canvas, display.layers);
   return (
@@ -657,11 +661,13 @@ const Editor = ({ config }) => {
                     );
                   }
                 } else if (mouse.status === "drag") {
-                  transformSelection({
-                    x: lockedAxis === "y" ? 0 : mouse.x - mouse.startX,
-                    y: lockedAxis === "x" ? 0 : mouse.y - mouse.startY,
-                    relative: true
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      x: lockedAxis === "y" ? 0 : mouse.x - mouse.startX,
+                      y: lockedAxis === "x" ? 0 : mouse.y - mouse.startY,
+                      relative: true
+                    })
+                  );
                 } else if (mouse.status === "select") {
                   const x1 = Math.min(mouse.startX, mouse.x);
                   const y1 = Math.min(mouse.startY, mouse.y);
@@ -691,26 +697,28 @@ const Editor = ({ config }) => {
                     y: current.y + (mouse.y - mouse.startY)
                   }));
                 } else if (mouse.status === "resize") {
-                  transformSelection({
-                    w:
-                      mouseStartedOverSelectionLeft ||
-                      mouseStartedOverSelectionRight
-                        ? selectionBounds.x2 -
-                          selectionBounds.x1 +
-                          (mouse.x - mouse.startX) *
-                            (mouseStartedOverSelectionLeft ? -1 : 1)
-                        : undefined,
-                    h:
-                      mouseStartedOverSelectionTop ||
-                      mouseStartedOverSelectionBottom
-                        ? selectionBounds.y2 -
-                          selectionBounds.y1 +
-                          (mouse.y - mouse.startY) *
-                            (mouseStartedOverSelectionTop ? -1 : 1)
-                        : undefined,
-                    cx: mouseStartedOverSelectionLeft ? 1 : 0,
-                    cy: mouseStartedOverSelectionTop ? 1 : 0
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      w:
+                        mouseStartedOverSelectionLeft ||
+                        mouseStartedOverSelectionRight
+                          ? selectionBounds.x2 -
+                            selectionBounds.x1 +
+                            (mouse.x - mouse.startX) *
+                              (mouseStartedOverSelectionLeft ? -1 : 1)
+                          : undefined,
+                      h:
+                        mouseStartedOverSelectionTop ||
+                        mouseStartedOverSelectionBottom
+                          ? selectionBounds.y2 -
+                            selectionBounds.y1 +
+                            (mouse.y - mouse.startY) *
+                              (mouseStartedOverSelectionTop ? -1 : 1)
+                          : undefined,
+                      cx: mouseStartedOverSelectionLeft ? 1 : 0,
+                      cy: mouseStartedOverSelectionTop ? 1 : 0
+                    })
+                  );
                 }
                 setMouse(current => ({
                   ...current,
@@ -1065,9 +1073,11 @@ const Editor = ({ config }) => {
                 type="number"
                 value={Math.round(selectionBounds.x1)}
                 onChange={({ currentTarget: { value } }) => {
-                  transformSelection({
-                    x: parseInt(value || 0, 10)
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      x: parseInt(value || 0, 10)
+                    })
+                  );
                 }}
               />
               <Label htmlFor="info-panel-y">Y</Label>
@@ -1076,9 +1086,11 @@ const Editor = ({ config }) => {
                 type="number"
                 value={Math.round(selectionBounds.y1)}
                 onChange={({ currentTarget: { value } }) => {
-                  transformSelection({
-                    y: parseInt(value || 0, 10)
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      y: parseInt(value || 0, 10)
+                    })
+                  );
                 }}
               />
               <Label htmlFor="info-panel-w">W</Label>
@@ -1086,9 +1098,11 @@ const Editor = ({ config }) => {
                 type="number"
                 value={Math.round(selectionBounds.x2 - selectionBounds.x1)}
                 onChange={({ currentTarget: { value } }) => {
-                  transformSelection({
-                    w: parseInt(value || 0, 10)
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      w: parseInt(value || 0, 10)
+                    })
+                  );
                 }}
               />
               <Label htmlFor="info-panel-h">H</Label>
@@ -1096,9 +1110,11 @@ const Editor = ({ config }) => {
                 type="number"
                 value={Math.round(selectionBounds.y2 - selectionBounds.y1)}
                 onChange={({ currentTarget: { value } }) => {
-                  transformSelection({
-                    h: parseInt(value || 0, 10)
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      h: parseInt(value || 0, 10)
+                    })
+                  );
                 }}
               />
             </div>
