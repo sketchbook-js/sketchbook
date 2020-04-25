@@ -156,30 +156,26 @@ const Editor = ({ config }) => {
       switch (event.code) {
         case "ArrowLeft":
           transformSelection({
-            x:
-              Math.round(selectionBounds.x1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            x: keys.has("ShiftLeft") || keys.has("ShiftRight") ? -10 : -1,
+            relative: true
           });
           break;
         case "ArrowUp":
           transformSelection({
-            y:
-              Math.round(selectionBounds.y1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            y: keys.has("ShiftLeft") || keys.has("ShiftRight") ? -10 : -1,
+            relative: true
           });
           break;
         case "ArrowRight":
           transformSelection({
-            x:
-              Math.round(selectionBounds.x1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            x: keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1,
+            relative: true
           });
           break;
         case "ArrowDown":
           transformSelection({
-            y:
-              Math.round(selectionBounds.y1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
+            y: keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1,
+            relative: true
           });
           break;
         case "Backspace":
@@ -262,8 +258,8 @@ const Editor = ({ config }) => {
       transformedLayers = transformLayers(
         transformedLayers,
         {
-          x: !lockedAxis || lockedAxis === "x" ? mouse.x - mouse.startX : null,
-          y: !lockedAxis || lockedAxis === "y" ? mouse.y - mouse.startY : null,
+          x: lockedAxis === "y" ? 0 : mouse.x - mouse.startX,
+          y: lockedAxis === "x" ? 0 : mouse.y - mouse.startY,
           relative: true
         },
         layer => state.selection.has(layer.id)
@@ -662,18 +658,9 @@ const Editor = ({ config }) => {
                   }
                 } else if (mouse.status === "drag") {
                   transformSelection({
-                    x:
-                      !lockedAxis || lockedAxis === "x"
-                        ? selectionBounds.x1 + mouse.x - mouse.startX
-                        : lockedAxis === "y"
-                        ? selectionBounds.x1
-                        : null,
-                    y:
-                      !lockedAxis || lockedAxis === "y"
-                        ? selectionBounds.y1 + mouse.y - mouse.startY
-                        : lockedAxis === "x"
-                        ? selectionBounds.y1
-                        : null
+                    x: lockedAxis === "y" ? 0 : mouse.x - mouse.startX,
+                    y: lockedAxis === "x" ? 0 : mouse.y - mouse.startY,
+                    relative: true
                   });
                 } else if (mouse.status === "select") {
                   const x1 = Math.min(mouse.startX, mouse.x);
