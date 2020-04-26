@@ -136,7 +136,9 @@ const Editor = ({ config }) => {
         mouseX: 0,
         mouseY: 0,
         clickX: 0,
-        clickY: 0
+        clickY: 0,
+        shiftKey: false,
+        spaceKey: false
       }
     },
     false,
@@ -146,8 +148,9 @@ const Editor = ({ config }) => {
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => selection.has(layer.id))
   );
-  const keys = useKeys({
+  useKeys({
     keydown: event => {
+      const { shiftKey } = event;
       const codeBlacklist = set([
         "Backspace",
         "ShiftLeft",
@@ -165,36 +168,52 @@ const Editor = ({ config }) => {
       }
       switch (event.code) {
         case "ArrowLeft":
-          setState(current =>
-            transformSelection(current, {
-              x: keys.has("ShiftLeft") || keys.has("ShiftRight") ? -10 : -1,
+          setState(current => ({
+            ...transformSelection(current, {
+              x: shiftKey ? -10 : -1,
               relative: true
-            })
-          );
+            }),
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
         case "ArrowUp":
-          setState(current =>
-            transformSelection(current, {
-              y: keys.has("ShiftLeft") || keys.has("ShiftRight") ? -10 : -1,
+          setState(current => ({
+            ...transformSelection(current, {
+              y: shiftKey ? -10 : -1,
               relative: true
-            })
-          );
+            }),
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
         case "ArrowRight":
-          setState(current =>
-            transformSelection(current, {
-              x: keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1,
+          setState(current => ({
+            ...transformSelection(current, {
+              x: shiftKey ? 10 : 1,
               relative: true
-            })
-          );
+            }),
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
         case "ArrowDown":
-          setState(current =>
-            transformSelection(current, {
-              y: keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1,
+          setState(current => ({
+            ...transformSelection(current, {
+              y: shiftKey ? 10 : 1,
               relative: true
-            })
-          );
+            }),
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
         case "Backspace":
           setState(
@@ -206,14 +225,45 @@ const Editor = ({ config }) => {
                   ({ id }) => !current.selection.has(id)
                 )
               },
-              selection: set()
+              selection: set(),
+              input: {
+                ...current.input,
+                shiftKey
+              }
             }),
             true
           );
           break;
+        case "Space":
+          setState(current => ({
+            ...current,
+            input: {
+              ...current.input,
+              spaceKey: true,
+              shiftKey
+            }
+          }));
+          break;
         default:
+          setState(current => ({
+            ...current,
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
       }
+    },
+    keyup: ({ code, shiftKey }) => {
+      setState(current => ({
+        ...current,
+        input: {
+          ...current.input,
+          spaceKey: code === "Space" ? false : current.input.spaceKey,
+          shiftKey
+        }
+      }));
     }
   });
   const mouseIsWithinSelection =
@@ -242,13 +292,12 @@ const Editor = ({ config }) => {
     mouseStartedWithinSelection && state.input.clickY <= selectionBounds.y1 + 3;
   const mouseStartedOverSelectionBottom =
     mouseStartedWithinSelection && state.input.clickY >= selectionBounds.y2 - 3;
-  const lockedAxis =
-    and(keys, ["ShiftLeft", "ShiftRight"]).size !== 1
-      ? null
-      : Math.abs(state.input.mouseX - state.input.clickX) >
-        Math.abs(state.input.mouseY - state.input.clickY)
+  const lockedAxis = state.input.shiftKey
+    ? Math.abs(state.input.mouseX - state.input.clickX) >
+      Math.abs(state.input.mouseY - state.input.clickY)
       ? "x"
-      : "y";
+      : "y"
+    : null;
   let transformedLayers = state.doc.layers;
   // TODO: Filter out layers that don't intersect the viewport using canvas.current.getBoundingClientRect()
   switch (state.input.mode) {
@@ -434,16 +483,16 @@ const Editor = ({ config }) => {
                       borderBottom: "1px solid #ddd"
                     }}
                     onClick={event => {
+                      const { shiftKey } = event;
                       event.stopPropagation();
                       setState(
                         current => ({
                           ...current,
-                          selection:
-                            keys.has("ShiftLeft") || keys.has("ShiftRight")
-                              ? current.selection.has(id)
-                                ? not(current.selection, [id])
-                                : or(current.selection, [id])
-                              : set([id])
+                          selection: shiftKey
+                            ? current.selection.has(id)
+                              ? not(current.selection, [id])
+                              : or(current.selection, [id])
+                            : set([id])
                         }),
                         true
                       );
@@ -513,7 +562,7 @@ const Editor = ({ config }) => {
           cursor:
             state.input.mode === "pan"
               ? "grabbing"
-              : keys.has("Space")
+              : state.input.spaceKey
               ? "grab"
               : state.selection.size > 0 &&
                 ((mouseIsOverSelectionLeft && mouseIsOverSelectionTop) ||
@@ -551,7 +600,7 @@ const Editor = ({ config }) => {
               }
             : null
         }
-        onMouseMove={({ clientX, clientY }) => {
+        onMouseMove={({ clientX, clientY, shiftKey }) => {
           const rect = canvas.current.getBoundingClientRect();
           const x = clientX - rect.x - viewport.x;
           const y = clientY - rect.y - viewport.y;
@@ -568,7 +617,7 @@ const Editor = ({ config }) => {
             const dy = y - state.input.clickY;
             const distance = Math.abs(Math.sqrt(dx * dx + dy * dy));
             if (distance > 1) {
-              if (keys.has("Space")) {
+              if (state.input.spaceKey) {
                 setState(current => ({
                   ...current,
                   input: {
@@ -616,12 +665,11 @@ const Editor = ({ config }) => {
                   setState(
                     current => ({
                       ...current,
-                      selection:
-                        keys.has("ShiftLeft") || keys.has("ShiftRight")
-                          ? current.selection.has(clickedLayer.id)
-                            ? not(current.selection, [clickedLayer.id])
-                            : or(current.selection, [clickedLayer.id])
-                          : set([clickedLayer.id]),
+                      selection: shiftKey
+                        ? current.selection.has(clickedLayer.id)
+                          ? not(current.selection, [clickedLayer.id])
+                          : or(current.selection, [clickedLayer.id])
+                        : set([clickedLayer.id]),
                       input: {
                         ...current.input,
                         mode: "drag"
@@ -644,7 +692,7 @@ const Editor = ({ config }) => {
         }}
         onMouseUp={
           state.input.mode !== "up"
-            ? ({ clientX, clientY }) => {
+            ? ({ clientX, clientY, shiftKey }) => {
                 if (state.input.mode === "down") {
                   const layersUnderClick = doc.layers.filter(
                     layer =>
@@ -659,12 +707,11 @@ const Editor = ({ config }) => {
                     setState(
                       current => ({
                         ...current,
-                        selection:
-                          keys.has("ShiftLeft") || keys.has("ShiftRight")
-                            ? current.selection.has(clickedLayer.id)
-                              ? not(current.selection, [clickedLayer.id])
-                              : or(current.selection, [clickedLayer.id])
-                            : set([clickedLayer.id])
+                        selection: shiftKey
+                          ? current.selection.has(clickedLayer.id)
+                            ? not(current.selection, [clickedLayer.id])
+                            : or(current.selection, [clickedLayer.id])
+                          : set([clickedLayer.id])
                       }),
                       true
                     );
@@ -999,7 +1046,14 @@ const Editor = ({ config }) => {
               y: state.input.mouseY
             }}
             viewport={viewport}
-            keys={keys}
+            keys={
+              new Set(
+                [
+                  state.input.shiftKey ? "Shift" : null,
+                  state.input.spaceKey ? "Space" : null
+                ].filter(Boolean)
+              )
+            }
           />
         </div>
       </div>
