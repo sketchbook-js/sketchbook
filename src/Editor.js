@@ -122,11 +122,6 @@ const Editor = ({ config }) => {
   const canvas = useRef(null);
   const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
   const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);
-  const [viewport, setViewport] = useState({
-    x: 0,
-    y: 0,
-    scale: 1
-  });
   const [mouse, setMouse] = useState({
     status: "up", // "up", "down", "drag", "select", "pan" or "resize"
     x: 0,
@@ -137,12 +132,17 @@ const Editor = ({ config }) => {
   const [state, setState, pointer, setPointer, snapshots] = useStateSnapshots(
     {
       doc: exampleDoc,
-      selection: set()
+      selection: set(),
+      viewport: {
+        x: 0,
+        y: 0,
+        scale: 1
+      }
     },
     false,
     100
   );
-  const { doc, selection } = state;
+  const { doc, selection, viewport } = state;
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => selection.has(layer.id))
   );
@@ -691,10 +691,13 @@ const Editor = ({ config }) => {
                     true
                   );
                 } else if (mouse.status === "pan") {
-                  setViewport(current => ({
+                  setState(current => ({
                     ...current,
-                    x: current.x + (mouse.x - mouse.startX),
-                    y: current.y + (mouse.y - mouse.startY)
+                    viewport: {
+                      ...current.viewport,
+                      x: current.viewport.x + (mouse.x - mouse.startX),
+                      y: current.viewport.y + (mouse.y - mouse.startY)
+                    }
                   }));
                 } else if (mouse.status === "resize") {
                   setState(current =>
