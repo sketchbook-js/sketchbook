@@ -118,6 +118,125 @@ const transformSelection = (current, transform) => ({
   }
 });
 
+const getDisplay = state => {
+  const { doc, selection, viewport } = state;
+  const selectionBounds = getLayerBounds(
+    state.doc.layers.filter(layer => selection.has(layer.id))
+  );
+  const mouseIsWithinSelection =
+    state.input.mouseX >= selectionBounds.x1 - 3 &&
+    state.input.mouseX <= selectionBounds.x2 + 3 &&
+    state.input.mouseY >= selectionBounds.y1 - 3 &&
+    state.input.mouseY <= selectionBounds.y2 + 3;
+  const mouseIsOverSelectionLeft =
+    mouseIsWithinSelection && state.input.mouseX <= selectionBounds.x1 + 3;
+  const mouseIsOverSelectionRight =
+    mouseIsWithinSelection && state.input.mouseX >= selectionBounds.x2 - 3;
+  const mouseIsOverSelectionTop =
+    mouseIsWithinSelection && state.input.mouseY <= selectionBounds.y1 + 3;
+  const mouseIsOverSelectionBottom =
+    mouseIsWithinSelection && state.input.mouseY >= selectionBounds.y2 - 3;
+  const mouseStartedWithinSelection =
+    state.input.clickX >= selectionBounds.x1 - 3 &&
+    state.input.clickX <= selectionBounds.x2 + 3 &&
+    state.input.clickY >= selectionBounds.y1 - 3 &&
+    state.input.clickY <= selectionBounds.y2 + 3;
+  const mouseStartedOverSelectionLeft =
+    mouseStartedWithinSelection && state.input.clickX <= selectionBounds.x1 + 3;
+  const mouseStartedOverSelectionRight =
+    mouseStartedWithinSelection && state.input.clickX >= selectionBounds.x2 - 3;
+  const mouseStartedOverSelectionTop =
+    mouseStartedWithinSelection && state.input.clickY <= selectionBounds.y1 + 3;
+  const mouseStartedOverSelectionBottom =
+    mouseStartedWithinSelection && state.input.clickY >= selectionBounds.y2 - 3;
+  const lockedAxis = state.input.shiftKey
+    ? Math.abs(state.input.mouseX - state.input.clickX) >
+      Math.abs(state.input.mouseY - state.input.clickY)
+      ? "x"
+      : "y"
+    : null;
+  let transformedLayers = state.doc.layers;
+  // TODO: Filter out layers that don't intersect the viewport using canvas.current.getBoundingClientRect()
+  switch (state.input.mode) {
+    case "resize":
+      transformedLayers = transformLayers(
+        transformedLayers,
+        {
+          w:
+            mouseStartedOverSelectionLeft || mouseStartedOverSelectionRight
+              ? (state.input.mouseX - state.input.clickX) *
+                (mouseStartedOverSelectionLeft ? -1 : 1)
+              : undefined,
+          h:
+            mouseStartedOverSelectionTop || mouseStartedOverSelectionBottom
+              ? (state.input.mouseY - state.input.clickY) *
+                (mouseStartedOverSelectionTop ? -1 : 1)
+              : undefined,
+          cx: mouseStartedOverSelectionLeft ? 1 : 0,
+          cy: mouseStartedOverSelectionTop ? 1 : 0,
+          relative: true
+        },
+        layer => state.selection.has(layer.id)
+      );
+      break;
+    case "drag":
+      transformedLayers = transformLayers(
+        transformedLayers,
+        {
+          x: lockedAxis === "y" ? 0 : state.input.mouseX - state.input.clickX,
+          y: lockedAxis === "x" ? 0 : state.input.mouseY - state.input.clickY,
+          relative: true
+        },
+        layer => state.selection.has(layer.id)
+      );
+      break;
+    case "pan":
+      transformedLayers = transformLayers(transformedLayers, {
+        x: state.input.mouseX - state.input.clickX,
+        y: state.input.mouseY - state.input.clickY,
+        relative: true
+      });
+      break;
+    default:
+      break;
+  }
+  transformedLayers = transformLayers(transformedLayers, {
+    x: viewport.x,
+    y: viewport.y,
+    relative: true
+  });
+  const transformedSelectionBounds = getLayerBounds(
+    transformedLayers.filter(layer => selection.has(layer.id))
+  );
+  return {
+    mouseStartedOverSelectionLeft,
+    mouseStartedOverSelectionRight,
+    mouseStartedOverSelectionTop,
+    mouseStartedOverSelectionBottom,
+    mouseIsOverSelectionLeft,
+    mouseIsOverSelectionRight,
+    mouseIsOverSelectionTop,
+    mouseIsOverSelectionBottom,
+    transformedSelectionBounds,
+    mouseIsWithinSelection,
+    lockedAxis,
+    layers: transformedLayers.map(
+      ({ id, type, component, name, x1, y1, x2, y2, options }) => ({
+        id,
+        type,
+        component,
+        name,
+        x: x1,
+        y: y1,
+        scale: viewport.scale,
+        width: x2 - x1,
+        height: y2 - y1,
+        options
+      })
+    )
+  };
+};
+
 const Editor = ({ config }) => {
   const canvas = useRef(null);
   const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
@@ -148,6 +267,20 @@ const Editor = ({ config }) => {
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => selection.has(layer.id))
   );
+  const display = getDisplay(state);
+  const {
+    mouseStartedOverSelectionLeft,
+    mouseStartedOverSelectionRight,
+    mouseStartedOverSelectionTop,
+    mouseStartedOverSelectionBottom,
+    mouseIsOverSelectionLeft,
+    mouseIsOverSelectionRight,
+    mouseIsOverSelectionTop,
+    mouseIsOverSelectionBottom,
+    transformedSelectionBounds,
+    mouseIsWithinSelection,
+    lockedAxis
+  } = display;
   useKeys({
     keydown: event => {
       const { shiftKey } = event;
@@ -266,107 +399,6 @@ const Editor = ({ config }) => {
       }));
     }
   });
-  const mouseIsWithinSelection =
-    state.input.mouseX >= selectionBounds.x1 - 3 &&
-    state.input.mouseX <= selectionBounds.x2 + 3 &&
-    state.input.mouseY >= selectionBounds.y1 - 3 &&
-    state.input.mouseY <= selectionBounds.y2 + 3;
-  const mouseIsOverSelectionLeft =
-    mouseIsWithinSelection && state.input.mouseX <= selectionBounds.x1 + 3;
-  const mouseIsOverSelectionRight =
-    mouseIsWithinSelection && state.input.mouseX >= selectionBounds.x2 - 3;
-  const mouseIsOverSelectionTop =
-    mouseIsWithinSelection && state.input.mouseY <= selectionBounds.y1 + 3;
-  const mouseIsOverSelectionBottom =
-    mouseIsWithinSelection && state.input.mouseY >= selectionBounds.y2 - 3;
-  const mouseStartedWithinSelection =
-    state.input.clickX >= selectionBounds.x1 - 3 &&
-    state.input.clickX <= selectionBounds.x2 + 3 &&
-    state.input.clickY >= selectionBounds.y1 - 3 &&
-    state.input.clickY <= selectionBounds.y2 + 3;
-  const mouseStartedOverSelectionLeft =
-    mouseStartedWithinSelection && state.input.clickX <= selectionBounds.x1 + 3;
-  const mouseStartedOverSelectionRight =
-    mouseStartedWithinSelection && state.input.clickX >= selectionBounds.x2 - 3;
-  const mouseStartedOverSelectionTop =
-    mouseStartedWithinSelection && state.input.clickY <= selectionBounds.y1 + 3;
-  const mouseStartedOverSelectionBottom =
-    mouseStartedWithinSelection && state.input.clickY >= selectionBounds.y2 - 3;
-  const lockedAxis = state.input.shiftKey
-    ? Math.abs(state.input.mouseX - state.input.clickX) >
-      Math.abs(state.input.mouseY - state.input.clickY)
-      ? "x"
-      : "y"
-    : null;
-  let transformedLayers = state.doc.layers;
-  // TODO: Filter out layers that don't intersect the viewport using canvas.current.getBoundingClientRect()
-  switch (state.input.mode) {
-    case "resize":
-      transformedLayers = transformLayers(
-        transformedLayers,
-        {
-          w:
-            mouseStartedOverSelectionLeft || mouseStartedOverSelectionRight
-              ? (state.input.mouseX - state.input.clickX) *
-                (mouseStartedOverSelectionLeft ? -1 : 1)
-              : undefined,
-          h:
-            mouseStartedOverSelectionTop || mouseStartedOverSelectionBottom
-              ? (state.input.mouseY - state.input.clickY) *
-                (mouseStartedOverSelectionTop ? -1 : 1)
-              : undefined,
-          cx: mouseStartedOverSelectionLeft ? 1 : 0,
-          cy: mouseStartedOverSelectionTop ? 1 : 0,
-          relative: true
-        },
-        layer => state.selection.has(layer.id)
-      );
-      break;
-    case "drag":
-      transformedLayers = transformLayers(
-        transformedLayers,
-        {
-          x: lockedAxis === "y" ? 0 : state.input.mouseX - state.input.clickX,
-          y: lockedAxis === "x" ? 0 : state.input.mouseY - state.input.clickY,
-          relative: true
-        },
-        layer => state.selection.has(layer.id)
-      );
-      break;
-    case "pan":
-      transformedLayers = transformLayers(transformedLayers, {
-        x: state.input.mouseX - state.input.clickX,
-        y: state.input.mouseY - state.input.clickY,
-        relative: true
-      });
-      break;
-    default:
-      break;
-  }
-  transformedLayers = transformLayers(transformedLayers, {
-    x: viewport.x,
-    y: viewport.y,
-    relative: true
-  });
-  const transformedSelectionBounds = getLayerBounds(
-    transformedLayers.filter(layer => selection.has(layer.id))
-  );
-  const display = {
-    layers: transformedLayers.map(
-      ({ id, type, component, name, x1, y1, x2, y2, options }) => ({
-        id,
-        type,
-        component,
-        name,
-        x: x1,
-        y: y1,
-        scale: viewport.scale,
-        width: x2 - x1,
-        height: y2 - y1,
-        options
-      })
-    )
-  };
   const { measureLayer } = useCanvasConnection(window, canvas, display.layers);
   return (
     <div
