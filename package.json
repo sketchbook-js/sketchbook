@@ -11,7 +11,7 @@
     "jest:watch": "jest --watchAll",
     "jest": "jest",
     "start": "node scripts/start",
-    "test": "yarn eslint && yarn jest"
+    "test": "yarn eslint && yarn flow check && yarn jest"
   },
   "dependencies": {
     "arg": "^4.1.3",
@@ -28,6 +28,7 @@
     "@babel/core": "^7.8.4",
     "@babel/plugin-proposal-numeric-separator": "^7.8.3",
     "@babel/preset-env": "^7.8.4",
+    "@babel/preset-flow": "^7.9.0",
     "@babel/preset-react": "^7.8.3",
     "babel-eslint": "^10.0.3",
     "babel-jest": "^25.1.0",
@@ -42,6 +43,7 @@
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.18.3",
     "eslint-plugin-react-hooks": "^2.3.0",
+    "flow-bin": "^0.123.0",
     "jest": "^25.1.0",
     "jest-environment-jsdom-fourteen": "^1.0.1",
     "jest-watch-typeahead": "^0.4.2",
