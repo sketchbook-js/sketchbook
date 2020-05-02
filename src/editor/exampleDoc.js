@@ -1,6 +1,7 @@
 import pushID from "../pushID";
+import { TypeLayer } from "./types/types";
 
-const exampleDoc = {
+const exampleDoc: { type: string, layers: Array<TypeLayer> } = {
   type: "SketchbookDocument",
   layers: [
     {
