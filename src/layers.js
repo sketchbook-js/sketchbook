@@ -20,7 +20,7 @@ const transformLayers = (
       },
   predicate: TypeLayerPredicate = () => true
 ): Array<TypeLayer> => {
-  const bounds = getLayerBounds(layers, predicate);
+  const bounds = getSelectionBounds(layers, predicate);
   const width = bounds.x2 - bounds.x1;
   const height = bounds.y2 - bounds.y1;
   const origin = {
@@ -103,7 +103,7 @@ const alignLayers = (
   { x, y }: { x: number, y: number },
   predicate: TypeLayerPredicate = () => true
 ): Array<TypeLayer> => {
-  const bounds = getLayerBounds(layers, predicate);
+  const bounds = getSelectionBounds(layers, predicate);
   return layers.map(layer =>
     predicate(layer)
       ? {
@@ -146,8 +146,7 @@ const alignLayers = (
   );
 };
 
-// TODO: Rename this getSelectionBounds?
-const getLayerBounds = (
+const getSelectionBounds = (
   layers: Array<TypeLayer>,
   predicate: TypeLayerPredicate = () => true
 ): { x1: number, y1: number, x2: number, y2: number } =>
@@ -256,7 +255,7 @@ const resizeLayersToExtreme = (
 export {
   transformLayers,
   alignLayers,
-  getLayerBounds,
+  getSelectionBounds,
   transformBounds,
   transformPoints,
   getExtremeBounds,

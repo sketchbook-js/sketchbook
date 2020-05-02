@@ -9,7 +9,7 @@ import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
 import {
-  getLayerBounds,
+  getSelectionBounds,
   transformLayers,
   alignLayers,
   resizeLayersToExtreme
@@ -131,7 +131,7 @@ const Editor = ({ config }) => {
     100
   );
   const { doc, selection } = state;
-  const selectionBounds = getLayerBounds(
+  const selectionBounds = getSelectionBounds(
     doc.layers.filter(layer => selection.has(layer.id))
   );
   const keys = useKeys({
@@ -282,7 +282,7 @@ const Editor = ({ config }) => {
     y: viewport.y,
     relative: true
   });
-  const transformedSelectionBounds = getLayerBounds(
+  const transformedSelectionBounds = getSelectionBounds(
     transformedLayers.filter(layer => selection.has(layer.id))
   );
   const display = {
