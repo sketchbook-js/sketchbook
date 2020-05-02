@@ -1,3 +1,4 @@
+// Layer transformation
 export type TypeLayer = {
   id: number,
   type: string,
@@ -6,7 +7,7 @@ export type TypeLayer = {
   y1: number,
   x2: number,
   y2: number,
-  options: {}
+  options?: { [string]: string }
 };
 
 export type TypeLayerPredicate = (layer: TypeLayer) => boolean;
