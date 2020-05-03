@@ -1,5 +1,5 @@
 // @flow
-import { Layer, LayerPredicate, Matrix } from "./types/types";
+import type { Layer, LayerPredicate, Matrix } from "./types/types";
 
 const transformLayers = (
   layers: Array<Layer>,

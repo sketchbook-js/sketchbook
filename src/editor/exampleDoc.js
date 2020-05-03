@@ -1,6 +1,6 @@
 // @flow
 import pushID from "../pushID";
-import { SketchbookDocument } from "../types/types";
+import type { SketchbookDocument } from "../types/types";
 
 const exampleDoc: SketchbookDocument = {
   type: "SketchbookDocument",

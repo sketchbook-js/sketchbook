@@ -1,9 +1,12 @@
+// @flow
+
 type TODO = any;
 
 export type Layer = {
   id: number,
   type: string,
   component: string,
+  name: string,
   x1: number,
   y1: number,
   x2: number,
@@ -24,5 +27,5 @@ export type Matrix = {
 
 export type SketchbookDocument = {
   type: "SketchbookDocument",
-  layers: Array<TypeLayer>
+  layers: Array<Layer>
 };
