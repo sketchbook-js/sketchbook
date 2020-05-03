@@ -1,7 +1,7 @@
 import {
   transformLayers,
   alignLayers,
-  getSelectionBounds,
+  getLayerBounds,
   transformBounds,
   transformPoints,
   getExtremeBounds,
@@ -288,7 +288,7 @@ describe("transformLayers", () => {
     ]);
   });
 
-  test("multiple layers, negatively offset from 0, scaling, origin middle-right, relative", () => {
+  test("multiple layers, negativly offset from 0, scaling, origin middle-right, relative", () => {
     expect(
       transformLayers(
         [
@@ -544,9 +544,9 @@ describe("alignLayers", () => {
   test.todo("predicate");
 });
 
-describe("getSelectionBounds", () => {
+describe("getLayerBounds", () => {
   test("no layers", () => {
-    expect(getSelectionBounds([])).toEqual({
+    expect(getLayerBounds([])).toEqual({
       x1: 0,
       y1: 0,
       x2: 0,
@@ -556,7 +556,7 @@ describe("getSelectionBounds", () => {
 
   test("single layer", () => {
     expect(
-      getSelectionBounds([
+      getLayerBounds([
         {
           x1: 0,
           y1: 0,
@@ -574,7 +574,7 @@ describe("getSelectionBounds", () => {
 
   test("multiple layers", () => {
     expect(
-      getSelectionBounds([
+      getLayerBounds([
         {
           x1: 0,
           y1: 0,
@@ -596,9 +596,9 @@ describe("getSelectionBounds", () => {
     });
   });
 
-  test("multiple layers positively offset from 0", () => {
+  test("multiple layers positivly offset from 0", () => {
     expect(
-      getSelectionBounds([
+      getLayerBounds([
         {
           x1: 100,
           y1: 100,
@@ -622,7 +622,7 @@ describe("getSelectionBounds", () => {
 
   test("multiple layers negativly offset from 0", () => {
     expect(
-      getSelectionBounds([
+      getLayerBounds([
         {
           x1: -200,
           y1: -200,
