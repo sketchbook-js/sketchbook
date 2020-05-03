@@ -19,3 +19,8 @@ export type Matrix = {
   e: number,
   f: number
 };
+
+export type SketchbookDocument = {
+  type: "SketchbookDocument",
+  layers: Array<TypeLayer>
+};
