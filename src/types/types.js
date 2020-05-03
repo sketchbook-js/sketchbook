@@ -14,7 +14,7 @@ export type Layer = {
   options?: TODO
 };
 
-export type LayerPredicate = (layer: Layer) => boolean;
+export type Predicate<T> = (item: T) => boolean;
 
 export type Matrix = {
   a: number,

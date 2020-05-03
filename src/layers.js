@@ -1,5 +1,5 @@
 // @flow
-import type { Layer, LayerPredicate, Matrix } from "./types/types";
+import type { Layer, Predicate, Matrix } from "./types/types";
 
 const transformLayers = (
   layers: Array<Layer>,
@@ -12,7 +12,7 @@ const transformLayers = (
     cy?: number,
     relative?: boolean
   },
-  predicate: LayerPredicate = () => true
+  predicate: Predicate<Layer> = () => true
 ): Array<Layer> => {
   const bounds = getLayerBounds(layers, predicate);
   const width = bounds.x2 - bounds.x1;
@@ -95,7 +95,7 @@ const transformLayers = (
 const alignLayers = (
   layers: Array<Layer>,
   { x, y }: { x: number, y: number },
-  predicate: LayerPredicate = () => true
+  predicate: Predicate<Layer> = () => true
 ): Array<Layer> => {
   const bounds = getLayerBounds(layers, predicate);
   return layers.map(layer =>
@@ -142,7 +142,7 @@ const alignLayers = (
 
 const getLayerBounds = (
   layers: Array<Layer>,
-  predicate: LayerPredicate = () => true
+  predicate: Predicate<Layer> = () => true
 ): { x1: number, y1: number, x2: number, y2: number } =>
   layers.filter(predicate).length > 0
     ? layers.filter(predicate).reduce(
@@ -194,7 +194,7 @@ const transformPoints = (
 const getExtremeBounds = (
   layers: Array<Layer>,
   extreme: "widest" | "narrowest" | "tallest" | "shortest",
-  predicate: LayerPredicate = () => true
+  predicate: Predicate<Layer> = () => true
 ) => {
   if (layers.length === 0) return null;
   const filteredLayers = layers.filter(predicate);
@@ -231,7 +231,7 @@ const getExtremeBounds = (
 const resizeLayersToExtreme = (
   layers: Array<Layer>,
   extreme: "widest" | "narrowest" | "tallest" | "shortest",
-  predicate: LayerPredicate = () => true
+  predicate: Predicate<Layer> = () => true
 ): Array<Layer> => {
   const extremeBounds = getExtremeBounds(layers, extreme, predicate);
   return extremeBounds
