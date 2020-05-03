@@ -3,21 +3,15 @@ import { Layer, LayerPredicate, Matrix } from "./types/types";
 
 const transformLayers = (
   layers: Array<Layer>,
-  transform:
-    | {
-        w: number,
-        h: number,
-        cx: number,
-        cy: number,
-        relative: boolean
-      }
-    | {
-        cx?: number,
-        cy?: number,
-        x: number,
-        y: number,
-        relative: boolean
-      },
+  transform: {
+    w?: number,
+    h?: number,
+    x?: number,
+    y?: number,
+    cx?: number,
+    cy?: number,
+    relative?: boolean
+  },
   predicate: LayerPredicate = () => true
 ): Array<Layer> => {
   const bounds = getLayerBounds(layers, predicate);
@@ -185,8 +179,8 @@ const transformBounds = (
 
 const transformPoints = (
   matrices: Array<Matrix>,
-  points: Array<Array<number>>
-): Array<Array<number>> =>
+  points: Array<[number, number]>
+): Array<[number, number]> =>
   points.map(point =>
     matrices.reduce(
       (result, matrix) => [
@@ -199,7 +193,7 @@ const transformPoints = (
 
 const getExtremeBounds = (
   layers: Array<Layer>,
-  extreme: string,
+  extreme: "widest" | "narrowest" | "tallest" | "shortest",
   predicate: LayerPredicate = () => true
 ) => {
   if (layers.length === 0) return null;
@@ -236,7 +230,7 @@ const getExtremeBounds = (
 
 const resizeLayersToExtreme = (
   layers: Array<Layer>,
-  extreme: string,
+  extreme: "widest" | "narrowest" | "tallest" | "shortest",
   predicate: LayerPredicate = () => true
 ): Array<Layer> => {
   const extremeBounds = getExtremeBounds(layers, extreme, predicate);
