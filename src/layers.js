@@ -146,7 +146,6 @@ const alignLayers = (
   );
 };
 
-// TODO: Rename this getSelectionBounds?
 const getLayerBounds = (
   layers: Array<TypeLayer>,
   predicate: TypeLayerPredicate = () => true

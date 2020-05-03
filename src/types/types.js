@@ -1,4 +1,3 @@
-// Layer transformation
 export type TypeLayer = {
   id: number,
   type: string,
