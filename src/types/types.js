@@ -1,4 +1,4 @@
-export type TypeLayer = {
+export type Layer = {
   id: number,
   type: string,
   component: string,
@@ -9,9 +9,9 @@ export type TypeLayer = {
   options?: { [string]: string }
 };
 
-export type TypeLayerPredicate = (layer: TypeLayer) => boolean;
+export type LayerPredicate = (layer: Layer) => boolean;
 
-export type TypeMatrix = {
+export type Matrix = {
   a: number,
   b: number,
   c: number,
