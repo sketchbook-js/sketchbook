@@ -1,3 +1,5 @@
+type TODO = any;
+
 export type Layer = {
   id: number,
   type: string,
@@ -6,7 +8,7 @@ export type Layer = {
   y1: number,
   x2: number,
   y2: number,
-  options?: { [string]: string }
+  options?: TODO
 };
 
 export type LayerPredicate = (layer: Layer) => boolean;
