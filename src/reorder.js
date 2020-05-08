@@ -1,3 +1,4 @@
+// @flow
 /*
  * Reorder the elements of an array using their indices.
  * @param {Array<T>} list - An array of elements to be reorder.
@@ -12,7 +13,11 @@
  * reorder(["a", "b", "c", "d"], [2, 0], 1); // -> ["b", "c", "a", "d"]
  */
 
-const reorder = (list, originalIndices, targetIndex) => {
+const reorder = <T>(
+  list: Array<T>,
+  originalIndices: number | Array<number>,
+  targetIndex: number
+): Array<T> => {
   const originalIndicesAsArray = Array.isArray(originalIndices)
     ? originalIndices
     : [originalIndices];

@@ -1,4 +1,19 @@
-const transformLayers = (layers, transform, predicate = () => true) => {
+// @flow
+import type { Layer, Predicate, Matrix } from "./types/types";
+
+const transformLayers = (
+  layers: Array<Layer>,
+  transform: {
+    w?: number,
+    h?: number,
+    x?: number,
+    y?: number,
+    cx?: number,
+    cy?: number,
+    relative?: boolean
+  },
+  predicate: Predicate<Layer> = () => true
+): Array<Layer> => {
   const bounds = getLayerBounds(layers, predicate);
   const width = bounds.x2 - bounds.x1;
   const height = bounds.y2 - bounds.y1;
@@ -77,7 +92,11 @@ const transformLayers = (layers, transform, predicate = () => true) => {
 // TODO: This would be could be a little more "simple" if the x and y values
 // were between 0 and 1 instead of -1 and 1. It'd work like the cx and cy
 // values in the transformLayers() function.
-const alignLayers = (layers, { x, y }, predicate = () => true) => {
+const alignLayers = (
+  layers: Array<Layer>,
+  { x, y }: { x: number, y: number },
+  predicate: Predicate<Layer> = () => true
+): Array<Layer> => {
   const bounds = getLayerBounds(layers, predicate);
   return layers.map(layer =>
     predicate(layer)
@@ -121,8 +140,10 @@ const alignLayers = (layers, { x, y }, predicate = () => true) => {
   );
 };
 
-// TODO: Rename this getSelectionBounds?
-const getLayerBounds = (layers, predicate = () => true) =>
+const getLayerBounds = (
+  layers: Array<Layer>,
+  predicate: Predicate<Layer> = () => true
+): { x1: number, y1: number, x2: number, y2: number } =>
   layers.filter(predicate).length > 0
     ? layers.filter(predicate).reduce(
         (bounds, layer) => ({
@@ -140,7 +161,10 @@ const getLayerBounds = (layers, predicate = () => true) =>
       )
     : { x1: 0, y1: 0, x2: 0, y2: 0 };
 
-const transformBounds = (matrices, { x1, y1, x2, y2 }) => {
+const transformBounds = (
+  matrices: Array<Matrix>,
+  { x1, y1, x2, y2 }: Layer
+): { x1: number, y1: number, x2: number, y2: number } => {
   const points = transformPoints(matrices, [
     [x1, y1],
     [x2, y2]
@@ -153,7 +177,10 @@ const transformBounds = (matrices, { x1, y1, x2, y2 }) => {
   };
 };
 
-const transformPoints = (matrices, points) =>
+const transformPoints = (
+  matrices: Array<Matrix>,
+  points: Array<[number, number]>
+): Array<[number, number]> =>
   points.map(point =>
     matrices.reduce(
       (result, matrix) => [
@@ -164,7 +191,11 @@ const transformPoints = (matrices, points) =>
     )
   );
 
-const getExtremeBounds = (layers, extreme, predicate = () => true) => {
+const getExtremeBounds = (
+  layers: Array<Layer>,
+  extreme: "widest" | "narrowest" | "tallest" | "shortest",
+  predicate: Predicate<Layer> = () => true
+) => {
   if (layers.length === 0) return null;
   const filteredLayers = layers.filter(predicate);
   switch (extreme) {
@@ -197,7 +228,11 @@ const getExtremeBounds = (layers, extreme, predicate = () => true) => {
   }
 };
 
-const resizeLayersToExtreme = (layers, extreme, predicate = () => true) => {
+const resizeLayersToExtreme = (
+  layers: Array<Layer>,
+  extreme: "widest" | "narrowest" | "tallest" | "shortest",
+  predicate: Predicate<Layer> = () => true
+): Array<Layer> => {
   const extremeBounds = getExtremeBounds(layers, extreme, predicate);
   return extremeBounds
     ? layers.map(layer =>

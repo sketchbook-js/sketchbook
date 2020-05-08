@@ -1,6 +1,8 @@
+// @flow
 import pushID from "../pushID";
+import type { SketchbookDocument } from "../types/types";
 
-const exampleDoc = {
+const exampleDoc: SketchbookDocument = {
   type: "SketchbookDocument",
   layers: [
     {
