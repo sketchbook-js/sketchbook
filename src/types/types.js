@@ -1,6 +1,6 @@
 // @flow
 
-type TODO = any;
+export type TODO = any;
 
 export type Layer = {
   id: number,
@@ -28,4 +28,51 @@ export type Matrix = {
 export type SketchbookDocument = {
   type: "SketchbookDocument",
   layers: Array<Layer>
+};
+
+export type Field = {
+  key: string,
+  label: string,
+  input: Input
+};
+
+export type Input =
+  | ListInput
+  | RecordInput
+  | StringInput
+  | PlainTextInput
+  | CheckboxInput
+  | CheckboxesInput;
+
+export type ListInput = {
+  type: "List",
+  inputs: Input
+};
+
+export type RecordInput = {
+  type: "Record",
+  fields: Field[]
+};
+
+export type StringInput = {
+  type: "String"
+};
+
+export type PlainTextInput = {
+  type: "PlainText"
+};
+
+export type CheckboxInput = {
+  type: "Checkbox",
+  description?: string
+};
+
+export type CheckboxesInput = {
+  type: "Checkboxes",
+  items: CheckboxItem[]
+};
+
+export type CheckboxItem = {
+  label: string,
+  value: any
 };
