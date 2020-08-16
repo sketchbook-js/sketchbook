@@ -15,8 +15,8 @@ import {
   resizeLayersToExtreme
 } from "./layers";
 
-import StringRenderer from "./renderers/StringRenderer";
-import RecordRenderer from "./renderers/RecordRenderer";
+import StringRenderer from "./options/StringRenderer";
+import RecordRenderer from "./options/RecordRenderer";
 
 import AlignBottom from "./icons/AlignBottom";
 import AlignHorizontalMiddle from "./icons/AlignHorizontalMiddle";
