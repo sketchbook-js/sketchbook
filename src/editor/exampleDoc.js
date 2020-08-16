@@ -6,16 +6,62 @@ const exampleDoc: SketchbookDocument = {
   type: "SketchbookDocument",
   layers: [
     {
-      id: pushID(),
+      id: 101010,
       type: "SketchbookComponent",
-      component: "Heading 1",
-      name: "Heading 1",
-      x1: 100,
-      y1: 100,
-      x2: 750,
-      y2: 140,
-      options: { text: "Example Website" }
+      component: "Example",
+      name: "Example",
+      x1: 0,
+      y1: 0,
+      x2: 100,
+      y2: 100,
+      options: {
+        title: "Example title",
+        items: ["Example text A", "Example text B", "Example text C"],
+        // items: [["a", "b"], ["c"]],
+        buckets: {
+          pinkBucket: "Records -> string"
+        },
+        myLinks: {
+          // website: "webby",
+          list: ["item1", "item2"]
+        },
+        meat: [
+          {
+            poultry: "Chicken!"
+          }
+        ],
+        nestedList1: [["a", "b"]],
+        // listOfListOfString: [{ list: ["l1"] }], // Get the index
+        // listOfRecordsOfString: [{ record1: "record1text" }], // Get the index
+        // recordOfListOfString: {
+        //   record: ["string1", "string2", "string3"]
+        // }, // Get the key
+        // recordOfRecordOfString: {
+        //   record1: {
+        //     record2: "string"
+        //   }
+        // }
+        links: {
+          website: {
+            url: "https://example.com",
+            text: "example"
+          }
+        }
+        // labels: ["new", "popular"],
+        // highlight: true
+      }
     },
+    // {
+    //   id: pushID(),
+    //   type: "SketchbookComponent",
+    //   component: "Heading 1",
+    //   name: "Heading 1",
+    //   x1: 100,
+    //   y1: 100,
+    //   x2: 750,
+    //   y2: 140,
+    //   options: { text: "Example Website" }
+    // },
     {
       id: pushID(),
       type: "SketchbookComponent",
