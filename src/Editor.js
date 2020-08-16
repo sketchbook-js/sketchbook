@@ -15,6 +15,9 @@ import {
   resizeLayersToExtreme
 } from "./layers";
 
+import StringRenderer from "./renderers/StringRenderer";
+import RecordRenderer from "./renderers/RecordRenderer";
+
 import AlignBottom from "./icons/AlignBottom";
 import AlignHorizontalMiddle from "./icons/AlignHorizontalMiddle";
 import AlignLeft from "./icons/AlignLeft";
@@ -66,7 +69,6 @@ const Input = ({ style, ...props }) => (
     {...props}
   />
 );
-
 const Button = ({ style, disabled, Icon, children, ...props }) => (
   <button
     style={{
@@ -84,7 +86,6 @@ const Button = ({ style, disabled, Icon, children, ...props }) => (
     {Icon ? <Icon color={disabled ? "#bbb" : undefined} /> : children}
   </button>
 );
-
 const Textarea = ({ style, ...props }) => (
   <textarea
     style={{
@@ -108,6 +109,8 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
 
 const Editor = ({ config }) => {
   const canvas = useRef(null);
+  const [path, setPath] = useState([]);
+  const [depth, setDepth] = useState(0);
   const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
   const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);
   const [viewport, setViewport] = useState({
@@ -1476,143 +1479,78 @@ const Editor = ({ config }) => {
                   Multiple layers selected
                 </div>
               ) : (
-                config.components
-                  .find(
-                    ({ type }) =>
-                      type ===
-                      doc.layers.find(({ id }) => selection.has(id)).component
-                  )
-                  .options?.map(({ key, input, label }, index) => {
-                    const layer = doc.layers.find(({ id }) =>
-                      selection.has(id)
-                    );
-                    const error = config.components
-                      .find(({ type }) => type === layer.component)
-                      .validate?.(layer.options)
-                      ?.filter(error => error.key === key)
-                      .find(() => true);
-                    switch (input.type) {
-                      case "String":
-                        return (
-                          <Fragment key={key}>
-                            {error ? (
-                              <OptionsErrorMessage
-                                style={{
-                                  paddingTop: index === 0 ? "4px" : "0px",
-                                  paddingLeft: "6px"
-                                }}
-                              >
-                                {error.message}
-                              </OptionsErrorMessage>
-                            ) : null}
-                            <div
-                              id={`option-${key}`}
-                              type="text"
-                              style={{
-                                display: "grid",
-                                gridTemplateColumns:
-                                  "repeat(1, min-content 1fr)",
-                                alignItems: "center",
-                                justifyItems: "center",
-                                gap: 6,
-                                padding: 6
-                              }}
-                            >
-                              <Label htmlFor={`option-${key}`}>{label}</Label>
-                              <Input
-                                key={key}
-                                id={`option-${key}`}
-                                type="text"
-                                value={
-                                  doc.layers.find(
-                                    ({ id }) => id === [...selection][0]
-                                  ).options[key]
-                                }
-                                onChange={({ currentTarget: { value } }) => {
-                                  setState(current => ({
-                                    ...current,
-                                    doc: {
-                                      layers: current.doc.layers.map(layer =>
-                                        layer.id === [...selection][0]
-                                          ? {
-                                              ...layer,
-                                              options: {
-                                                ...layer.options,
-                                                [key]: value
-                                              }
-                                            }
-                                          : layer
-                                      )
+                (
+                  <Fragment>
+                    {["Root", ...path].map(pathKey => {
+                      return (
+                        <button
+                          onClick={() => {
+                            setPath(currPath => {
+                              const keyIndex = currPath.findIndex(
+                                path => path === pathKey
+                              );
+                              return currPath.length === 1
+                                ? [] // Render the root level
+                                : currPath.slice(0, keyIndex);
+                            });
+                          }}
+                        >
+                          {pathKey}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => {
+                        setPath(path => path.slice(0, path.length - 1));
+                      }}
+                    >
+                      Back
+                    </button>
+                    <RecordRenderer
+                      fields={
+                        config.components.find(
+                          ({ type }) =>
+                            doc.layers.find(({ id }) => id === 101010)
+                              .component === type
+                        ).options
+                      }
+                      values={
+                        doc.layers.find(({ id }) => id === 101010).options
+                      }
+                      path={path}
+                      depth={depth}
+                      onNavigate={newPaths =>
+                        setPath(path => [...path, ...newPaths])
+                      }
+                      onChange={(index, key, value) =>
+                        // TODO: This doesn't work.
+                        // Pass in an index when wanting to modify an array element, otherwise pass in null.
+                        setState(current => ({
+                          ...current,
+                          doc: {
+                            layers: current.doc.layers.map(layer =>
+                              layer.id === [...selection][0]
+                                ? {
+                                    ...layer,
+                                    options: {
+                                      ...layer.options,
+                                      [key]:
+                                        index === null
+                                          ? value
+                                          : layer.options.key.map(
+                                              (keyValue, i) =>
+                                                i === index ? value : keyValue
+                                            )
                                     }
-                                  }));
-                                }}
-                              />
-                            </div>
-                          </Fragment>
-                        );
-                      case "PlainText":
-                        return (
-                          <Fragment key={key}>
-                            {error ? (
-                              <OptionsErrorMessage
-                                style={{
-                                  paddingTop: index === 0 ? "4px" : "0px",
-                                  paddingLeft: "6px"
-                                }}
-                              >
-                                {error.message}
-                              </OptionsErrorMessage>
-                            ) : null}
-                            <div
-                              style={{
-                                display: "grid",
-                                gridTemplateColumns:
-                                  "repeat(1, min-content 1fr)",
-                                alignItems: "center",
-                                justifyItems: "center",
-                                gap: 6,
-                                padding: 6
-                              }}
-                            >
-                              <Label htmlFor={`option-${key}`}>{label}</Label>
-                              <Textarea
-                                key={key}
-                                id={`option-${key}`}
-                                type="text"
-                                style={{
-                                  minHeight: "8em"
-                                }}
-                                value={
-                                  doc.layers.find(
-                                    ({ id }) => id === [...selection][0]
-                                  ).options[key]
-                                }
-                                onChange={({ currentTarget: { value } }) => {
-                                  setState(current => ({
-                                    ...current,
-                                    doc: {
-                                      layers: current.doc.layers.map(layer =>
-                                        layer.id === [...selection][0]
-                                          ? {
-                                              ...layer,
-                                              options: {
-                                                ...layer.options,
-                                                [key]: value
-                                              }
-                                            }
-                                          : layer
-                                      )
-                                    }
-                                  }));
-                                }}
-                              />
-                            </div>
-                          </Fragment>
-                        );
-                      default:
-                        return null;
-                    }
-                  }) ?? (
+                                  }
+                                : layer
+                            )
+                          }
+                        }))
+                      }
+                    />
+                  </Fragment>
+                ) ?? (
                   <div
                     style={{
                       color: "#999",
