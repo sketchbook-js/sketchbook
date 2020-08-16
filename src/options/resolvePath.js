@@ -1,5 +1,5 @@
 // @flow
-import type { Input } from "../../types/types";
+import type { Input } from "../types/types";
 
 const resolvePath = (
   path: Array<string | number>,

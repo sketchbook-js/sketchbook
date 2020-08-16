@@ -4,7 +4,7 @@ import React, { Fragment } from "react";
 
 import type { Field, Input } from "../types/types";
 
-import resolvePath from "./helpers/resolvePath";
+import resolvePath from "./resolvePath";
 
 import StringRenderer from "./StringRenderer";
 import PlainTextRenderer from "./PlainTextRenderer";
