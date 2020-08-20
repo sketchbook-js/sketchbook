@@ -82,7 +82,7 @@
       "src/**.js"
     ],
     "testMatch": [
-      "<rootDir>/src/**.test.js"
+      "<rootDir>/src/**/*.test.js"
     ],
     "testEnvironment": "jest-environment-jsdom-fourteen",
     "transform": {
