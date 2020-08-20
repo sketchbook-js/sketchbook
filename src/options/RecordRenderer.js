@@ -1,6 +1,7 @@
 // @flow
 
 import React, { Fragment } from "react";
+import type { Node } from "react";
 
 import type { Field, Input } from "../types/types";
 
@@ -25,14 +26,20 @@ const ListRenderer = <T>({
   path: Array<string | number>,
   onChange: any,
   onNavigate: any
-}) => {
+}): Node => {
+  if (!Array.isArray(values)) {
+    throw Error(
+      `At path: ${JSON.stringify(path)}, the list value is not an array.`
+    );
+  }
+
   return path.length === depth ? (
     values.map((value, index) => (
       <AbstractRenderer
         config={input}
         value={value}
         depth={depth + 1}
-        path={path} // FIXME: Does this need to be here?
+        path={path}
         onChange={({ currentTarget: { value } }) => onChange(index, value)}
         onNavigate={onNavigate}
         newPaths={[index]}
@@ -92,7 +99,7 @@ const AbstractRenderer = <T>({
     case "String":
       return <StringRenderer value={value} onChange={onChange} />;
     default:
-      return null;
+      throw Error("Config type is unknown. Use a known config type.");
   }
 };
 
@@ -115,34 +122,60 @@ const RecordRenderer = <T>({
 }) => {
   if (depth === 0 && path.length > 0) {
     const field = fields.find(field => field.key === path[0]);
-    const config = field.input;
-    const value = values[field.key];
-    return (
-      <AbstractRenderer
-        {...resolvePath(path.slice(1), { config, value, depth })}
-        path={path}
-        onNavigate={onNavigate}
-        onChange={onChange}
-        newPaths={[]}
-      />
+    if (field !== undefined) {
+      return (
+        <AbstractRenderer
+          {...resolvePath(path.slice(1), {
+            config: field.input,
+            value: values[field.key],
+            depth
+          })}
+          path={path}
+          onNavigate={onNavigate}
+          onChange={onChange}
+          newPaths={[]}
+        />
+      );
+    }
+  }
+
+  if (!Array.isArray(fields)) {
+    throw Error(
+      `At path: ${JSON.stringify(path)}, the record field is not an array.`
     );
   }
 
   return fields.length === 0 ? null : path.length === depth ? (
-    fields.map<any>((field, i) => (
-      <div key={field.key}>
-        <label>{field.label}</label>
-        <AbstractRenderer
-          newPaths={[field.key]}
-          path={path}
-          config={field.input || field.inputs}
-          depth={depth}
-          value={values[field.key]}
-          onNavigate={onNavigate}
-          onChange={onChange}
-        />
-      </div>
-    ))
+    fields.map<any>((field, i) => {
+      if (!field.key) {
+        throw Error(`Record at path ${JSON.stringify(path)} is missing a key.`);
+      }
+
+      if (!field.label) {
+        throw Error(
+          `Record at path ${JSON.stringify(path)} is missing a label.`
+        );
+      }
+
+      if (!field.input) {
+        throw Error(`Record at path ${JSON.stringify(path)} is missing a key.`);
+      }
+
+      return (
+        <div key={field.key}>
+          <label>{field.label}</label>
+          <AbstractRenderer
+            newPaths={[field.key]}
+            path={path}
+            config={field.input}
+            depth={depth}
+            value={values[field.key]}
+            onNavigate={onNavigate}
+            onChange={onChange}
+          />
+        </div>
+      );
+    })
   ) : (
     <button onClick={() => onNavigate(newPaths)} disabled={fields.length === 0}>
       {fields.length} record item{fields.length === 1 ? "" : "s"}
