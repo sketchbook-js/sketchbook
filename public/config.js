@@ -178,7 +178,7 @@ Sketchbook.config = {
       ],
       init: () => ({
         options: {
-          text: "Lorem ipsum"
+          title: "Lorem ipsum"
           // links: {
           //   website: {
           //     url: "https://example.com",
@@ -190,10 +190,10 @@ Sketchbook.config = {
         }
       }),
       validate: () => null,
-      render: ({ element, width, height, options: { text } }) => {
+      render: ({ element, width, height, options: { title } }) => {
         element.style = "height: 100%; display: flex; align-items: center;";
         element.innerHTML = `
-          <h1 style="margin: 0;">${text}</h1>
+          <h1 style="margin: 0;">${title}</h1>
         `;
       }
     },
