@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment } from "react";
+import React from "react";
 import type { Node } from "react";
 
 import type { Field, Input } from "../types/types";
@@ -10,7 +10,9 @@ import resolvePath from "./resolvePath";
 import StringRenderer from "./StringRenderer";
 import PlainTextRenderer from "./PlainTextRenderer";
 
-const ListRenderer = <T>({
+type Option = string | Array<Option> | { [key: string]: Option };
+
+const ListRenderer = ({
   newPaths,
   input,
   values,
@@ -21,7 +23,7 @@ const ListRenderer = <T>({
 }: {
   newPaths: Array<string | number>,
   input: Input,
-  values: any,
+  values: Option,
   depth: number,
   path: Array<string | number>,
   onChange: any,
@@ -52,7 +54,7 @@ const ListRenderer = <T>({
   );
 };
 
-const AbstractRenderer = <T>({
+const AbstractRenderer = ({
   newPaths,
   config,
   value,
@@ -63,7 +65,7 @@ const AbstractRenderer = <T>({
 }: {
   newPaths: Array<string | number>,
   config: Input, // the configuration for this option from config.js
-  value: any, // the value of this option from the document
+  value: Option, // the value of this option from the document
   path: Array<string | number>,
   depth: number,
   onNavigate: any,
@@ -71,29 +73,35 @@ const AbstractRenderer = <T>({
 }) => {
   switch (config.type) {
     case "List":
-      return (
-        <ListRenderer
-          newPaths={newPaths}
-          input={config.inputs}
-          values={value}
-          depth={depth + 1}
-          path={path}
-          onNavigate={onNavigate}
-          onChange={onChange}
-        />
-      );
+      if (Array.isArray(value)) {
+        return (
+          <ListRenderer
+            newPaths={newPaths}
+            input={config.inputs}
+            values={value}
+            depth={depth + 1}
+            path={path}
+            onNavigate={onNavigate}
+            onChange={onChange}
+          />
+        );
+      }
+      break;
     case "Record":
-      return (
-        <RecordRenderer
-          depth={depth + 1}
-          onChange={onChange}
-          fields={config.fields}
-          values={value}
-          path={path}
-          newPaths={newPaths}
-          onNavigate={onNavigate}
-        />
-      );
+      if (typeof value !== "string" && !Array.isArray(value)) {
+        return (
+          <RecordRenderer
+            depth={depth + 1}
+            onChange={onChange}
+            fields={config.fields}
+            values={value}
+            path={path}
+            newPaths={newPaths}
+            onNavigate={onNavigate}
+          />
+        );
+      }
+      break;
     case "PlainText":
       return <PlainTextRenderer value={value} onChange={onChange} />;
     case "String":
@@ -101,9 +109,10 @@ const AbstractRenderer = <T>({
     default:
       throw Error("Config type is unknown. Use a known config type.");
   }
+  return null;
 };
 
-const RecordRenderer = <T>({
+const RecordRenderer = ({
   newPaths,
   fields,
   values,
@@ -114,7 +123,7 @@ const RecordRenderer = <T>({
 }: {
   newPaths: Array<string | number>,
   fields: Field[],
-  values: { [key: string]: any },
+  values: { [key: string]: Option },
   path: Array<string | number>,
   depth: number,
   onNavigate: any,
