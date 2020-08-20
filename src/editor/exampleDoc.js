@@ -6,7 +6,7 @@ const exampleDoc: SketchbookDocument = {
   type: "SketchbookDocument",
   layers: [
     {
-      id: 101010,
+      id: pushID(),
       type: "SketchbookComponent",
       component: "Example",
       name: "Example",

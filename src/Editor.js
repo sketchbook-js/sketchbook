@@ -1517,20 +1517,22 @@ const Editor = ({ config }) => {
                     </button>
                     {config.components.find(
                       ({ type }) =>
-                        doc.layers.find(({ id }) => id === 101010).component ===
-                        type
+                        doc.layers.find(({ id }) => id === [...selection][0])
+                          .component === type
                     ).options ? (
                       <RecordRenderer
                         fields={
                           config.components.find(
                             ({ type }) =>
-                              doc.layers.find(({ id }) => id === 101010)
-                                .component === type
+                              doc.layers.find(
+                                ({ id }) => id === [...selection][0]
+                              ).component === type
                           ).options
                         }
                         values={
                           // TODO: id === selected layer instead of 101010
-                          doc.layers.find(({ id }) => id === 101010).options
+                          doc.layers.find(({ id }) => id === [...selection][0])
+                            .options
                         }
                         path={path}
                         depth={depth}
