@@ -5,6 +5,7 @@ import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
 import useCanvasConnection from "./editor/useCanvasConnection";
 import exampleDoc from "./editor/exampleDoc";
+import PanelTitle from "./editor/PanelTitle";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
@@ -31,23 +32,6 @@ import MoveBackward from "./icons/MoveBackward";
 import MoveForward from "./icons/MoveForward";
 import MoveToBack from "./icons/MoveToBack";
 import MoveToFront from "./icons/MoveToFront";
-
-const PanelTitle = ({ style, children, ...props }) => (
-  <h2
-    style={{
-      color: "#000",
-      fontWeight: "bold",
-      fontSize: 14,
-      fontVariantCaps: "small-caps",
-      padding: "0 6px",
-      borderBottom: "1px solid #ddd",
-      ...style
-    }}
-    {...props}
-  >
-    {children}
-  </h2>
-);
 
 const Label = props => (
   <label
