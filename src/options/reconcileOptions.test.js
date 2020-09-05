@@ -7,11 +7,11 @@ describe("reconcileOptions", () => {
         {
           type: "Record",
           fields: [
-            { key: "name", label: "Name", value: { type: "String" } },
+            { key: "name", label: "Name", input: { type: "String" } },
             {
               key: "teams",
               label: "Teams",
-              value: { type: "List", items: { type: "String" } }
+              input: { type: "List", inputs: { type: "String" } }
             }
           ]
         },
@@ -77,7 +77,7 @@ describe("reconcileOptions", () => {
   describe("List option", () => {
     test("base case", () => {
       expect(
-        reconcileOptions({ type: "List", items: { type: "String" } }, [])
+        reconcileOptions({ type: "List", inputs: { type: "String" } }, [])
       ).toEqual({
         type: "List",
         path: [],

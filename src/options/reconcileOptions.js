@@ -9,16 +9,16 @@ const valueError = (message: string, path: OptionPath) =>
   Error(`${message} (path=${path.length ? path.join(".") : "<root>"})`);
 
 const reconcileOptions = (
-  config: mixed,
+  input: mixed,
   value: mixed,
   path: OptionPath = []
 ): Option => {
-  if (config === null || typeof config !== "object")
-    throw configError("Missing or invalid config.", path);
+  if (input === null || typeof input !== "object")
+    throw configError("Missing or invalid input.", path);
 
-  switch (config.type) {
+  switch (input.type) {
     case "Record": {
-      if (!Array.isArray(config.fields))
+      if (!Array.isArray(input.fields))
         throw configError(
           'A "Record" option must have a `fields` property that is an array.',
           path
@@ -32,14 +32,14 @@ const reconcileOptions = (
       return {
         type: "Record",
         path,
-        fields: config.fields.map(field => {
+        fields: input.fields.map(field => {
           if (field === null || typeof field !== "object")
             throw configError(
               'Every field of a "Record" option must be an object.',
               path
             );
 
-          const { key, value: fieldValue, label } = field;
+          const { key, input: fieldInput, label } = field;
 
           if (typeof key !== "string")
             throw configError(
@@ -53,7 +53,7 @@ const reconcileOptions = (
             );
 
           return {
-            value: reconcileOptions(fieldValue, value[key], path.concat(key)),
+            value: reconcileOptions(fieldInput, value[key], path.concat(key)),
             label: label
           };
         })
@@ -70,7 +70,7 @@ const reconcileOptions = (
         type: "List",
         path,
         items: value.map((item, index) =>
-          reconcileOptions(config.items, item, path.concat(index))
+          reconcileOptions(input.inputs, item, path.concat(index))
         )
       };
     }
@@ -102,7 +102,7 @@ const reconcileOptions = (
     }
 
     case "Checkbox": {
-      if (config.description !== null && typeof config.description !== "string")
+      if (input.description !== null && typeof input.description !== "string")
         throw configError(
           'A "Checkbox" option must have a `description` property that is either null or a string.',
           path
@@ -115,13 +115,13 @@ const reconcileOptions = (
       return {
         type: "Checkbox",
         path,
-        description: config.description,
+        description: input.description,
         value
       };
     }
 
     case "Checkboxes": {
-      if (!Array.isArray(config.items))
+      if (!Array.isArray(input.items))
         throw configError(
           'A "Checkboxes" option must have a `items` property that is an array.',
           path
@@ -134,7 +134,7 @@ const reconcileOptions = (
       return {
         type: "Checkboxes",
         path,
-        items: config.items.map(item => {
+        items: input.items.map(item => {
           if (item === null || typeof item !== "object")
             throw configError(
               'Every item of a "Checkboxes" option must be an object.',
@@ -164,10 +164,7 @@ const reconcileOptions = (
     }
 
     default:
-      throw configError(
-        `Unknown option type: \`${String(config.type)}\``,
-        path
-      );
+      throw configError(`Unknown option type: \`${String(input.type)}\``, path);
   }
 };
 
