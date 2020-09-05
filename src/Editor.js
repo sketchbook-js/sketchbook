@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
@@ -6,6 +6,7 @@ import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 import useCanvasConnection from "./editor/useCanvasConnection";
 import exampleDoc from "./editor/exampleDoc";
 import PanelTitle from "./editor/PanelTitle";
+import OptionsPanel from "./editor/OptionsPanel";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
@@ -15,9 +16,6 @@ import {
   alignLayers,
   resizeLayersToExtreme
 } from "./layers";
-
-import StringRenderer from "./options/StringRenderer";
-import RecordRenderer from "./options/RecordRenderer";
 
 import AlignBottom from "./icons/AlignBottom";
 import AlignHorizontalMiddle from "./icons/AlignHorizontalMiddle";
@@ -70,31 +68,9 @@ const Button = ({ style, disabled, Icon, children, ...props }) => (
     {Icon ? <Icon color={disabled ? "#bbb" : undefined} /> : children}
   </button>
 );
-const Textarea = ({ style, ...props }) => (
-  <textarea
-    style={{
-      background: "#fff",
-      border: "1px solid #ddd",
-      resize: "none",
-      ...style
-    }}
-    spellCheck="false"
-    {...props}
-  />
-);
-
-const OptionsErrorMessage = ({ children, style, ...props }) => {
-  return (
-    <div style={{ color: "red", ...style }} {...props}>
-      {children}
-    </div>
-  );
-};
 
 const Editor = ({ config }) => {
   const canvas = useRef(null);
-  const [path, setPath] = useState([]);
-  const [depth, setDepth] = useState(0);
   const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
   const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);
   const [viewport, setViewport] = useState({
@@ -1450,121 +1426,7 @@ const Editor = ({ config }) => {
                 Move to back
               </Button>
             </div>
-            <>
-              <PanelTitle style={{ marginTop: 6 }}>Options</PanelTitle>
-              {selection.size > 1 ? (
-                <div
-                  style={{
-                    color: "#999",
-                    fontStyle: "italic",
-                    padding: 6
-                  }}
-                >
-                  Multiple layers selected
-                </div>
-              ) : (
-                (
-                  <Fragment>
-                    {/* RENDER PATH BAR */}
-                    {["Root", ...path].map(pathItem => {
-                      return (
-                        <button
-                          className="path"
-                          onClick={() => {
-                            setPath(currPath => {
-                              const keyIndex = currPath.findIndex(
-                                path => path === pathItem
-                              );
-                              return currPath.length === 1
-                                ? [] // Render the root level
-                                : currPath.slice(0, keyIndex);
-                            });
-                          }}
-                        >
-                          {pathItem}
-                          {">"}
-                          <style jsx>{`
-                            .path:hover {
-                              color: "pink";
-                            }
-                          `}</style>
-                        </button>
-                      );
-                    })}
-                    {/* BACK BUTTON */}
-                    <button
-                      onClick={() => {
-                        setPath(path => path.slice(0, path.length - 1));
-                      }}
-                    >
-                      Back
-                    </button>
-                    {config.components.find(
-                      ({ type }) =>
-                        doc.layers.find(({ id }) => id === [...selection][0])
-                          .component === type
-                    ).options ? (
-                      <RecordRenderer
-                        fields={
-                          config.components.find(
-                            ({ type }) =>
-                              doc.layers.find(
-                                ({ id }) => id === [...selection][0]
-                              ).component === type
-                          ).options
-                        }
-                        values={
-                          // TODO: id === selected layer instead of 101010
-                          doc.layers.find(({ id }) => id === [...selection][0])
-                            .options
-                        }
-                        path={path}
-                        depth={depth}
-                        onNavigate={newPaths =>
-                          setPath(path => [...path, ...newPaths])
-                        }
-                        onChange={(index, key, value) =>
-                          // TODO: This doesn't work because it requires you to update the state more than 1 layer. IT also has to be able to handle key value objects and arrays.
-                          // Pass in an index when wanting to modify an array element, otherwise pass in null.
-                          setState(current => ({
-                            ...current,
-                            doc: {
-                              layers: current.doc.layers.map(layer =>
-                                layer.id === [...selection][0]
-                                  ? {
-                                      ...layer,
-                                      options: {
-                                        ...layer.options,
-                                        [key]:
-                                          index === null
-                                            ? value
-                                            : layer.options.key.map(
-                                                (keyValue, i) =>
-                                                  i === index ? value : keyValue
-                                              )
-                                      }
-                                    }
-                                  : layer
-                              )
-                            }
-                          }))
-                        }
-                      />
-                    ) : null}
-                  </Fragment>
-                ) ?? (
-                  <div
-                    style={{
-                      color: "#999",
-                      fontStyle: "italic",
-                      padding: 6
-                    }}
-                  >
-                    No options
-                  </div>
-                )
-              )}
-            </>
+            <OptionsPanel selection={selection} doc={doc} config={config} />
           </>
         )}
       </div>
