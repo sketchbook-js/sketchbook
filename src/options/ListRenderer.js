@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { AbstractRenderer } from "./RecordRenderer";
+import AbstractRenderer from "./AbstractRenderer";
 
 import type { Node } from "react";
 
