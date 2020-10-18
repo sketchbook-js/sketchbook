@@ -1,72 +1,102 @@
-// @flow
-
 import React from "react";
 
-import type { Input } from "../types/types";
-
-import RecordRenderer from "./RecordRenderer";
-import ListRenderer from "./ListRenderer";
-import StringRenderer from "./StringRenderer";
-import PlainTextRenderer from "./PlainTextRenderer";
-
-type Option = string | Array<Option> | { [key: string]: Option };
-
-const AbstractRenderer = ({
-  newPaths,
-  config,
-  value,
-  path,
-  depth,
-  onNavigate,
-  onChange
-}: {
-  newPaths: Array<string | number>,
-  config: Input, // the configuration for this option from config.js
-  value: Option, // the value of this option from the document
-  path: Array<string | number>,
-  depth: number,
-  onNavigate: any,
-  onChange: any
-}) => {
-  switch (config.type) {
+const AbstractRenderer = ({ options, onChange, onNavigate, depth = 0 }) => {
+  switch (options.type) {
     case "List":
-      if (Array.isArray(value)) {
-        return (
-          <ListRenderer
-            newPaths={newPaths}
-            input={config.inputs}
-            values={value}
-            depth={depth + 1}
-            path={path}
-            onNavigate={onNavigate}
-            onChange={onChange}
-          />
-        );
-      }
-      break;
+      return (
+        <ListRenderer
+          options={options}
+          onChange={onChange}
+          onNavigate={onNavigate}
+          depth={depth}
+        />
+      );
     case "Record":
-      if (typeof value !== "string" && !Array.isArray(value)) {
-        return (
-          <RecordRenderer
-            depth={depth + 1}
-            onChange={onChange}
-            fields={config.fields}
-            values={value}
-            path={path}
-            newPaths={newPaths}
-            onNavigate={onNavigate}
-          />
-        );
-      }
-      break;
-    case "PlainText":
-      return <PlainTextRenderer value={value} onChange={onChange} />;
+      return (
+        <RecordRenderer
+          options={options}
+          // onChange={onChange}
+          // onNavigate={onNavigate}
+          depth={depth}
+        />
+      );
     case "String":
-      return <StringRenderer value={value} onChange={onChange} />;
+      return (
+        <StringRenderer
+          options={options}
+          onChange={onChange}
+          onNavigate={onNavigate}
+        />
+      );
+    // etc
     default:
-      throw Error("Config type is unknown. Use a known config type.");
+      throw Error(`Unknown option: ${options.type}`);
   }
-  return null;
 };
+
+const RecordRenderer = ({ options }: { options: RecordOption }) => {
+  return (
+    <ol>
+      {options.fields.map((field, i) => {
+        let recordText = null;
+        switch (field.value.type) {
+          case "Record":
+            const fieldCount = field.value.fields.length;
+            recordText = `${fieldCount} record${fieldCount === 1 ? "" : "s"}`;
+            break;
+          case "List":
+            const listItemCount = field.value.items.length;
+            recordText = `${listItemCount} list item${
+              listItemCount === 1 ? "" : "s"
+            }`;
+            break;
+          default:
+            recordText = field.value.value;
+            break;
+        }
+        return (
+          <li key={field.value.path.join(".")}>
+            <label>{field.label}</label>
+            <div style={{ display: "inline-block" }}>{recordText}</div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+};
+
+const ListRenderer = ({ options, onChange, onNavigate, depth }) =>
+  depth < 2 ? (
+    <ol>
+      {options.items.map(value => (
+        <li key={value.path.join(".")}>
+          <AbstractRenderer
+            options={value}
+            onChange={onChange}
+            onNavigate={onNavigate}
+            depth={depth + 1}
+          />
+        </li>
+      ))}
+    </ol>
+  ) : (
+    <button
+      onClick={() => {
+        onNavigate(options.path);
+      }}
+    >
+      {options.items.length} list item{options.items.length === 1 ? "" : "s"} →
+    </button>
+  );
+
+const StringRenderer = ({ options, onChange, onNavigate }) => (
+  <input
+    type="text"
+    value={options.value}
+    onChange={event => {
+      onChange(options.path, event.target.value);
+    }}
+  />
+);
 
 export default AbstractRenderer;

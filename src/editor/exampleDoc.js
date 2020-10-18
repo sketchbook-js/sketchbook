@@ -21,16 +21,18 @@ const exampleDoc: SketchbookDocument = {
         buckets: {
           pinkBucket: "Records -> string"
         },
-        myLinks: {
-          // website: "webby",
-          list: ["item1", "item2"]
-        },
+        // TODO: below
+        // myLinks: {
+        //   // website: "webby",
+        //   list: ["item1", "item2"]
+        // },
         meat: [
           {
             poultry: "Chicken!"
           }
         ],
-        nestedList1: [["a", "b"]],
+        // TODO: below
+        // nestedList1: [["a", "b"]],
         // listOfListOfString: [{ list: ["l1"] }], // Get the index
         // listOfRecordsOfString: [{ record1: "record1text" }], // Get the index
         // recordOfListOfString: {

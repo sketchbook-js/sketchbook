@@ -63,25 +63,25 @@ Sketchbook.config = {
         //     }
         //   }
         // },
-        {
-          key: "myLinks",
-          label: "MyLinks",
-          input: {
-            type: "Record",
-            fields: [
-              {
-                key: "list",
-                label: "list",
-                input: {
-                  type: "List",
-                  inputs: {
-                    type: "String"
-                  }
-                }
-              }
-            ]
-          }
-        },
+        // {
+        //   key: "myLinks",
+        //   label: "MyLinks",
+        //   input: {
+        //     type: "Record",
+        //     fields: [
+        //       {
+        //         key: "list",
+        //         label: "list",
+        //         input: {
+        //           type: "List",
+        //           inputs: {
+        //             type: "String"
+        //           }
+        //         }
+        //       }
+        //     ]
+        //   }
+        // },
         {
           key: "meat",
           label: "Meat",
@@ -101,19 +101,19 @@ Sketchbook.config = {
             }
           }
         },
-        {
-          key: "nestedList1",
-          label: "NestedList",
-          input: {
-            type: "List",
-            inputs: {
-              type: "List",
-              inputs: {
-                type: "String"
-              }
-            }
-          }
-        },
+        // {
+        //   key: "nestedList1",
+        //   label: "NestedList",
+        //   input: {
+        //     type: "List",
+        //     inputs: {
+        //       type: "List",
+        //       inputs: {
+        //         type: "String"
+        //       }
+        //     }
+        //   }
+        // },
         {
           key: "links",
           label: "Links",
