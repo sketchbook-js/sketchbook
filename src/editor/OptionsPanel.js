@@ -27,6 +27,7 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
     selectedLayer.options
   );
 
+  console.log("Initial path", path);
   const { options: displayOptions, depth: displayOptionsDepth } = resolvePath({
     options,
     path,

@@ -45,11 +45,14 @@ const resolvePath = ({
     if (options.type === "List") {
       // options.value.items when going from list to list
       // otherwise, option.items
+      // console.log("opts", JSON.stringify(options));
       const listItems = options.items || options.value.items;
       const nextOption = listItems.find(item => {
         const nextPath = item.path;
         const nextPathItem = nextPath[nextPath.length - 1];
 
+        // console.log("nextPathItem", nextPathItem);
+        // console.log("path", path);
         return nextPathItem === path[1];
       });
 

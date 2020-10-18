@@ -47,7 +47,6 @@ const RecordRenderer = ({
     <ol>
       {options.fields.map(field => {
         let RecordValue: React.Component = null;
-        const nextPath = field.value.path[field.value.path.length - 1];
         switch (field.value.type) {
           case "Record":
             const fieldCount = field.value.fields.length;
@@ -56,7 +55,10 @@ const RecordRenderer = ({
                 <button
                   style={{ display: "inline-block" }}
                   onClick={() =>
-                    onNavigate(currPath => [...currPath, nextPath])
+                    onNavigate(currPath => [
+                      ...currPath,
+                      ...field.value.path.slice(-1)
+                    ])
                   }
                   disabled={fieldCount === 0}
                 >
@@ -72,7 +74,10 @@ const RecordRenderer = ({
                 <button
                   style={{ display: "inline-block" }}
                   onClick={() =>
-                    onNavigate(currPath => [...currPath, nextPath])
+                    onNavigate(currPath => [
+                      ...currPath,
+                      ...field.value.path.slice(-1)
+                    ])
                   }
                   disabled={listItemCount === 0}
                 >
@@ -102,29 +107,47 @@ const RecordRenderer = ({
   );
 };
 
-const ListRenderer = ({ options, onChange, onNavigate, depth }) =>
-  depth < 2 ? (
+const ListRenderer = ({ options, onChange, onNavigate, depth }) => {
+  return (
     <ol>
-      {options.items.map(value => (
-        <li key={value.path.join(".")}>
-          <AbstractRenderer
-            options={value}
-            onChange={onChange}
-            onNavigate={onNavigate}
-            depth={depth + 1}
-          />
-        </li>
-      ))}
+      {options.items.map(item => {
+        if (item.type === "List") {
+          const listItemCount = item.items.length;
+          return (
+            <button
+              key={item.path.join(".")}
+              style={{ display: "inline-block" }}
+              onClick={() =>
+                onNavigate(currPath => [...currPath, ...item.path.slice(-2)])
+              }
+              disabled={listItemCount === 0}
+            >
+              {listItemCount} list item{listItemCount === 1 ? "" : "s"}
+            </button>
+          );
+        }
+
+        if (item.type === "Record") {
+          const recordCount = item.fields.length;
+          return (
+            <button
+              key={item.path.join(".")}
+              style={{ display: "inline-block" }}
+              onClick={() =>
+                onNavigate(currPath => [...currPath, ...item.path.slice(-2)])
+              }
+              disabled={recordCount === 0}
+            >
+              {recordCount} record{recordCount === 1 ? "" : "s"}
+            </button>
+          );
+        }
+
+        return <li key={item.path.join(".")}>{item.value}</li>;
+      })}
     </ol>
-  ) : (
-    <button
-      onClick={() => {
-        onNavigate(options.path);
-      }}
-    >
-      {options.items.length} list item{options.items.length === 1 ? "" : "s"} →
-    </button>
   );
+};
 
 const StringRenderer = ({ options, onChange, onNavigate }) => (
   <input
