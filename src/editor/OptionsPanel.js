@@ -36,7 +36,11 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   return (
     <>
       <PanelTitle style={{ marginTop: 6 }}>Options</PanelTitle>
-      <AbstractRenderer options={displayOptions} depth={displayOptionsDepth} />
+      <AbstractRenderer
+        options={displayOptions}
+        onNavigate={newPath => setPath(newPath)}
+        depth={displayOptionsDepth}
+      />
     </>
   );
   // return (

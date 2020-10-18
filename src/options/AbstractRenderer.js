@@ -15,8 +15,8 @@ const AbstractRenderer = ({ options, onChange, onNavigate, depth = 0 }) => {
       return (
         <RecordRenderer
           options={options}
-          // onChange={onChange}
-          // onNavigate={onNavigate}
+          onChange={onChange}
+          onNavigate={onNavigate}
           depth={depth}
         />
       );
@@ -34,30 +34,67 @@ const AbstractRenderer = ({ options, onChange, onNavigate, depth = 0 }) => {
   }
 };
 
-const RecordRenderer = ({ options }: { options: RecordOption }) => {
+const RecordRenderer = ({
+  options,
+  onNavigate,
+  onChange
+}: {
+  options: RecordOption,
+  onNavigate: func,
+  onChange: func
+}) => {
   return (
     <ol>
-      {options.fields.map((field, i) => {
-        let recordText = null;
+      {options.fields.map(field => {
+        let RecordValue: React.Component = null;
+        const nextPath = field.value.path[field.value.path.length - 1];
         switch (field.value.type) {
           case "Record":
             const fieldCount = field.value.fields.length;
-            recordText = `${fieldCount} record${fieldCount === 1 ? "" : "s"}`;
+            RecordValue = () => {
+              return (
+                <button
+                  style={{ display: "inline-block" }}
+                  onClick={() =>
+                    onNavigate(currPath => [...currPath, nextPath])
+                  }
+                  disabled={fieldCount === 0}
+                >
+                  {fieldCount} record{fieldCount === 1 ? "" : "s"}
+                </button>
+              );
+            };
             break;
           case "List":
             const listItemCount = field.value.items.length;
-            recordText = `${listItemCount} list item${
-              listItemCount === 1 ? "" : "s"
-            }`;
+            RecordValue = () => {
+              return (
+                <button
+                  style={{ display: "inline-block" }}
+                  onClick={() =>
+                    onNavigate(currPath => [...currPath, nextPath])
+                  }
+                  disabled={listItemCount === 0}
+                >
+                  {listItemCount} list item{listItemCount === 1 ? "" : "s"}
+                </button>
+              );
+            };
             break;
           default:
-            recordText = field.value.value;
+            RecordValue = () => {
+              return (
+                <div style={{ display: "inline-block" }}>
+                  {field.value.value}
+                </div>
+              );
+            };
             break;
         }
         return (
           <li key={field.value.path.join(".")}>
             <label>{field.label}</label>
-            <div style={{ display: "inline-block" }}>{recordText}</div>
+            <RecordValue />
           </li>
         );
       })}
