@@ -4,165 +4,99 @@ describe("ResolvePath", () => {
   test("should throw error when path is length 9", () => {
     const PATH_LENGTH = 9;
     expect(() =>
-      resolvePath(new Array(PATH_LENGTH).fill(0), {
-        config: {},
-        value: "",
+      resolvePath({
+        path: [],
+        options: {
+          path: new Array(PATH_LENGTH).fill(0)
+        },
         depth: 0
       })
     ).toThrowError(
       Error(
-        "Your document has is nested more than 10 times! Reduce the amount of nesting."
+        `You cannot traverse more than 10 layers deep! Please reduce the amount of nesting in your document.`
       )
     );
   });
 
-  test("should throw error when config type is not record and path length is not 0", () => {
-    expect(() =>
-      resolvePath([0, 0], {
-        config: {
-          type: "List",
-          inputs: {
-            type: "String"
-          }
-        },
-        value: ["Example A", "Example B", "Example C"],
-        depth: 0
-      })
-    ).toThrowError(Error("Can't resolve path."));
-  });
-
-  test("should resolve path for List -> String, displaying the string", () => {
+  test("should resolve path for List -> String", () => {
     expect(
-      resolvePath([0], {
-        config: {
+      resolvePath({
+        path: ["values", 0],
+        options: {
           type: "List",
-          inputs: {
-            type: "String"
-          }
+          path: ["values"],
+          items: [{ type: "String", path: ["values", 0], value: "A" }]
         },
-        value: ["Example A", "Example B", "Example C"],
         depth: 0
       })
     ).toEqual({
-      config: { type: "String" },
-      value: "Example A",
-      depth: 1
-    });
-  });
-
-  test("should resolve path for List -> List", () => {
-    expect(
-      resolvePath([0], {
-        config: {
-          type: "List",
-          inputs: {
-            type: "List",
-            inputs: {
-              type: "String"
-            }
-          }
-        },
-        value: [["a", "b"]],
-        depth: 0
-      })
-    ).toEqual({
-      config: {
-        inputs: {
-          type: "String"
-        },
-        type: "List"
-      },
-      value: ["a", "b"],
+      options: { type: "String", path: ["values", 0], value: "A" },
       depth: 1
     });
   });
 
   test("should resolve path for List -> List -> String", () => {
     expect(
-      resolvePath([0, 1], {
-        config: {
+      resolvePath({
+        path: ["values", 0, "second values", 0],
+        options: {
           type: "List",
-          inputs: {
-            type: "List",
-            inputs: {
-              type: "String"
-            }
-          }
-        },
-        value: [["a", "b"]],
-        depth: 0
-      })
-    ).toEqual({
-      config: {
-        type: "String"
-      },
-      value: "b",
-      depth: 2
-    });
-  });
-
-  test("should resolve path for Record -> Record", () => {
-    expect(
-      resolvePath(["website"], {
-        config: {
-          type: "Record",
-          fields: [
+          path: ["values"],
+          items: [
             {
-              key: "website",
-              label: "Links",
-              input: {
-                type: "Record",
-                fields: [
+              type: "List",
+              path: ["values", 0],
+              value: {
+                type: "List",
+                path: ["values", 0, "second values"],
+                items: [
                   {
-                    key: "url",
-                    label: "URL",
-                    input: {
-                      type: "String"
-                    }
-                  },
-                  {
-                    key: "text",
-                    label: "Text",
-                    input: {
-                      type: "String"
-                    }
+                    type: "String",
+                    path: ["values", 0, "second values", 0],
+                    value: "second A"
                   }
                 ]
               }
             }
           ]
         },
-        value: {
-          website: {
-            url: "https://example.com",
-            text: "example"
-          }
+        depth: 0
+      })
+    ).toEqual({
+      options: {
+        type: "String",
+        path: ["values", 0, "second values", 0],
+        value: "second A"
+      },
+      depth: 2
+    });
+  });
+
+  test("should resolve path for Record -> String", () => {
+    expect(
+      resolvePath({
+        path: ["values"],
+        options: {
+          type: "Record",
+          path: [],
+          fields: [
+            {
+              label: "Name",
+              value: {
+                type: "String",
+                path: ["values"],
+                value: "A"
+              }
+            }
+          ]
         },
         depth: 0
       })
     ).toEqual({
-      config: {
-        type: "Record",
-        fields: [
-          {
-            key: "url",
-            label: "URL",
-            input: {
-              type: "String"
-            }
-          },
-          {
-            key: "text",
-            label: "Text",
-            input: {
-              type: "String"
-            }
-          }
-        ]
-      },
-      value: {
-        url: "https://example.com",
-        text: "example"
+      options: {
+        type: "String",
+        path: ["values"],
+        value: "A"
       },
       depth: 1
     });
@@ -170,28 +104,24 @@ describe("ResolvePath", () => {
 
   test("should resolve path for Record -> Record -> String", () => {
     expect(
-      resolvePath(["website", "url"], {
-        config: {
+      resolvePath({
+        path: ["records", "values"],
+        options: {
           type: "Record",
+          path: [],
           fields: [
             {
-              key: "website",
-              label: "Links",
-              input: {
+              label: "Name",
+              value: {
                 type: "Record",
+                path: ["records"],
                 fields: [
                   {
-                    key: "url",
-                    label: "URL",
-                    input: {
-                      type: "String"
-                    }
-                  },
-                  {
-                    key: "text",
-                    label: "Text",
-                    input: {
-                      type: "String"
+                    label: "Name",
+                    value: {
+                      type: "String",
+                      path: ["records", "values"],
+                      value: "A"
                     }
                   }
                 ]
@@ -199,20 +129,17 @@ describe("ResolvePath", () => {
             }
           ]
         },
-        value: {
-          website: {
-            url: "https://example.com",
-            text: "example"
-          }
-        },
         depth: 0
       })
     ).toEqual({
-      config: {
-        type: "String"
+      options: {
+        type: "String",
+        path: ["records", "values"],
+        value: "A"
       },
-      value: "https://example.com",
       depth: 2
     });
   });
+
+  test.todo("Error cases");
 });
