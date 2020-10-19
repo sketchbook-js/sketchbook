@@ -134,7 +134,7 @@ const ListRenderer = ({ options, onChange, onNavigate, depth }) => {
               key={item.path.join(".")}
               style={{ display: "inline-block" }}
               onClick={() =>
-                onNavigate(currPath => [...currPath, ...item.path.slice(-2)])
+                onNavigate(currPath => [...currPath, ...item.path.slice(-1)])
               }
               disabled={recordCount === 0}
             >
