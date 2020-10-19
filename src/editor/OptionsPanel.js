@@ -37,6 +37,49 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   return (
     <>
       <PanelTitle style={{ marginTop: 6 }}>Options</PanelTitle>
+
+      {/* PATH NAVBAR */}
+      {["Root", ...path].map((pathItem, i) => {
+        return (
+          <button
+            className="path"
+            onClick={() => {
+              setPath(currPath => {
+                if (pathItem === "Root" && currPath.length === 0) {
+                  return []; // Render root level
+                }
+
+                const keyIndex = currPath.findIndex(
+                  pathName => pathName === pathItem
+                );
+                return currPath.slice(0, keyIndex + 1);
+              });
+            }}
+          >
+            {pathItem}
+            {/* Don't render the ">" for the last path element. */}
+            {path.length === i ? "" : ">"}
+            <style jsx>{`
+              .path:hover {
+                color: "pink";
+              }
+            `}</style>
+          </button>
+        );
+      })}
+
+      {/* BACK BUTTON */}
+      <button
+        onClick={() => {
+          setPath(currPath => currPath.slice(0, currPath.length - 1));
+        }}
+        // DISABLE WHEN ONLY ROOT
+        disabled={path.length === 0}
+      >
+        Back
+      </button>
+
+      {/* Options */}
       <AbstractRenderer
         options={displayOptions}
         onNavigate={newPath => setPath(newPath)}
@@ -60,9 +103,9 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   //     ) : (
   //       (
   //         <>
-  //           {/* RENDER PATH BAR */}
-  //           {["Root", ...path].map(pathItem => {
-  //             return (
+  // {/* RENDER PATH BAR */}
+  // {["Root", ...path].map(pathItem => {
+  //   return (
   //               <button
   //                 className="path"
   //                 onClick={() => {
