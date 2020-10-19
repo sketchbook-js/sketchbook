@@ -18,42 +18,56 @@ describe("ResolvePath", () => {
     );
   });
 
-  test("should resolve path for List -> String", () => {
+  test("should resolve path for Record -> List -> String", () => {
     expect(
       resolvePath({
         path: ["values", 0],
         options: {
-          type: "List",
-          path: ["values"],
-          items: [{ type: "String", path: ["values", 0], value: "A" }]
+          type: "Record",
+          path: [],
+          fields: [
+            {
+              label: "Name",
+              value: {
+                type: "List",
+                path: ["values"],
+                items: [{ type: "String", path: ["values", 0], value: "A" }]
+              }
+            }
+          ]
         },
         depth: 0
       })
     ).toEqual({
       options: { type: "String", path: ["values", 0], value: "A" },
-      depth: 1
+      depth: 2
     });
   });
 
-  test("should resolve path for List -> List -> String", () => {
+  test("should resolve path for Record -> List -> List -> String", () => {
     expect(
       resolvePath({
-        path: ["values", 0, "second values", 0],
+        path: ["values", 0, 0],
         options: {
-          type: "List",
-          path: ["values"],
-          items: [
+          type: "Record",
+          path: [],
+          fields: [
             {
-              type: "List",
-              path: ["values", 0],
+              label: "Name",
               value: {
                 type: "List",
-                path: ["values", 0, "second values"],
+                path: ["values"],
                 items: [
                   {
-                    type: "String",
-                    path: ["values", 0, "second values", 0],
-                    value: "second A"
+                    type: "List",
+                    path: ["values", 0],
+                    items: [
+                      {
+                        type: "String",
+                        path: ["values", 0, 0],
+                        value: "second A"
+                      }
+                    ]
                   }
                 ]
               }
@@ -65,10 +79,10 @@ describe("ResolvePath", () => {
     ).toEqual({
       options: {
         type: "String",
-        path: ["values", 0, "second values", 0],
+        path: ["values", 0, 0],
         value: "second A"
       },
-      depth: 2
+      depth: 3
     });
   });
 

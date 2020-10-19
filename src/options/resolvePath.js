@@ -53,8 +53,10 @@ const resolvePath = ({
 
         // console.log("nextPathItem", nextPathItem);
         // console.log("path", path);
-        return nextPathItem === path[1];
+        return nextPathItem === path[0];
       });
+      // console.log("li", listItems);
+      // console.log("path", path);
 
       if (nextOption === undefined) {
         throw Error(
@@ -63,7 +65,7 @@ const resolvePath = ({
       }
 
       return resolvePath({
-        path: path.slice(2),
+        path: path.slice(1),
         options: nextOption,
         depth: depth + 1
       });
