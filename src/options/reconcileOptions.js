@@ -8,6 +8,10 @@ const configError = (message: string, path: OptionPath) =>
 const valueError = (message: string, path: OptionPath) =>
   Error(`${message} (path=${path.length ? path.join(".") : "<root>"})`);
 
+/**
+ * Used to combine the config and doc into one object
+ * that can be more easier recursed over in resolvePath
+ */
 const reconcileOptions = (
   input: mixed,
   value: mixed,

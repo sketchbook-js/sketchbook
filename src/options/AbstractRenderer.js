@@ -4,6 +4,9 @@ import StringRenderer from "./StringRenderer";
 import ListRenderer from "./ListRenderer";
 import PlainTextRenderer from "./PlainTextRenderer";
 
+/**
+ * Selects a renderer to display.
+ */
 const AbstractRenderer = ({ options, onChange, onNavigate, depth = 0 }) => {
   switch (options.type) {
     case "List":

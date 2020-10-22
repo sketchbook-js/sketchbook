@@ -12,6 +12,12 @@ type Props = {
   depth: number
 };
 
+/**
+ * Renders a list of items as an unordered list.
+ * If the item is a nested list or nested records, then a button
+ * with the number of items in the nested object is displayed instead
+ * that the user can click/navigate into.
+ */
 const ListRenderer = ({ options, onChange, onNavigate, depth }: Props) => {
   return (
     <ol>

@@ -19,6 +19,7 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   const [path, setPath] = useState([]);
   const [depth, setDepth] = useState(0);
 
+  // when multiple layers are selected, options can't be shown
   if (selection.size > 1) {
     return (
       <>
@@ -44,6 +45,7 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
     ({ type }) => selectedLayer.component === type
   );
 
+  // no options in selected layer component
   if (!selectedLayerComponent.options) {
     return (
       <>

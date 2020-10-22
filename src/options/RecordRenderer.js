@@ -11,6 +11,12 @@ type Props = {
   onChange: any
 };
 
+/**
+ * Renders a bunch of records (label, value pairs) as an unordered list.
+ * If the item is a nested list or nested records, then a button
+ * with the number of items in the nested object is displayed instead
+ * that the user can click/navigate into.
+ */
 const RecordRenderer = ({ options, onNavigate, onChange }: Props) => {
   return (
     <ol>
