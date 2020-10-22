@@ -1426,7 +1426,12 @@ const Editor = ({ config }) => {
                 Move to back
               </Button>
             </div>
-            <OptionsPanel selection={selection} doc={doc} config={config} />
+            <OptionsPanel
+              setState={setState}
+              selection={selection}
+              doc={doc}
+              config={config}
+            />
           </>
         )}
       </div>
