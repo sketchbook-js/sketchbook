@@ -19,6 +19,23 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   const [path, setPath] = useState([]);
   const [depth, setDepth] = useState(0);
 
+  if (selection.size > 1) {
+    return (
+      <>
+        <PanelTitle style={{ marginTop: 6 }}>Options</PanelTitle>
+        <div
+          style={{
+            color: "#999",
+            fontStyle: "italic",
+            padding: 6
+          }}
+        >
+          Multiple layers selected
+        </div>
+      </>
+    );
+  }
+
   const selectedLayerIndex = doc.layers.findIndex(
     ({ id }) => id === [...selection][0]
   );
@@ -26,12 +43,29 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   const selectedLayerComponent = config.components.find(
     ({ type }) => selectedLayer.component === type
   );
+
+  if (!selectedLayerComponent.options) {
+    return (
+      <>
+        <PanelTitle style={{ marginTop: 6 }}>Options</PanelTitle>
+        <div
+          style={{
+            color: "#999",
+            fontStyle: "italic",
+            padding: 6
+          }}
+        >
+          No options
+        </div>
+      </>
+    );
+  }
+
   const options = reconcileOptions(
     { type: "Record", fields: selectedLayerComponent.options },
     selectedLayer.options
   );
 
-  console.log("Initial path", path);
   const { options: displayOptions, depth: displayOptionsDepth } = resolvePath({
     options,
     path,
@@ -41,7 +75,6 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   return (
     <>
       <PanelTitle style={{ marginTop: 6 }}>Options</PanelTitle>
-
       {/* PATH NAVBAR */}
       {["Root", ...path].map((pathItem, i) => {
         return (
