@@ -2,6 +2,7 @@ import React from "react";
 import RecordRenderer from "./RecordRenderer";
 import StringRenderer from "./StringRenderer";
 import ListRenderer from "./ListRenderer";
+import PlainTextRenderer from "./PlainTextRenderer";
 
 const AbstractRenderer = ({ options, onChange, onNavigate, depth = 0 }) => {
   switch (options.type) {
@@ -26,6 +27,14 @@ const AbstractRenderer = ({ options, onChange, onNavigate, depth = 0 }) => {
     case "String":
       return (
         <StringRenderer
+          option={options}
+          onChange={onChange}
+          onNavigate={onNavigate}
+        />
+      );
+    case "PlainText":
+      return (
+        <PlainTextRenderer
           option={options}
           onChange={onChange}
           onNavigate={onNavigate}
