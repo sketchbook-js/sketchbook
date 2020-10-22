@@ -1,55 +1,69 @@
-// // @flow
+// @flow
 
-// import React from "react";
+import React from "react";
+import StringRenderer from "./StringRenderer";
+import type { ListOption } from "../types/types";
 
-// import AbstractRenderer from "./absrenderer";
+type Props = {
+  options: ListOption,
+  onChange: any,
+  onNavigate: any,
+  depth: number
+};
 
-// import type { Node } from "react";
+const ListRenderer = ({ options, onChange, onNavigate, depth }: Props) => {
+  return (
+    <ol>
+      {options.items.map(option => {
+        switch (option.type) {
+          case "List":
+            const listItemCount = option.items.length;
+            return (
+              <button
+                key={option.path.join(".")}
+                style={{ display: "inline-block" }}
+                onClick={() =>
+                  onNavigate(currPath => [
+                    ...currPath,
+                    ...option.path.slice(-2)
+                  ])
+                }
+                disabled={listItemCount === 0}
+              >
+                {listItemCount} list item{listItemCount === 1 ? "" : "s"}
+              </button>
+            );
+          case "Record":
+            const recordCount = option.fields.length;
+            return (
+              <button
+                key={option.path.join(".")}
+                style={{ display: "inline-block" }}
+                onClick={() =>
+                  onNavigate(currPath => [
+                    ...currPath,
+                    ...option.path.slice(-1)
+                  ])
+                }
+                disabled={recordCount === 0}
+              >
+                {recordCount} record{recordCount === 1 ? "" : "s"}
+              </button>
+            );
+          case "String":
+            return (
+              <StringRenderer
+                key={option.path.join(".")}
+                option={option}
+                onChange={onChange}
+              />
+            );
+          default:
+            throw Error(`Unknown option: ${option.type}`);
+        }
+      })}
+    </ol>
+  );
+};
 
-// import type { Input } from "../types/types";
-
-// type Option = string | Array<Option> | { [key: string]: Option };
-
-// const ListRenderer = ({
-//   newPaths,
-//   input,
-//   values,
-//   depth,
-//   path,
-//   onChange,
-//   onNavigate
-// }: {
-//   newPaths: Array<string | number>,
-//   input: Input,
-//   values: Option,
-//   depth: number,
-//   path: Array<string | number>,
-//   onChange: any,
-//   onNavigate: any
-// }): Node => {
-//   if (!Array.isArray(values)) {
-//     throw Error(
-//       `At path: ${JSON.stringify(path)}, the list value is not an array.`
-//     );
-//   }
-
-//   return path.length === depth ? (
-//     values.map((value, index) => (
-//       <AbstractRenderer
-//         config={input}
-//         value={value}
-//         depth={depth + 1}
-//         path={path}
-//         onChange={({ currentTarget: { value } }) => onChange(index, value)}
-//         onNavigate={onNavigate}
-//         newPaths={[index]}
-//       />
-//     ))
-//   ) : (
-//     <button onClick={() => onNavigate(newPaths)} disabled={values.length === 0}>
-//       {values.length} list item{values.length === 1 ? "" : "s"}
-//     </button>
-//   );
-// };
-
-// export default ListRenderer;
+export default ListRenderer;

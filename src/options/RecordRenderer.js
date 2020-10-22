@@ -1,92 +1,75 @@
-// // @flow
+// @flow
 
-// import React from "react";
+import React from "react";
+import StringRenderer from "./StringRenderer";
+import type { RecordOption, Option } from "../types/types";
 
-// import AbstractRenderer from "./absrenderer";
-// import resolvePath from "./resolvePath";
+type Props = {
+  options: RecordOption,
+  onNavigate: any,
+  onChange: any
+};
 
-// import type { Field } from "../types/types";
+const RecordRenderer = ({ options, onNavigate, onChange }: Props) => {
+  return (
+    <ol>
+      {options.fields.map(field => {
+        return (
+          <li key={field.value.path.join(".")}>
+            <label>{field.label}</label>
+            <RecordValue
+              onChange={onChange}
+              onNavigate={onNavigate}
+              option={field.value}
+            />
+          </li>
+        );
+      })}
+    </ol>
+  );
+};
 
-// type Option = string | Array<Option> | { [key: string]: Option };
+const RecordValue = ({
+  option,
+  onChange,
+  onNavigate
+}: {
+  option: Option,
+  onNavigate: any,
+  onChange: any
+}) => {
+  switch (option.type) {
+    case "Record":
+      const fieldCount = option.fields.length;
+      return (
+        <button
+          style={{ display: "inline-block" }}
+          onClick={() =>
+            onNavigate(currPath => [...currPath, ...option.path.slice(-1)])
+          }
+          disabled={fieldCount === 0}
+        >
+          {fieldCount} record{fieldCount === 1 ? "" : "s"}
+        </button>
+      );
+    case "List":
+      const listItemCount = option.items.length;
+      return (
+        <button
+          style={{ display: "inline-block" }}
+          onClick={() =>
+            onNavigate(currPath => [...currPath, ...option.path.slice(-1)])
+          }
+          disabled={listItemCount === 0}
+        >
+          {listItemCount} list item{listItemCount === 1 ? "" : "s"}
+        </button>
+      );
+    case "String":
+      return <StringRenderer option={option} onChange={onChange} />;
+    default:
+      throw Error(`Unknown option: ${option.type}`);
+  }
+};
 
-// const RecordRenderer = ({
-//   newPaths,
-//   fields,
-//   values,
-//   path,
-//   depth,
-//   onNavigate,
-//   onChange
-// }: {
-//   newPaths: Array<string | number>,
-//   fields: Field[],
-//   values: { [key: string]: Option },
-//   path: Array<string | number>,
-//   depth: number,
-//   onNavigate: any,
-//   onChange: any
-// }) => {
-//   if (depth === 0 && path.length > 0) {
-//     const field = fields.find(field => field.key === path[0]);
-//     if (field !== undefined) {
-//       return (
-//         <AbstractRenderer
-//           {...resolvePath(path.slice(1), {
-//             config: field.input,
-//             value: values[field.key],
-//             depth
-//           })}
-//           path={path}
-//           onNavigate={onNavigate}
-//           onChange={onChange}
-//           newPaths={[]}
-//         />
-//       );
-//     }
-//   }
-
-//   if (!Array.isArray(fields)) {
-//     throw Error(
-//       `At path: ${JSON.stringify(path)}, the record field is not an array.`
-//     );
-//   }
-
-//   return fields.length === 0 ? null : path.length === depth ? (
-//     fields.map<any>((field, i) => {
-//       if (!field.key) {
-//         throw Error(`Record at path ${JSON.stringify(path)} is missing a key.`);
-//       }
-
-//       if (!field.label) {
-//         throw Error(
-//           `Record at path ${JSON.stringify(path)} is missing a label.`
-//         );
-//       }
-
-//       if (!field.input) {
-//         throw Error(`Record at path ${JSON.stringify(path)} is missing a key.`);
-//       }
-
-//       return (
-//         <div key={field.key}>
-//           <label>{field.label}</label>
-//           <AbstractRenderer
-//             newPaths={[field.key]}
-//             path={path}
-//             config={field.input}
-//             depth={depth}
-//             value={values[field.key]}
-//             onNavigate={onNavigate}
-//             onChange={onChange}
-//           />
-//         </div>
-//       );
-//     })
-//   ) : (
-//     <button onClick={() => onNavigate(newPaths)} disabled={fields.length === 0}>
-//       {fields.length} record item{fields.length === 1 ? "" : "s"}
-//     </button>
-//   );
-// };
-
-// export default RecordRenderer;
+export default RecordRenderer;
