@@ -3,6 +3,7 @@
 import React from "react";
 import StringRenderer from "./StringRenderer";
 import type { ListOption } from "../types/types";
+import PlainTextRenderer from "./PlainTextRenderer";
 
 type Props = {
   options: ListOption,
@@ -53,6 +54,14 @@ const ListRenderer = ({ options, onChange, onNavigate, depth }: Props) => {
           case "String":
             return (
               <StringRenderer
+                key={option.path.join(".")}
+                option={option}
+                onChange={onChange}
+              />
+            );
+          case "PlainText":
+            return (
+              <PlainTextRenderer
                 key={option.path.join(".")}
                 option={option}
                 onChange={onChange}

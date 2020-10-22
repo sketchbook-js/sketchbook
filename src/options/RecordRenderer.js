@@ -3,6 +3,7 @@
 import React from "react";
 import StringRenderer from "./StringRenderer";
 import type { RecordOption, Option } from "../types/types";
+import PlainTextRenderer from "./PlainTextRenderer";
 
 type Props = {
   options: RecordOption,
@@ -67,6 +68,8 @@ const RecordValue = ({
       );
     case "String":
       return <StringRenderer option={option} onChange={onChange} />;
+    case "PlainText":
+      return <PlainTextRenderer option={option} onChange={onChange} />;
     default:
       throw Error(`Unknown option: ${option.type}`);
   }
