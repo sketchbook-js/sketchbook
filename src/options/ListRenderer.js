@@ -8,8 +8,7 @@ import PlainTextRenderer from "./PlainTextRenderer";
 type Props = {
   options: ListOption,
   onChange: any,
-  onNavigate: any,
-  depth: number
+  onNavigate: any
 };
 
 /**
@@ -18,7 +17,7 @@ type Props = {
  * with the number of items in the nested object is displayed instead
  * that the user can click/navigate into.
  */
-const ListRenderer = ({ options, onChange, onNavigate, depth }: Props) => {
+const ListRenderer = ({ options, onChange, onNavigate }: Props) => {
   return (
     <ol>
       {options.items.map(option => {

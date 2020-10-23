@@ -7,7 +7,7 @@ import PlainTextRenderer from "./PlainTextRenderer";
 /**
  * Selects a renderer to display.
  */
-const AbstractRenderer = ({ options, onChange, onNavigate, depth = 0 }) => {
+const AbstractRenderer = ({ options, onChange, onNavigate }) => {
   switch (options.type) {
     case "List":
       return (
@@ -15,7 +15,6 @@ const AbstractRenderer = ({ options, onChange, onNavigate, depth = 0 }) => {
           options={options}
           onChange={onChange}
           onNavigate={onNavigate}
-          depth={depth}
         />
       );
     case "Record":
@@ -24,7 +23,6 @@ const AbstractRenderer = ({ options, onChange, onNavigate, depth = 0 }) => {
           options={options}
           onChange={onChange}
           onNavigate={onNavigate}
-          depth={depth}
         />
       );
     case "String":

@@ -17,7 +17,6 @@ type Props = {
 
 const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   const [path, setPath] = useState([]);
-  const [depth, setDepth] = useState(0);
 
   // when multiple layers are selected, options can't be shown
   if (selection.size > 1) {
@@ -68,10 +67,9 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
     selectedLayer.options
   );
 
-  const { options: displayOptions, depth: displayOptionsDepth } = resolvePath({
+  const { options: displayOptions } = resolvePath({
     options,
-    path,
-    depth
+    path
   });
 
   return (
@@ -134,7 +132,6 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
             return immutable.set(currState, formattedPath, newValue);
           });
         }}
-        depth={displayOptionsDepth}
       />
     </>
   );

@@ -5,11 +5,8 @@ describe("ResolvePath", () => {
     const PATH_LENGTH = 9;
     expect(() =>
       resolvePath({
-        path: [],
-        options: {
-          path: new Array(PATH_LENGTH).fill(0)
-        },
-        depth: 0
+        path: new Array(PATH_LENGTH).fill(0),
+        options: {}
       })
     ).toThrowError(
       Error(
@@ -35,12 +32,10 @@ describe("ResolvePath", () => {
               }
             }
           ]
-        },
-        depth: 0
+        }
       })
     ).toEqual({
-      options: { type: "String", path: ["values", 0], value: "A" },
-      depth: 2
+      options: { type: "String", path: ["values", 0], value: "A" }
     });
   });
 
@@ -73,16 +68,14 @@ describe("ResolvePath", () => {
               }
             }
           ]
-        },
-        depth: 0
+        }
       })
     ).toEqual({
       options: {
         type: "String",
         path: ["values", 0, 0],
         value: "second A"
-      },
-      depth: 3
+      }
     });
   });
 
@@ -103,16 +96,14 @@ describe("ResolvePath", () => {
               }
             }
           ]
-        },
-        depth: 0
+        }
       })
     ).toEqual({
       options: {
         type: "String",
         path: ["values"],
         value: "A"
-      },
-      depth: 1
+      }
     });
   });
 
@@ -142,16 +133,14 @@ describe("ResolvePath", () => {
               }
             }
           ]
-        },
-        depth: 0
+        }
       })
     ).toEqual({
       options: {
         type: "String",
         path: ["records", "values"],
         value: "A"
-      },
-      depth: 2
+      }
     });
   });
 
