@@ -4,10 +4,14 @@ import StringRenderer from "./StringRenderer";
 import ListRenderer from "./ListRenderer";
 import PlainTextRenderer from "./PlainTextRenderer";
 
+import type { Option } from "../types/types";
+
+type Props = { options: Option, onChange: any, onNavigate: any };
+
 /**
  * Selects a renderer to display.
  */
-const AbstractRenderer = ({ options, onChange, onNavigate }) => {
+const AbstractRenderer = ({ options, onChange, onNavigate }: Props) => {
   switch (options.type) {
     case "List":
       return (
