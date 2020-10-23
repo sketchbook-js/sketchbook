@@ -32,62 +32,6 @@ export type SketchbookDocument = {
   layers: Array<Layer>
 };
 
-// DEPRECATED
-export type Field = {
-  key: string,
-  label: string,
-  input: Input
-};
-
-// DEPRECATED
-export type Input =
-  | ListInput
-  | RecordInput
-  | StringInput
-  | PlainTextInput
-  | CheckboxInput
-  | CheckboxesInput;
-
-// DEPRECATED
-export type ListInput = {
-  type: "List",
-  inputs: Input
-};
-
-// DEPRECATED
-export type RecordInput = {
-  type: "Record",
-  fields: Field[]
-};
-
-// DEPRECATED
-export type StringInput = {
-  type: "String"
-};
-
-// DEPRECATED
-export type PlainTextInput = {
-  type: "PlainText"
-};
-
-// DEPRECATED
-export type CheckboxInput = {
-  type: "Checkbox",
-  description?: string
-};
-
-// DEPRECATED
-export type CheckboxesInput = {
-  type: "Checkboxes",
-  items: CheckboxItem[]
-};
-
-// DEPRECATED
-export type CheckboxItem = {
-  label: string,
-  value: any
-};
-
 export type Option =
   | ListOption
   | RecordOption
