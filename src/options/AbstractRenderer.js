@@ -30,21 +30,9 @@ const AbstractRenderer = ({ options, onChange, onNavigate }: Props) => {
         />
       );
     case "String":
-      return (
-        <StringRenderer
-          option={options}
-          onChange={onChange}
-          onNavigate={onNavigate}
-        />
-      );
+      return <StringRenderer option={options} onChange={onChange} />;
     case "PlainText":
-      return (
-        <PlainTextRenderer
-          option={options}
-          onChange={onChange}
-          onNavigate={onNavigate}
-        />
-      );
+      return <PlainTextRenderer option={options} onChange={onChange} />;
     // etc
     default:
       throw Error(`Unknown option: ${options.type}`);
