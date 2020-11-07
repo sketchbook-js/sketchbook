@@ -24,8 +24,13 @@
     "jest:watch": "jest --watchAll",
     "jest": "jest",
     "start": "node scripts/start",
+    "release": "np",
     "test": "yarn eslint && yarn flow check && yarn jest"
   },
+  "files": [
+    "build",
+    "cli"
+  ],
   "dependencies": {
     "arg": "^4.1.3",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
