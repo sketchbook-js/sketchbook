@@ -1,5 +1,5 @@
 {
-  "name": "sketchbook-js",
+  "name": "@sketchbook-js/sketchbook",
   "version": "0.1.0",
   "private": true,
   "bin": {
