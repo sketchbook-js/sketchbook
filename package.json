@@ -1,6 +1,18 @@
 {
   "name": "@sketchbook-js/sketchbook",
   "version": "0.1.0",
+  "description": "The design tool that lives in your repo.",
+  "repository": "https://github.com/haydn/sketchbook-js.git",
+  "keywords": [
+    "design",
+    "tool",
+    "graphic"
+  ],
+  "main": "cli/index.js",
+  "author": "Hayden Ewers",
+  "license": "MIT",
+  "bugs": "https://github.com/haydn/sketchbook-js/issues",
+  "homepage": "https://github.com/haydn/sketchbook-js#readme",
   "private": true,
   "bin": {
     "sketchbook": "cli/index.js"
