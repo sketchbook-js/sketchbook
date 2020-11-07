@@ -2,7 +2,7 @@
   "name": "sketchbook-js",
   "version": "0.1.0",
   "private": true,
-  "bin": "cli/index.js",
+  "bin" : { "sketchbook" : "cli/index.js" },
   "scripts": {
     "build": "node scripts/build",
     "eslint:fix": "eslint --fix src/**.js",
