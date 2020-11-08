@@ -1,14 +1,14 @@
 // @flow
 
 import React from "react";
-import StringRenderer from "./StringRenderer";
 import type { ListOption } from "../types/types";
-import PlainTextRenderer from "./PlainTextRenderer";
+import AbstractRenderer from "./AbstractRenderer";
 
 type Props = {
   options: ListOption,
   onChange: any,
-  onNavigate: any
+  onNavigate: any,
+  depth: number
 };
 
 /**
@@ -17,66 +17,36 @@ type Props = {
  * with the number of items in the nested object is displayed instead
  * that the user can click/navigate into.
  */
-const ListRenderer = ({ options, onChange, onNavigate }: Props) => {
+const ListRenderer = ({ options, onChange, onNavigate, depth }: Props) => {
+  const listItemCount = options.items.length;
   return (
-    <ol>
-      {options.items.map(option => {
-        switch (option.type) {
-          case "List":
-            const listItemCount = option.items.length;
-            return (
-              <button
-                key={option.path.join(".")}
-                style={{ display: "inline-block" }}
-                onClick={() =>
-                  onNavigate(currPath => [
-                    ...currPath,
-                    ...option.path.slice(-2)
-                  ])
-                }
-                disabled={listItemCount === 0}
-              >
-                {listItemCount} list item{listItemCount === 1 ? "" : "s"}
-              </button>
-            );
-          case "Record":
-            const recordCount = option.fields.length;
-            return (
-              <button
-                key={option.path.join(".")}
-                style={{ display: "inline-block" }}
-                onClick={() =>
-                  onNavigate(currPath => [
-                    ...currPath,
-                    ...option.path.slice(-1)
-                  ])
-                }
-                disabled={recordCount === 0}
-              >
-                {recordCount} record{recordCount === 1 ? "" : "s"}
-              </button>
-            );
-          case "String":
-            return (
-              <StringRenderer
-                key={option.path.join(".")}
-                option={option}
+    <>
+      {depth === options.path.length ? (
+        <ol>
+          {options.items.map(option => (
+            <li key={option.path.join(".")}>
+              <AbstractRenderer
+                options={option}
                 onChange={onChange}
+                onNavigate={onNavigate}
+                displayDepth={depth}
               />
-            );
-          case "PlainText":
-            return (
-              <PlainTextRenderer
-                key={option.path.join(".")}
-                option={option}
-                onChange={onChange}
-              />
-            );
-          default:
-            throw Error(`Unknown option: ${option.type}`);
-        }
-      })}
-    </ol>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <button
+          key={options.path.join(".")}
+          style={{ display: "inline-block" }}
+          onClick={() =>
+            onNavigate(currPath => [...currPath, ...options.path.slice(-1)])
+          }
+          disabled={listItemCount === 0}
+        >
+          {listItemCount} list item{listItemCount === 1 ? "" : "s"}
+        </button>
+      )}
+    </>
   );
 };
 
