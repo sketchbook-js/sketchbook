@@ -17,6 +17,7 @@ type Props = {
 
 const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   const [path, setPath] = useState([]);
+  const [depth, setDepth] = useState(0);
 
   // when multiple layers are selected, options can't be shown
   if (selection.size > 1) {
@@ -67,9 +68,10 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
     selectedLayer.options
   );
 
-  const { options: displayOptions } = resolvePath({
+  const { options: displayOptions, depth: optionDepth } = resolvePath({
     options,
-    path
+    path,
+    depth
   });
 
   return (
@@ -132,6 +134,8 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
             return immutable.set(currState, formattedPath, newValue);
           });
         }}
+        // Used to determine how to render the list-like option types
+        displayDepth={optionDepth}
       />
     </>
   );

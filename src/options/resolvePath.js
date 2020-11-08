@@ -11,13 +11,16 @@ import type { Option } from "../types/types";
  */
 const resolvePath = ({
   path,
-  options
+  options,
+  depth
 }: {
   path: Array<string | number>,
-  options: Option
-}): { options: Option } => {
+  options: Option,
+  depth: number
+}): { options: Option, depth: number } => {
   const MAX_DEPTH = 10;
   // We subtract 1 because we don't include the root in the path when calling this function.
+  // We use path so we don't actually need to recurse to get the recursion depth
   if (path.length >= MAX_DEPTH - 1) {
     throw Error(
       `You cannot traverse more than ${MAX_DEPTH} layers deep! Please reduce the amount of nesting in your document.`
@@ -43,7 +46,8 @@ const resolvePath = ({
 
       return resolvePath({
         path: path.slice(1),
-        options: nextOption
+        options: nextOption,
+        depth: depth + 1
       });
     }
 
@@ -66,14 +70,15 @@ const resolvePath = ({
 
       return resolvePath({
         path: path.slice(1),
-        options: nextOption
+        options: nextOption,
+        depth: depth + 1
       });
     }
 
     throw Error("Can't resolve path.");
   }
 
-  return { options };
+  return { options, depth };
 };
 
 export default resolvePath;

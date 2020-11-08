@@ -6,12 +6,22 @@ import PlainTextRenderer from "./PlainTextRenderer";
 
 import type { Option } from "../types/types";
 
-type Props = { options: Option, onChange: any, onNavigate: any };
+type Props = {
+  options: Option,
+  onChange: any,
+  onNavigate: any,
+  displayDepth: number
+};
 
 /**
  * Selects a renderer to display.
  */
-const AbstractRenderer = ({ options, onChange, onNavigate }: Props) => {
+const AbstractRenderer = ({
+  options,
+  onChange,
+  onNavigate,
+  displayDepth
+}: Props) => {
   switch (options.type) {
     case "List":
       return (
@@ -19,6 +29,7 @@ const AbstractRenderer = ({ options, onChange, onNavigate }: Props) => {
           options={options}
           onChange={onChange}
           onNavigate={onNavigate}
+          depth={displayDepth}
         />
       );
     case "Record":
@@ -27,6 +38,7 @@ const AbstractRenderer = ({ options, onChange, onNavigate }: Props) => {
           options={options}
           onChange={onChange}
           onNavigate={onNavigate}
+          depth={displayDepth}
         />
       );
     case "String":
