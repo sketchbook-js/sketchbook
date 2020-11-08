@@ -32,7 +32,10 @@ const exampleDoc: SketchbookDocument = {
           }
         ],
         // TODO: below
-        // nestedList1: [["a", "b"]],
+        nestedList1: [
+          ["c", "d"],
+          ["a", "b"]
+        ],
         // listOfListOfString: [{ list: ["l1"] }], // Get the index
         // listOfRecordsOfString: [{ record1: "record1text" }], // Get the index
         // recordOfListOfString: {

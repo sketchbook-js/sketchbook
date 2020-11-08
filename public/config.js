@@ -101,19 +101,19 @@ Sketchbook.config = {
             }
           }
         },
-        // {
-        //   key: "nestedList1",
-        //   label: "NestedList",
-        //   input: {
-        //     type: "List",
-        //     inputs: {
-        //       type: "List",
-        //       inputs: {
-        //         type: "String"
-        //       }
-        //     }
-        //   }
-        // },
+        {
+          key: "nestedList1",
+          label: "NestedList",
+          input: {
+            type: "List",
+            inputs: {
+              type: "List",
+              inputs: {
+                type: "String"
+              }
+            }
+          }
+        },
         {
           key: "links",
           label: "Links",
