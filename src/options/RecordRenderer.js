@@ -1,14 +1,14 @@
 // @flow
 
 import React from "react";
-import StringRenderer from "./StringRenderer";
-import type { RecordOption, Option } from "../types/types";
-import PlainTextRenderer from "./PlainTextRenderer";
+import AbstractRenderer from "./AbstractRenderer";
+import type { RecordOption } from "../types/types";
 
 type Props = {
   options: RecordOption,
   onNavigate: any,
-  onChange: any
+  onChange: any,
+  depth: number
 };
 
 /**
@@ -17,68 +17,42 @@ type Props = {
  * with the number of items in the nested object is displayed instead
  * that the user can click/navigate into.
  */
-const RecordRenderer = ({ options, onNavigate, onChange }: Props) => {
-  return (
-    <ol>
-      {options.fields.map(field => {
-        return (
-          <li key={field.value.path.join(".")}>
-            <label>{field.label}</label>
-            <RecordValue
-              onChange={onChange}
-              onNavigate={onNavigate}
-              option={field.value}
-            />
-          </li>
-        );
-      })}
-    </ol>
-  );
-};
+const RecordRenderer = ({ options, onNavigate, onChange, depth }: Props) => {
+  const fieldCount = options.fields.length;
 
-const RecordValue = ({
-  option,
-  onChange,
-  onNavigate
-}: {
-  option: Option,
-  onNavigate: any,
-  onChange: any
-}) => {
-  switch (option.type) {
-    case "Record":
-      const fieldCount = option.fields.length;
-      return (
+  return (
+    <>
+      {depth === options.path.length ? (
+        <ol>
+          {options.fields.map(field => {
+            const option = field.value;
+            return (
+              <li key={field.value.path.join(".")}>
+                <label>{field.label}</label>
+                <AbstractRenderer
+                  key={option.path.join(".")}
+                  options={option}
+                  onChange={onChange}
+                  onNavigate={onNavigate}
+                  displayDepth={depth}
+                />
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
         <button
           style={{ display: "inline-block" }}
           onClick={() =>
-            onNavigate(currPath => [...currPath, ...option.path.slice(-1)])
+            onNavigate(currPath => [...currPath, ...options.path.slice(-1)])
           }
           disabled={fieldCount === 0}
         >
           {fieldCount} record{fieldCount === 1 ? "" : "s"}
         </button>
-      );
-    case "List":
-      const listItemCount = option.items.length;
-      return (
-        <button
-          style={{ display: "inline-block" }}
-          onClick={() =>
-            onNavigate(currPath => [...currPath, ...option.path.slice(-1)])
-          }
-          disabled={listItemCount === 0}
-        >
-          {listItemCount} list item{listItemCount === 1 ? "" : "s"}
-        </button>
-      );
-    case "String":
-      return <StringRenderer option={option} onChange={onChange} />;
-    case "PlainText":
-      return <PlainTextRenderer option={option} onChange={onChange} />;
-    default:
-      throw Error(`Unknown option: ${option.type}`);
-  }
+      )}
+    </>
+  );
 };
 
 export default RecordRenderer;
