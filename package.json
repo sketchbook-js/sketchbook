@@ -1,6 +1,6 @@
 {
   "name": "@sketchbook-js/sketchbook",
-  "version": "0.0.0",
+  "version": "0.1.0-0",
   "description": "The design tool that lives in your repo.",
   "repository": "https://github.com/haydn/sketchbook-js.git",
   "keywords": [
@@ -26,6 +26,9 @@
     "start": "node scripts/start",
     "release": "np --any-branch",
     "test": "yarn eslint && yarn flow check && yarn jest"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "files": [
     "build",
