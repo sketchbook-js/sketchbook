@@ -19,6 +19,7 @@ describe("ResolvePath", () => {
     expect(
       resolvePath({
         path: ["values", 0],
+        depth: 0,
         options: {
           type: "Record",
           path: [],
@@ -35,7 +36,8 @@ describe("ResolvePath", () => {
         }
       })
     ).toEqual({
-      options: { type: "String", path: ["values", 0], value: "A" }
+      options: { type: "String", path: ["values", 0], value: "A" },
+      depth: 2
     });
   });
 
@@ -43,6 +45,7 @@ describe("ResolvePath", () => {
     expect(
       resolvePath({
         path: ["values", 0, 0],
+        depth: 0,
         options: {
           type: "Record",
           path: [],
@@ -75,7 +78,8 @@ describe("ResolvePath", () => {
         type: "String",
         path: ["values", 0, 0],
         value: "second A"
-      }
+      },
+      depth: 3
     });
   });
 
@@ -83,6 +87,7 @@ describe("ResolvePath", () => {
     expect(
       resolvePath({
         path: ["values"],
+        depth: 0,
         options: {
           type: "Record",
           path: [],
@@ -103,7 +108,8 @@ describe("ResolvePath", () => {
         type: "String",
         path: ["values"],
         value: "A"
-      }
+      },
+      depth: 1
     });
   });
 
@@ -111,6 +117,7 @@ describe("ResolvePath", () => {
     expect(
       resolvePath({
         path: ["records", "values"],
+        depth: 0,
         options: {
           type: "Record",
           path: [],
@@ -140,7 +147,8 @@ describe("ResolvePath", () => {
         type: "String",
         path: ["records", "values"],
         value: "A"
-      }
+      },
+      depth: 2
     });
   });
 
