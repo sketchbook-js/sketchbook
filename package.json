@@ -24,7 +24,7 @@
     "jest:watch": "jest --watchAll",
     "jest": "jest",
     "start": "node scripts/start",
-    "release": "np --any-branch",
+    "release": "np",
     "test": "yarn eslint && yarn flow check && yarn jest"
   },
   "publishConfig": {
