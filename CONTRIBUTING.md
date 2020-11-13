@@ -2,7 +2,7 @@
 
 The project roadmap is managed in GitHub projects:
 
-https://github.com/haydn/sketchbook/projects/1
+https://github.com/sketchbook-js/sketchbook/projects/1
 
 General discussion happens in the Spectrum community:
 
@@ -19,7 +19,7 @@ Steps to set up your local repo:
 
 1.  Fork the repo:
 
-    https://github.com/haydn/sketchbook/fork
+    https://github.com/sketchbook-js/sketchbook/fork
 
 2.  Clone your fork:
 
