@@ -33,8 +33,8 @@ const exampleDoc: SketchbookDocument = {
         ],
         // TODO: below
         nestedList1: [
-          ["c", "d"],
-          ["a", "b"]
+          [["c"], ["d", "e"]],
+          [["a"], ["b"]]
         ],
         // listOfListOfString: [{ list: ["l1"] }], // Get the index
         // listOfRecordsOfString: [{ record1: "record1text" }], // Get the index

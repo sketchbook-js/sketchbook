@@ -109,7 +109,10 @@ Sketchbook.config = {
             inputs: {
               type: "List",
               inputs: {
-                type: "String"
+                type: "List",
+                inputs: {
+                  type: "String"
+                }
               }
             }
           }
