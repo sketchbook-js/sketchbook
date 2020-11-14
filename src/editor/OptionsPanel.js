@@ -1,7 +1,6 @@
 // @flow
 
 import React, { useState } from "react";
-import * as immutable from "object-path-immutable";
 
 import PanelTitle from "../editor/PanelTitle";
 import AbstractRenderer from "../options/AbstractRenderer";
@@ -18,6 +17,8 @@ type Props = {
 const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
   const [path, setPath] = useState([]);
   const [depth, setDepth] = useState(0);
+
+  console.log("doc", doc);
 
   // when multiple layers are selected, options can't be shown
   if (selection.size > 1) {
@@ -68,10 +69,29 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
     selectedLayer.options
   );
 
-  const { options: displayOptions, depth: optionDepth } = resolvePath({
+  const {
+    options: displayOptions,
+    depth: optionDepth,
+    updateNode: updateNodeHandler
+  } = resolvePath({
     options,
     path,
-    depth
+    depth,
+    updateNode: updater => {
+      setState(current => ({
+        ...current,
+        doc: {
+          layers: current.doc.layers.map(layer =>
+            layer.id === selectedLayer.id
+              ? {
+                  ...layer,
+                  options: updater(layer.options)
+                }
+              : layer
+          )
+        }
+      }));
+    }
   });
 
   return (
@@ -125,15 +145,7 @@ const OptionsPanel = ({ selection, doc, config, setState }: Props) => {
         // update doc path
         onNavigate={newPath => setPath(newPath)}
         // used to immutably update nested object state of unknown depth
-        onChange={(newValue, rendererPath) => {
-          // rendererPath is formatted like path1.path2.path3 etc.
-          const formattedPath =
-            `doc.layers.${selectedLayerIndex}.options.` +
-            rendererPath.join(".");
-          return setState(currState => {
-            return immutable.set(currState, formattedPath, newValue);
-          });
-        }}
+        updateNode={updateNodeHandler}
         // Used to determine how to render the list-like option types
         displayDepth={optionDepth}
       />

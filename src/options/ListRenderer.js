@@ -6,7 +6,7 @@ import AbstractRenderer from "./AbstractRenderer";
 
 type Props = {
   options: ListOption,
-  onChange: any,
+  updateNode: any,
   onNavigate: any,
   depth: number
 };
@@ -17,22 +17,35 @@ type Props = {
  * with the number of items in the nested object is displayed instead
  * that the user can click/navigate into.
  */
-const ListRenderer = ({ options, onChange, onNavigate, depth }: Props) => {
+const ListRenderer = ({ options, onNavigate, depth, updateNode }: Props) => {
   const listItemCount = options.items.length;
   return (
     <>
       {depth === options.path.length ? (
         <ol>
-          {options.items.map(option => (
-            <li key={option.path.join(".")}>
-              <AbstractRenderer
-                options={option}
-                onChange={onChange}
-                onNavigate={onNavigate}
-                displayDepth={depth}
-              />
-            </li>
-          ))}
+          {options.items.map(option => {
+            const lastPath = option.path[option.path.length - 1];
+            return (
+              <li key={option.path.join(".")}>
+                <AbstractRenderer
+                  options={option}
+                  updateNode={updater => {
+                    updateNode(stateTree => {
+                      return stateTree.map((value, i) => {
+                        return i === lastPath ? updater(value) : value;
+                      });
+                      //  {
+                      //   ...stateTree,
+                      //   [String(path[0])]: updater(stateTree[String(path[0])])
+                      // };
+                    });
+                  }}
+                  onNavigate={onNavigate}
+                  displayDepth={depth}
+                />
+              </li>
+            );
+          })}
         </ol>
       ) : (
         <button

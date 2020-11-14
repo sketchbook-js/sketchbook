@@ -12,12 +12,14 @@ import type { Option } from "../types/types";
 const resolvePath = ({
   path,
   options,
-  depth
+  depth,
+  updateNode
 }: {
   path: Array<string | number>,
   options: Option,
-  depth: number
-}): { options: Option, depth: number } => {
+  depth: number,
+  updateNode: any
+}): { options: Option, depth: number, updateNode: any } => {
   const MAX_DEPTH = 10;
   // We subtract 1 because we don't include the root in the path when calling this function.
   // We use path so we don't actually need to recurse to get the recursion depth
@@ -47,7 +49,15 @@ const resolvePath = ({
       return resolvePath({
         path: path.slice(1),
         options: nextOption,
-        depth: depth + 1
+        depth: depth + 1,
+        updateNode: updater => {
+          updateNode(stateTree => {
+            return {
+              ...stateTree,
+              [String(path[0])]: updater(stateTree[String(path[0])])
+            };
+          });
+        }
       });
     }
 
@@ -71,14 +81,21 @@ const resolvePath = ({
       return resolvePath({
         path: path.slice(1),
         options: nextOption,
-        depth: depth + 1
+        depth: depth + 1,
+        updateNode: updater => {
+          updateNode(stateTree => {
+            return stateTree.map((value, i) => {
+              return i === path[0] ? updater(value) : value;
+            });
+          });
+        }
       });
     }
 
     throw Error("Can't resolve path.");
   }
 
-  return { options, depth };
+  return { options, depth, updateNode };
 };
 
 export default resolvePath;

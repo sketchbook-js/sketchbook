@@ -5,16 +5,18 @@ import type { PlainTextOption } from "../types/types";
 
 type Props = {
   option: PlainTextOption,
-  onChange: any
+  updateNode: any
 };
 
-const PlainTextRenderer = ({ option, onChange }: Props) => {
+const PlainTextRenderer = ({ option, updateNode }: Props) => {
   return (
     <input
       type="text"
       value={option.value}
-      onChange={event => {
-        onChange(event.currentTarget.value, option.path);
+      onChange={({ target: { value } }) => {
+        updateNode(stateTree => {
+          return value;
+        });
       }}
     />
   );

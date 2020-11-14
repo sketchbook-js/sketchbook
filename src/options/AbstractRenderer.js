@@ -8,7 +8,7 @@ import type { Option } from "../types/types";
 
 type Props = {
   options: Option,
-  onChange: any,
+  updateNode: any,
   onNavigate: any,
   displayDepth: number
 };
@@ -18,7 +18,7 @@ type Props = {
  */
 const AbstractRenderer = ({
   options,
-  onChange,
+  updateNode,
   onNavigate,
   displayDepth
 }: Props) => {
@@ -27,24 +27,24 @@ const AbstractRenderer = ({
       return (
         <ListRenderer
           options={options}
-          onChange={onChange}
           onNavigate={onNavigate}
+          updateNode={updateNode}
           depth={displayDepth}
         />
       );
     case "Record":
       return (
         <RecordRenderer
+          updateNode={updateNode}
           options={options}
-          onChange={onChange}
           onNavigate={onNavigate}
           depth={displayDepth}
         />
       );
     case "String":
-      return <StringRenderer option={options} onChange={onChange} />;
+      return <StringRenderer option={options} updateNode={updateNode} />;
     case "PlainText":
-      return <PlainTextRenderer option={options} onChange={onChange} />;
+      return <PlainTextRenderer option={options} updateNode={updateNode} />;
     // etc
     default:
       throw Error(`Unknown option: ${options.type}`);

@@ -5,16 +5,18 @@ import type { StringOption } from "../types/types";
 
 type Props = {
   option: StringOption,
-  onChange: any
+  updateNode: any
 };
 
-const StringRenderer = ({ option, onChange }: Props) => {
+const StringRenderer = ({ option, updateNode }: Props) => {
   return (
     <input
       type="text"
       value={option.value}
-      onChange={event => {
-        onChange(event.currentTarget.value, option.path);
+      onChange={({ target: { value } }) => {
+        updateNode(stateTree => {
+          return value;
+        });
       }}
     />
   );

@@ -7,7 +7,7 @@ import type { RecordOption } from "../types/types";
 type Props = {
   options: RecordOption,
   onNavigate: any,
-  onChange: any,
+  updateNode: any,
   depth: number
 };
 
@@ -17,7 +17,7 @@ type Props = {
  * with the number of items in the nested object is displayed instead
  * that the user can click/navigate into.
  */
-const RecordRenderer = ({ options, onNavigate, onChange, depth }: Props) => {
+const RecordRenderer = ({ options, onNavigate, updateNode, depth }: Props) => {
   const fieldCount = options.fields.length;
 
   return (
@@ -25,6 +25,7 @@ const RecordRenderer = ({ options, onNavigate, onChange, depth }: Props) => {
       {depth === options.path.length ? (
         <ol>
           {options.fields.map(field => {
+            console.log("label", field.label);
             const option = field.value;
             return (
               <li key={field.value.path.join(".")}>
@@ -32,7 +33,15 @@ const RecordRenderer = ({ options, onNavigate, onChange, depth }: Props) => {
                 <AbstractRenderer
                   key={option.path.join(".")}
                   options={option}
-                  onChange={onChange}
+                  updateNode={updater => {
+                    updateNode(stateTree => {
+                      const lastPath = option.path[option.path.length - 1];
+                      return {
+                        ...stateTree,
+                        [String(lastPath)]: updater(stateTree[String(lastPath)])
+                      };
+                    });
+                  }}
                   onNavigate={onNavigate}
                   displayDepth={depth}
                 />
@@ -54,5 +63,68 @@ const RecordRenderer = ({ options, onNavigate, onChange, depth }: Props) => {
     </>
   );
 };
+
+// const updateNodeHandler = option => updater => {
+//   updateNode(current => {
+//     const optionKey = option.path[option.path.length - 1];
+//     const parentOptionKey = option.path[option.path.length - 2];
+//     console.log("parentOptionKey", parentOptionKey);
+//     console.log("opt", option);
+//     console.log("optionKey", optionKey);
+//     console.log("update", {
+//       ...current[String(optionKey)],
+//       [optionKey]: updater(current.optionKey)
+//     });
+//     if (typeof optionKey === "string") {
+//       return option.type === "Record"
+//         ? {
+//             ...current,
+//             [String(optionKey)]: updater({
+//               ...current[String(optionKey)],
+//               [optionKey]: updater(current.optionKey)
+//             })
+//           }
+//         : updater(current[optionKey]);
+//     }
+
+//     if (typeof optionKey === "number") {
+//       // List -> list.
+//       console.log("here", current);
+//       if (typeof parentOptionKey === "number") {
+//         return { ...current };
+//         // return {
+//         //   ...current,
+//         //   [String(parentOptionKey)]: current[parentOptionKey].map(
+//         //     (value, i) => {
+//         //       return i === optionKey ? updater(value) : value;
+//         //     }
+//         //   )
+//         // };
+//       }
+
+//       // Record -> List
+//       if (typeof parentOptionKey === "string") {
+//         return {
+//           ...current,
+//           [String(parentOptionKey)]: current[parentOptionKey].map(
+//             (value, i) => {
+//               return i === optionKey ? updater(value) : value;
+//             }
+//           )
+//         };
+//       }
+//     }
+//     // console.log("current", current, field.label);
+//     // return {
+//     //   ...current,
+//     //   [String(optionValue)]: option.type === "List" ?  :
+//     //     updater(current[optionValue])
+//     //   // children: current.children.map((child, i) => {
+//     //   //   console.log("uc", updater(child));
+//     //   //   return i === index ? updater(child) : child;
+//     //   // })
+//     // };
+//   });
+// };
 
 export default RecordRenderer;
