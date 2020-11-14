@@ -10,7 +10,7 @@
 
 ## Demo
 
-https://sketchbook-js.particlesystem.com/
+https://sketchbook-js.vercel.app/
 
 ![](screenshot.png)
 
