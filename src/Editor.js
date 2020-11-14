@@ -1,10 +1,12 @@
-import React, { Fragment, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
 import useCanvasConnection from "./editor/useCanvasConnection";
 import exampleDoc from "./editor/exampleDoc";
+import PanelTitle from "./editor/PanelTitle";
+import OptionsPanel from "./editor/OptionsPanel";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
@@ -29,23 +31,6 @@ import MoveForward from "./icons/MoveForward";
 import MoveToBack from "./icons/MoveToBack";
 import MoveToFront from "./icons/MoveToFront";
 
-const PanelTitle = ({ style, children, ...props }) => (
-  <h2
-    style={{
-      color: "#000",
-      fontWeight: "bold",
-      fontSize: 14,
-      fontVariantCaps: "small-caps",
-      padding: "0 6px",
-      borderBottom: "1px solid #ddd",
-      ...style
-    }}
-    {...props}
-  >
-    {children}
-  </h2>
-);
-
 const Label = props => (
   <label
     style={{
@@ -66,7 +51,6 @@ const Input = ({ style, ...props }) => (
     {...props}
   />
 );
-
 const Button = ({ style, disabled, Icon, children, ...props }) => (
   <button
     style={{
@@ -84,27 +68,6 @@ const Button = ({ style, disabled, Icon, children, ...props }) => (
     {Icon ? <Icon color={disabled ? "#bbb" : undefined} /> : children}
   </button>
 );
-
-const Textarea = ({ style, ...props }) => (
-  <textarea
-    style={{
-      background: "#fff",
-      border: "1px solid #ddd",
-      resize: "none",
-      ...style
-    }}
-    spellCheck="false"
-    {...props}
-  />
-);
-
-const OptionsErrorMessage = ({ children, style, ...props }) => {
-  return (
-    <div style={{ color: "red", ...style }} {...props}>
-      {children}
-    </div>
-  );
-};
 
 const Editor = ({ config }) => {
   const canvas = useRef(null);
@@ -1463,168 +1426,12 @@ const Editor = ({ config }) => {
                 Move to back
               </Button>
             </div>
-            <>
-              <PanelTitle style={{ marginTop: 6 }}>Options</PanelTitle>
-              {selection.size > 1 ? (
-                <div
-                  style={{
-                    color: "#999",
-                    fontStyle: "italic",
-                    padding: 6
-                  }}
-                >
-                  Multiple layers selected
-                </div>
-              ) : (
-                config.components
-                  .find(
-                    ({ type }) =>
-                      type ===
-                      doc.layers.find(({ id }) => selection.has(id)).component
-                  )
-                  .options?.map(({ key, input, label }, index) => {
-                    const layer = doc.layers.find(({ id }) =>
-                      selection.has(id)
-                    );
-                    const error = config.components
-                      .find(({ type }) => type === layer.component)
-                      .validate?.(layer.options)
-                      ?.filter(error => error.key === key)
-                      .find(() => true);
-                    switch (input.type) {
-                      case "String":
-                        return (
-                          <Fragment key={key}>
-                            {error ? (
-                              <OptionsErrorMessage
-                                style={{
-                                  paddingTop: index === 0 ? "4px" : "0px",
-                                  paddingLeft: "6px"
-                                }}
-                              >
-                                {error.message}
-                              </OptionsErrorMessage>
-                            ) : null}
-                            <div
-                              id={`option-${key}`}
-                              type="text"
-                              style={{
-                                display: "grid",
-                                gridTemplateColumns:
-                                  "repeat(1, min-content 1fr)",
-                                alignItems: "center",
-                                justifyItems: "center",
-                                gap: 6,
-                                padding: 6
-                              }}
-                            >
-                              <Label htmlFor={`option-${key}`}>{label}</Label>
-                              <Input
-                                key={key}
-                                id={`option-${key}`}
-                                type="text"
-                                value={
-                                  doc.layers.find(
-                                    ({ id }) => id === [...selection][0]
-                                  ).options[key]
-                                }
-                                onChange={({ currentTarget: { value } }) => {
-                                  setState(current => ({
-                                    ...current,
-                                    doc: {
-                                      layers: current.doc.layers.map(layer =>
-                                        layer.id === [...selection][0]
-                                          ? {
-                                              ...layer,
-                                              options: {
-                                                ...layer.options,
-                                                [key]: value
-                                              }
-                                            }
-                                          : layer
-                                      )
-                                    }
-                                  }));
-                                }}
-                              />
-                            </div>
-                          </Fragment>
-                        );
-                      case "PlainText":
-                        return (
-                          <Fragment key={key}>
-                            {error ? (
-                              <OptionsErrorMessage
-                                style={{
-                                  paddingTop: index === 0 ? "4px" : "0px",
-                                  paddingLeft: "6px"
-                                }}
-                              >
-                                {error.message}
-                              </OptionsErrorMessage>
-                            ) : null}
-                            <div
-                              style={{
-                                display: "grid",
-                                gridTemplateColumns:
-                                  "repeat(1, min-content 1fr)",
-                                alignItems: "center",
-                                justifyItems: "center",
-                                gap: 6,
-                                padding: 6
-                              }}
-                            >
-                              <Label htmlFor={`option-${key}`}>{label}</Label>
-                              <Textarea
-                                key={key}
-                                id={`option-${key}`}
-                                type="text"
-                                style={{
-                                  minHeight: "8em"
-                                }}
-                                value={
-                                  doc.layers.find(
-                                    ({ id }) => id === [...selection][0]
-                                  ).options[key]
-                                }
-                                onChange={({ currentTarget: { value } }) => {
-                                  setState(current => ({
-                                    ...current,
-                                    doc: {
-                                      layers: current.doc.layers.map(layer =>
-                                        layer.id === [...selection][0]
-                                          ? {
-                                              ...layer,
-                                              options: {
-                                                ...layer.options,
-                                                [key]: value
-                                              }
-                                            }
-                                          : layer
-                                      )
-                                    }
-                                  }));
-                                }}
-                              />
-                            </div>
-                          </Fragment>
-                        );
-                      default:
-                        return null;
-                    }
-                  }) ?? (
-                  <div
-                    style={{
-                      color: "#999",
-                      fontStyle: "italic",
-                      padding: 6
-                    }}
-                  >
-                    No options
-                  </div>
-                )
-              )}
-            </>
+            <OptionsPanel
+              setState={setState}
+              selection={selection}
+              doc={doc}
+              config={config}
+            />
           </>
         )}
       </div>

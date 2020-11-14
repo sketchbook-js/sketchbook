@@ -1,6 +1,8 @@
 // @flow
 
-type TODO = any;
+/* eslint-disable no-use-before-define */
+
+export type TODO = any;
 
 export type Layer = {
   id: number,
@@ -29,3 +31,57 @@ export type SketchbookDocument = {
   type: "SketchbookDocument",
   layers: Array<Layer>
 };
+
+export type Option =
+  | ListOption
+  | RecordOption
+  | StringOption
+  | PlainTextOption
+  | CheckboxOption
+  | CheckboxesOption;
+
+export type ListOption = {
+  type: "List",
+  path: OptionPath,
+  items: Array<Option>
+};
+
+export type RecordOption = {
+  type: "Record",
+  path: OptionPath,
+  fields: Array<{
+    value: Option,
+    label: string
+  }>
+};
+
+export type StringOption = {
+  type: "String",
+  path: OptionPath,
+  value: string
+};
+
+export type PlainTextOption = {
+  type: "PlainText",
+  path: OptionPath,
+  value: string
+};
+
+export type CheckboxOption = {
+  type: "Checkbox",
+  path: OptionPath,
+  description: ?string,
+  value: boolean
+};
+
+export type CheckboxesOption = {
+  type: "Checkboxes",
+  path: OptionPath,
+  items: Array<{
+    value: string,
+    checked: boolean,
+    label: string
+  }>
+};
+
+export type OptionPath = Array<string | number>;

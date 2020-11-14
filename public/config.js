@@ -15,6 +15,192 @@ Sketchbook.config = {
   },
   components: [
     {
+      type: "Example",
+      options: [
+        {
+          key: "title",
+          label: "Title",
+          input: {
+            type: "String"
+          }
+        },
+        {
+          key: "items",
+          label: "Items",
+          input: {
+            type: "List",
+            inputs: {
+              type: "String"
+            }
+          }
+        },
+        {
+          key: "buckets",
+          label: "Buckets",
+          input: {
+            type: "Record",
+            fields: [
+              {
+                key: "pinkBucket",
+                label: "PinkBucket",
+                input: {
+                  type: "String"
+                }
+              }
+            ]
+          }
+        },
+        // {
+        //   key: "buckets",
+        //   label: "Buckets",
+        //   input: {
+        //     type: "List",
+        //     inputs: {
+        //       type: "List",
+        //       inputs: {
+        //         type: "Plaintext"
+        //       }
+        //     }
+        //   }
+        // },
+        // {
+        //   key: "myLinks",
+        //   label: "MyLinks",
+        //   input: {
+        //     type: "Record",
+        //     fields: [
+        //       {
+        //         key: "list",
+        //         label: "list",
+        //         input: {
+        //           type: "List",
+        //           inputs: {
+        //             type: "String"
+        //           }
+        //         }
+        //       }
+        //     ]
+        //   }
+        // },
+        {
+          key: "meat",
+          label: "Meat",
+          input: {
+            type: "List",
+            inputs: {
+              type: "Record",
+              fields: [
+                {
+                  key: "poultry",
+                  label: "Poultry",
+                  input: {
+                    type: "String"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          key: "nestedList1",
+          label: "NestedList",
+          input: {
+            type: "List",
+            inputs: {
+              type: "List",
+              inputs: {
+                type: "List",
+                inputs: {
+                  type: "String"
+                }
+              }
+            }
+          }
+        },
+        {
+          key: "links",
+          label: "Links",
+          input: {
+            type: "Record",
+            fields: [
+              {
+                key: "website",
+                label: "Links",
+                input: {
+                  type: "Record",
+                  fields: [
+                    {
+                      key: "url",
+                      label: "URL",
+                      input: {
+                        type: "String"
+                      }
+                    },
+                    {
+                      key: "text",
+                      label: "Text",
+                      input: {
+                        type: "String"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+        // {
+        //   key: "labels",
+        //   label: "Labels",
+        //   input: {
+        //     type: "Checkboxes",
+        //     items: [
+        //       {
+        //         label: "Recently Added",
+        //         value: "new"
+        //       },
+        //       {
+        //         label: "Featured",
+        //         value: "featured"
+        //       },
+        //       {
+        //         label: "Popular",
+        //         value: "popular"
+        //       }
+        //     ]
+        //   }
+        // },
+        // {
+        //   key: "highlight",
+        //   label: "Highlight",
+        //   input: {
+        //     type: "Checkbox",
+        //     description: "Show highlight around the item."
+        //   }
+        // }
+      ],
+      init: () => ({
+        options: {
+          title: "Lorem ipsum"
+          // links: {
+          //   website: {
+          //     url: "https://example.com",
+          //     text: "example"
+          //   }
+          // },
+          // labels: ["new", "popular"],
+          // highlight: true
+        }
+      }),
+      validate: () => null,
+      render: ({ element, width, height, options: { title } }) => {
+        element.style = "height: 100%; display: flex; align-items: center;";
+        element.innerHTML = `
+          <h1 style="margin: 0;">${title}</h1>
+        `;
+      }
+    },
+    {
       type: "Heading 1",
       options: [
         {
