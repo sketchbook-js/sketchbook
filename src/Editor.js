@@ -7,7 +7,6 @@ import InfoPanel from "./components/InfoPanel";
 
 import useCanvasConnection from "./editor/useCanvasConnection";
 import exampleDoc from "./editor/exampleDoc";
-import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
 import {
@@ -30,6 +29,7 @@ import MoveBackward from "./icons/MoveBackward";
 import MoveForward from "./icons/MoveForward";
 import MoveToBack from "./icons/MoveToBack";
 import MoveToFront from "./icons/MoveToFront";
+import useInput from "./useInput";
 
 const PanelTitle = ({ style, children, ...props }) => (
   <h2
@@ -146,24 +146,9 @@ const Editor = ({ config }) => {
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => selection.has(layer.id))
   );
-  const keys = useKeys({
-    keydown: event => {
-      const codeBlacklist = set([
-        "Backspace",
-        "ShiftLeft",
-        "ShiftRight",
-        "ArrowLeft",
-        "ArrowUp",
-        "ArrowRight",
-        "ArrowDown"
-      ]);
-      if (
-        (selection.size > 0 || event.code === "Backspace") &&
-        codeBlacklist.has(event.code)
-      ) {
-        event.preventDefault();
-      }
-      switch (event.code) {
+  const [, inputState] = useInput({
+    keyDown: ({ code }, { keysPressed: keys }) => {
+      switch (code) {
         case "ArrowLeft":
           setState(current =>
             transformSelection(current, {
@@ -216,6 +201,7 @@ const Editor = ({ config }) => {
       }
     }
   });
+  const { keysPressed: keys } = inputState;
   const mouseIsWithinSelection =
     mouse.x >= selectionBounds.x1 - 3 &&
     mouse.x <= selectionBounds.x2 + 3 &&
