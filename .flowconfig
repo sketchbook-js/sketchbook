@@ -1,3 +1,6 @@
+[declarations]
+<PROJECT_ROOT>/node_modules/.*
+
 [ignore]
 
 [include]
@@ -8,4 +11,5 @@
 
 [options]
 exact_by_default=true
+
 [strict]

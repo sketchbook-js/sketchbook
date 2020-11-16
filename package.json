@@ -90,6 +90,37 @@
       "transform-flow-strip-types"
     ]
   },
+  "prettier": {
+    "printWidth": 80,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": true,
+    "singleQuote": false,
+    "quoteProps": "as-needed",
+    "jsxSingleQuote": false,
+    "trailingComma": "all",
+    "bracketSpacing": true,
+    "jsxBracketSameLine": false,
+    "arrowParens": "always",
+    "overrides": [
+      {
+        "files": [
+          "src/Editor.js",
+          "src/index.js",
+          "src/layers.js",
+          "src/layers.test.js",
+          "src/pushID.js",
+          "src/reorder.js",
+          "src/reorder.test.js",
+          "src/useKeys.js"
+        ],
+        "options": {
+          "trailingComma": "none",
+          "arrowParens": "avoid"
+        }
+      }
+    ]
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
