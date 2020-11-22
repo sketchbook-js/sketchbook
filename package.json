@@ -18,9 +18,8 @@
   },
   "scripts": {
     "build": "node scripts/build",
-    "eslint:fix": "eslint --fix src/**.js",
-    "eslint": "eslint src/**.js",
-    "format": "prettier src/**.js --write",
+    "eslint:fix": "eslint --fix cli/**/*.js src/**/*.js",
+    "eslint": "eslint cli/**/*.js src/**/*.js",
     "jest:watch": "jest --watchAll",
     "jest": "jest",
     "start": "node scripts/start",
@@ -105,13 +104,20 @@
     "overrides": [
       {
         "files": [
+          "cli/index.js",
+          "src/canvas/index.js",
+          "src/canvas/Layer.js",
+          "src/canvas/useEditorConnection.js",
           "src/Editor.js",
+          "src/editor/exampleDoc.js",
+          "src/editor/useCanvasConnection.js",
           "src/index.js",
           "src/layers.js",
           "src/layers.test.js",
           "src/pushID.js",
           "src/reorder.js",
           "src/reorder.test.js",
+          "src/types/types.js",
           "src/useKeys.js"
         ],
         "options": {
