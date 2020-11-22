@@ -114,7 +114,6 @@
     "overrides": [
       {
         "files": [
-          "cli/index.js",
           "src/canvas/index.js",
           "src/canvas/Layer.js",
           "src/canvas/useEditorConnection.js",

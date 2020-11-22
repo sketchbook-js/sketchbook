@@ -14,7 +14,7 @@ const args = arg({
   "-c": "--config",
   "-p": "--port",
   "-b": "--bind",
-  "-h": "--help"
+  "-h": "--help",
 });
 
 const configFile = path.join(
@@ -24,7 +24,7 @@ const configFile = path.join(
       process.env.SKETCHBOOK_CONFIG === null
       ? "sketchbook/config.js"
       : process.env.SKETCHBOOK_CONFIG
-    : args["--config"]
+    : args["--config"],
 );
 const port =
   args["--port"] === undefined || args["--port"] === null
@@ -58,7 +58,7 @@ switch (command) {
     app.use("/canvas", express.static(path.join(__dirname, "../build/canvas")));
     app.use("/editor", express.static(path.join(__dirname, "../build/editor")));
     app.get("/", (req, res) =>
-      res.sendFile(path.join(__dirname, "../build/editor/index.html"))
+      res.sendFile(path.join(__dirname, "../build/editor/index.html")),
     );
     app.use("/", express.static(path.join(__dirname, "../build/meta")));
 
@@ -66,7 +66,7 @@ switch (command) {
       console.log(`Sketchbook started:
 
   http://${host}:${port}
-`)
+`),
     );
 
     break;
