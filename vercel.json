@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/editor/index.html" },
+    { "source": "/favicon.ico", "destination": "/meta/favicon.ico" },
+    { "source": "/logo192.png", "destination": "/meta/logo192.png" },
+    { "source": "/logo512.png", "destination": "/meta/logo512.png" },
+    { "source": "/manifest.json", "destination": "/meta/manifest.json" },
+    { "source": "/robots.txt", "destination": "/meta/robots.txt" }
+  ]
+}
