@@ -9,7 +9,12 @@
     "graphic"
   ],
   "main": "cli/index.js",
-  "author": "Hayden Ewers",
+  "contributors": [
+    {
+      "name": "Haydn Ewers",
+      "url": "https://particlesystem.com/"
+    }
+  ],
   "license": "MIT",
   "bugs": "https://github.com/sketchbook-js/sketchbook/issues",
   "homepage": "https://github.com/sketchbook-js/sketchbook#readme",
