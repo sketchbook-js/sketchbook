@@ -1,10 +1,9 @@
-import React, { Fragment, useState, useRef } from "react";
+import React, { Fragment, useEffect, useState, useRef } from "react";
 import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
 import useCanvasConnection from "./editor/useCanvasConnection";
-import exampleDoc from "./editor/exampleDoc";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
@@ -124,11 +123,24 @@ const Editor = ({ config }) => {
   });
   const [state, setState, pointer, setPointer, snapshots] = useStateSnapshots(
     {
-      doc: exampleDoc,
+      doc: { type: "SketchbookDocument", layers: [] },
       selection: set()
     },
     false,
     100
+  );
+  useEffect(
+    () => {
+      fetch("/designs/example.json")
+        .then(file => file.json())
+        .then(doc => {
+          setState(current => ({
+            ...current,
+            doc
+          }));
+        });
+    },
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   );
   const { doc, selection } = state;
   const selectionBounds = getLayerBounds(

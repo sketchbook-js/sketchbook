@@ -8,10 +8,12 @@ const express = require("express");
 
 const args = arg({
   "--config": String,
+  "--files": String,
   "--port": Number,
   "--bind": String,
   "--help": Boolean,
   "-c": "--config",
+  "-f": "--files",
   "-p": "--port",
   "-b": "--bind",
   "-h": "--help",
@@ -26,10 +28,22 @@ const configFile = path.join(
       : process.env.SKETCHBOOK_CONFIG
     : args["--config"],
 );
+
+const designsDir = path.join(
+  process.cwd(),
+  args["--designs"] === undefined || args["--designs"] === null
+    ? process.env.SKETCHBOOK_DESIGNS === undefined ||
+      process.env.SKETCHBOOK_DESIGNS === null
+      ? "sketchbook/designs"
+      : process.env.SKETCHBOOK_DESIGNS
+    : args["--designs"],
+);
+
 const port =
   args["--port"] === undefined || args["--port"] === null
     ? 3000
     : args["--port"];
+
 const host =
   args["--bind"] === undefined || args["--bind"] === null
     ? "localhost"
@@ -57,17 +71,18 @@ switch (command) {
     app.get("/config.js", (req, res) => res.sendFile(configFile));
     app.use("/canvas", express.static(path.join(__dirname, "../build/canvas")));
     app.use("/editor", express.static(path.join(__dirname, "../build/editor")));
-    app.get("/", (req, res) =>
-      res.sendFile(path.join(__dirname, "../build/editor/index.html")),
-    );
+    app.use("/designs", express.static(designsDir));
+    app.get("/", (req, res) => {
+      res.sendFile(path.join(__dirname, "../build/editor/index.html"));
+    });
     app.use("/", express.static(path.join(__dirname, "../build/meta")));
 
-    app.listen(port, host, () =>
+    app.listen(port, host, () => {
       console.log(`Sketchbook started:
 
   http://${host}:${port}
-`),
-    );
+`);
+    });
 
     break;
   }
@@ -85,6 +100,7 @@ switch (command) {
   Options:
 
     -c, --config   A relative path to the config file (default: sketchbook/config.js)
+    -d, --designs  A relative path to the designs directory (default: sketchbook/designs)
     -p, --port     The port to run the app on (default: 3000)
     -b, --bind     The host to bind the app to (default: localhost)
     -h, --help     Display this help information

@@ -118,7 +118,6 @@
           "src/canvas/Layer.js",
           "src/canvas/useEditorConnection.js",
           "src/Editor.js",
-          "src/editor/exampleDoc.js",
           "src/editor/useCanvasConnection.js",
           "src/index.js",
           "src/layers.js",
