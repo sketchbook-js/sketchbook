@@ -10,20 +10,23 @@ const Layer = ({
   render,
   onRender
 }) => {
-  const ref = useCallback(element => {
-    if (element) {
-      render({
-        element,
-        id,
-        type,
-        name,
-        width,
-        height,
-        options
-      });
-      if (onRender) onRender(element.getBoundingClientRect());
-    }
-  });
+  const ref = useCallback(
+    element => {
+      if (element) {
+        render({
+          element,
+          id,
+          type,
+          name,
+          width,
+          height,
+          options
+        });
+        if (onRender) onRender(element.getBoundingClientRect());
+      }
+    },
+    [render, id, type, name, width, height, options, onRender]
+  );
   return <div ref={ref} />;
 };
 
