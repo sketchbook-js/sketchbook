@@ -14,16 +14,25 @@ https://sketchbook-js.vercel.app/
 
 ![](screenshot.png)
 
-## Installation
+## Getting started
 
-Sketchbook is still under development and hasn't been published yet. Below is a
-draft on the setup instructions that should work once everything is in place.
+ 1. Install the package:
+    
+    ```
+    yarn add -D @sketchbook-js/sketchbook
+    ```
 
-> Sketchbook.js requires Node 10 or newer and a modern browser.
->
-> 1.  `yarn add sketchbook-js`
-> 2.  `yarn sketchbook init` (generates a `./sketchbook/config.js` file)
-> 3.  `yarn sketchbook start` (uses the `./sketchbook/config.js` file)
+ 2. Create the default `sketchbook/config.js` and `sketchbook/designs/example.json` files:
+    
+    ```
+    yarn sketchbook init
+    ```
+
+ 3. Run on `http://localhost:3000/`:
+    
+    ```
+    yarn sketchbook start
+    ```
 
 ## Contributing
 
@@ -38,3 +47,7 @@ https://spectrum.chat/sketchbook-js
 Have a read of the guidelines to start contributing:
 
 https://github.com/sketchbook-js/sketchbook/blob/master/CONTRIBUTING.md
+
+---
+
+[![Powered by Vercel](powered-by-vercel.svg)](https://vercel.com?utm_source=sketchbook-js&utm_campaign=oss)
