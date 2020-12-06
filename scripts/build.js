@@ -2,7 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 const fs = require("fs-extra");
 
-const copyPublicFolder = require('./copyPublicFolder');
+const copyPublicFolder = require("./copyPublicFolder");
 
 const canvas = require("../config/webpack.canvas");
 const editor = require("../config/webpack.editor");

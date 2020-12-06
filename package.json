@@ -27,8 +27,8 @@
   },
   "scripts": {
     "build": "node scripts/build",
-    "eslint:fix": "eslint --fix cli/**/*.js src/**/*.js",
-    "eslint": "eslint cli/**/*.js src/**/*.js",
+    "eslint:fix": "eslint --fix cli/**/*.js js scripts/**/*.js src/**/*.js",
+    "eslint": "eslint cli/**/*.js scripts/**/*.js src/**/*.js",
     "jest:watch": "jest --watchAll",
     "jest": "jest",
     "start": "node scripts/start",
@@ -114,6 +114,10 @@
     "overrides": [
       {
         "files": [
+          "scripts/build.js",
+          "scripts/copyPublicFolder.js",
+          "scripts/labelOutput.js",
+          "scripts/start.js",
           "src/canvas/index.js",
           "src/canvas/Layer.js",
           "src/canvas/useEditorConnection.js",
