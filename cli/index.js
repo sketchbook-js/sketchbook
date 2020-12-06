@@ -68,6 +68,10 @@ switch (command) {
 
     const app = express();
 
+    app.get("/env.js", (req, res) => {
+      res.type("text/javascript");
+      res.send("window.SKETCHBOOK_MODE = 'interactive';");
+    });
     app.get("/config.js", (req, res) => res.sendFile(configFile));
     app.use("/canvas", express.static(path.join(__dirname, "../build/canvas")));
     app.use("/editor", express.static(path.join(__dirname, "../build/editor")));
