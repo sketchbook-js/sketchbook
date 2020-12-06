@@ -1,6 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
-const fs = require("fs-extra");
+const fs = require("fs");
 
 const copyPublicFolder = require("./copyPublicFolder");
 
@@ -21,6 +21,30 @@ webpack(
     if (err || stats.hasErrors()) {
       console.error(err || stats.toJson("minimal"));
     }
+    fs.renameSync(
+      path.join(__dirname, "../build/editor/index.html"),
+      path.join(__dirname, "../build/index.html")
+    );
+    fs.renameSync(
+      path.join(__dirname, "../build/meta/favicon.ico"),
+      path.join(__dirname, "../build/favicon.ico")
+    );
+    fs.renameSync(
+      path.join(__dirname, "../build/meta/logo192.png"),
+      path.join(__dirname, "../build/logo192.png")
+    );
+    fs.renameSync(
+      path.join(__dirname, "../build/meta/logo512.png"),
+      path.join(__dirname, "../build/logo512.png")
+    );
+    fs.renameSync(
+      path.join(__dirname, "../build/meta/manifest.json"),
+      path.join(__dirname, "../build/manifest.json")
+    );
+    fs.renameSync(
+      path.join(__dirname, "../build/meta/robots.txt"),
+      path.join(__dirname, "../build/robots.txt")
+    );
     console.log("Done.");
   }
 );
