@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs-extra");
 const arg = require("arg");
 const express = require("express");
+const glob = require("glob");
 
 const args = arg({
   "--config": String,
@@ -73,6 +74,13 @@ switch (command) {
       res.send("window.SKETCHBOOK_MODE = 'interactive';");
     });
     app.get("/config.js", (req, res) => res.sendFile(configFile));
+    app.get("/designs.json", (req, res) =>
+      res.json(
+        glob.sync("**/*.json", {
+          cwd: path.join(__dirname, "../build/designs"),
+        }),
+      ),
+    );
     app.use("/canvas", express.static(path.join(__dirname, "../build/canvas")));
     app.use("/editor", express.static(path.join(__dirname, "../build/editor")));
     app.use("/designs", express.static(designsDir));

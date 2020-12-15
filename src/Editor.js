@@ -123,6 +123,7 @@ const Editor = ({ config }) => {
   });
   const [state, setState, pointer, setPointer, snapshots] = useStateSnapshots(
     {
+      name: "untitled.json",
       doc: { type: "SketchbookDocument", layers: [] },
       selection: set()
     },
@@ -131,13 +132,18 @@ const Editor = ({ config }) => {
   );
   useEffect(
     () => {
-      fetch("/designs/example.json")
+      fetch("/designs.json")
         .then(file => file.json())
-        .then(doc => {
-          setState(current => ({
-            ...current,
-            doc
-          }));
+        .then(files => {
+          fetch(`/designs/${files[0]}`)
+            .then(file => file.json())
+            .then(doc => {
+              setState(current => ({
+                name: files[0],
+                doc,
+                selection: set()
+              }));
+            });
         });
     },
     [] // eslint-disable-line react-hooks/exhaustive-deps
@@ -347,6 +353,19 @@ const Editor = ({ config }) => {
           event.stopPropagation();
         }}
       >
+        <PanelTitle style={{ marginTop: 6 }}>Current File</PanelTitle>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, min-content)",
+            alignItems: "center",
+            justifyItems: "center",
+            gap: 6,
+            padding: 6
+          }}
+        >
+          {state.name}
+        </div>
         <PanelTitle style={{ marginTop: 6 }}>History</PanelTitle>
         <div
           style={{
