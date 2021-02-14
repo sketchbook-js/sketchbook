@@ -3,6 +3,8 @@ import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
+import InfoPanel from "./components/InfoPanel";
+
 import useCanvasConnection from "./editor/useCanvasConnection";
 import exampleDoc from "./editor/exampleDoc";
 import useKeys from "./useKeys";
@@ -106,36 +108,182 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
   );
 };
 
+const transformSelection = (current, transform) => ({
+  ...current,
+  doc: {
+    ...current.doc,
+    layers: transformLayers(current.doc.layers, transform, layer =>
+      current.selection.has(layer.id)
+    )
+  }
+});
+
+const getDisplay = state => {
+  const { doc, selection, viewport } = state;
+  const selectionBounds = getLayerBounds(
+    state.doc.layers.filter(layer => selection.has(layer.id))
+  );
+  const mouseIsWithinSelection =
+    state.input.mouseX >= selectionBounds.x1 - 3 &&
+    state.input.mouseX <= selectionBounds.x2 + 3 &&
+    state.input.mouseY >= selectionBounds.y1 - 3 &&
+    state.input.mouseY <= selectionBounds.y2 + 3;
+  const mouseIsOverSelectionLeft =
+    mouseIsWithinSelection && state.input.mouseX <= selectionBounds.x1 + 3;
+  const mouseIsOverSelectionRight =
+    mouseIsWithinSelection && state.input.mouseX >= selectionBounds.x2 - 3;
+  const mouseIsOverSelectionTop =
+    mouseIsWithinSelection && state.input.mouseY <= selectionBounds.y1 + 3;
+  const mouseIsOverSelectionBottom =
+    mouseIsWithinSelection && state.input.mouseY >= selectionBounds.y2 - 3;
+  const mouseStartedWithinSelection =
+    state.input.clickX >= selectionBounds.x1 - 3 &&
+    state.input.clickX <= selectionBounds.x2 + 3 &&
+    state.input.clickY >= selectionBounds.y1 - 3 &&
+    state.input.clickY <= selectionBounds.y2 + 3;
+  const mouseStartedOverSelectionLeft =
+    mouseStartedWithinSelection && state.input.clickX <= selectionBounds.x1 + 3;
+  const mouseStartedOverSelectionRight =
+    mouseStartedWithinSelection && state.input.clickX >= selectionBounds.x2 - 3;
+  const mouseStartedOverSelectionTop =
+    mouseStartedWithinSelection && state.input.clickY <= selectionBounds.y1 + 3;
+  const mouseStartedOverSelectionBottom =
+    mouseStartedWithinSelection && state.input.clickY >= selectionBounds.y2 - 3;
+  const lockedAxis = state.input.shiftKey
+    ? Math.abs(state.input.mouseX - state.input.clickX) >
+      Math.abs(state.input.mouseY - state.input.clickY)
+      ? "x"
+      : "y"
+    : null;
+  let transformedLayers = state.doc.layers;
+  // TODO: Filter out layers that don't intersect the viewport using canvas.current.getBoundingClientRect()
+  switch (state.input.mode) {
+    case "resize":
+      transformedLayers = transformLayers(
+        transformedLayers,
+        {
+          w:
+            mouseStartedOverSelectionLeft || mouseStartedOverSelectionRight
+              ? (state.input.mouseX - state.input.clickX) *
+                (mouseStartedOverSelectionLeft ? -1 : 1)
+              : undefined,
+          h:
+            mouseStartedOverSelectionTop || mouseStartedOverSelectionBottom
+              ? (state.input.mouseY - state.input.clickY) *
+                (mouseStartedOverSelectionTop ? -1 : 1)
+              : undefined,
+          cx: mouseStartedOverSelectionLeft ? 1 : 0,
+          cy: mouseStartedOverSelectionTop ? 1 : 0,
+          relative: true
+        },
+        layer => state.selection.has(layer.id)
+      );
+      break;
+    case "drag":
+      transformedLayers = transformLayers(
+        transformedLayers,
+        {
+          x: lockedAxis === "y" ? 0 : state.input.mouseX - state.input.clickX,
+          y: lockedAxis === "x" ? 0 : state.input.mouseY - state.input.clickY,
+          relative: true
+        },
+        layer => state.selection.has(layer.id)
+      );
+      break;
+    case "pan":
+      transformedLayers = transformLayers(transformedLayers, {
+        x: state.input.mouseX - state.input.clickX,
+        y: state.input.mouseY - state.input.clickY,
+        relative: true
+      });
+      break;
+    default:
+      break;
+  }
+  transformedLayers = transformLayers(transformedLayers, {
+    x: viewport.x,
+    y: viewport.y,
+    relative: true
+  });
+  const transformedSelectionBounds = getLayerBounds(
+    transformedLayers.filter(layer => selection.has(layer.id))
+  );
+  return {
+    mouseStartedOverSelectionLeft,
+    mouseStartedOverSelectionRight,
+    mouseStartedOverSelectionTop,
+    mouseStartedOverSelectionBottom,
+    mouseIsOverSelectionLeft,
+    mouseIsOverSelectionRight,
+    mouseIsOverSelectionTop,
+    mouseIsOverSelectionBottom,
+    transformedSelectionBounds,
+    mouseIsWithinSelection,
+    lockedAxis,
+    layers: transformedLayers.map(
+      ({ id, type, component, name, x1, y1, x2, y2, options }) => ({
+        id,
+        type,
+        component,
+        name,
+        x: x1,
+        y: y1,
+        scale: viewport.scale,
+        width: x2 - x1,
+        height: y2 - y1,
+        options
+      })
+    )
+  };
+};
+
 const Editor = ({ config }) => {
   const canvas = useRef(null);
   const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
   const [idOfLayerBeingEdited, setIdOfLayerBeingEdited] = useState(null);
-  const [viewport, setViewport] = useState({
-    x: 0,
-    y: 0,
-    scale: 1
-  });
-  const [mouse, setMouse] = useState({
-    status: "up", // "up", "down", "drag", "select", "pan" or "resize"
-    x: 0,
-    y: 0,
-    startX: 0,
-    startY: 0
-  });
   const [state, setState, pointer, setPointer, snapshots] = useStateSnapshots(
     {
       doc: exampleDoc,
-      selection: set()
+      selection: set(),
+      viewport: {
+        x: 0,
+        y: 0,
+        scale: 1
+      },
+      input: {
+        mode: "up", // "up", "down", "drag", "select", "pan" or "resize"
+        mouseX: 0,
+        mouseY: 0,
+        clickX: 0,
+        clickY: 0,
+        shiftKey: false,
+        spaceKey: false
+      }
     },
     false,
     100
   );
-  const { doc, selection } = state;
+  const { doc, selection, viewport } = state;
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => selection.has(layer.id))
   );
-  const keys = useKeys({
+  const display = getDisplay(state);
+  const {
+    mouseStartedOverSelectionLeft,
+    mouseStartedOverSelectionRight,
+    mouseStartedOverSelectionTop,
+    mouseStartedOverSelectionBottom,
+    mouseIsOverSelectionLeft,
+    mouseIsOverSelectionRight,
+    mouseIsOverSelectionTop,
+    mouseIsOverSelectionBottom,
+    transformedSelectionBounds,
+    mouseIsWithinSelection,
+    lockedAxis
+  } = display;
+  useKeys({
     keydown: event => {
+      const { shiftKey } = event;
       const codeBlacklist = set([
         "Backspace",
         "ShiftLeft",
@@ -153,32 +301,52 @@ const Editor = ({ config }) => {
       }
       switch (event.code) {
         case "ArrowLeft":
-          transformSelection({
-            x:
-              Math.round(selectionBounds.x1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
+          setState(current => ({
+            ...transformSelection(current, {
+              x: shiftKey ? -10 : -1,
+              relative: true
+            }),
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
         case "ArrowUp":
-          transformSelection({
-            y:
-              Math.round(selectionBounds.y1) -
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
+          setState(current => ({
+            ...transformSelection(current, {
+              y: shiftKey ? -10 : -1,
+              relative: true
+            }),
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
         case "ArrowRight":
-          transformSelection({
-            x:
-              Math.round(selectionBounds.x1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
+          setState(current => ({
+            ...transformSelection(current, {
+              x: shiftKey ? 10 : 1,
+              relative: true
+            }),
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
         case "ArrowDown":
-          transformSelection({
-            y:
-              Math.round(selectionBounds.y1) +
-              (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 10 : 1)
-          });
+          setState(current => ({
+            ...transformSelection(current, {
+              y: shiftKey ? 10 : 1,
+              relative: true
+            }),
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
         case "Backspace":
           setState(
@@ -190,131 +358,47 @@ const Editor = ({ config }) => {
                   ({ id }) => !current.selection.has(id)
                 )
               },
-              selection: set()
+              selection: set(),
+              input: {
+                ...current.input,
+                shiftKey
+              }
             }),
             true
           );
           break;
+        case "Space":
+          setState(current => ({
+            ...current,
+            input: {
+              ...current.input,
+              spaceKey: true,
+              shiftKey
+            }
+          }));
+          break;
         default:
+          setState(current => ({
+            ...current,
+            input: {
+              ...current.input,
+              shiftKey
+            }
+          }));
           break;
       }
+    },
+    keyup: ({ code, shiftKey }) => {
+      setState(current => ({
+        ...current,
+        input: {
+          ...current.input,
+          spaceKey: code === "Space" ? false : current.input.spaceKey,
+          shiftKey
+        }
+      }));
     }
   });
-  const mouseIsWithinSelection =
-    mouse.x >= selectionBounds.x1 - 3 &&
-    mouse.x <= selectionBounds.x2 + 3 &&
-    mouse.y >= selectionBounds.y1 - 3 &&
-    mouse.y <= selectionBounds.y2 + 3;
-  const mouseIsOverSelectionLeft =
-    mouseIsWithinSelection && mouse.x <= selectionBounds.x1 + 3;
-  const mouseIsOverSelectionRight =
-    mouseIsWithinSelection && mouse.x >= selectionBounds.x2 - 3;
-  const mouseIsOverSelectionTop =
-    mouseIsWithinSelection && mouse.y <= selectionBounds.y1 + 3;
-  const mouseIsOverSelectionBottom =
-    mouseIsWithinSelection && mouse.y >= selectionBounds.y2 - 3;
-  const mouseStartedWithinSelection =
-    mouse.startX >= selectionBounds.x1 - 3 &&
-    mouse.startX <= selectionBounds.x2 + 3 &&
-    mouse.startY >= selectionBounds.y1 - 3 &&
-    mouse.startY <= selectionBounds.y2 + 3;
-  const mouseStartedOverSelectionLeft =
-    mouseStartedWithinSelection && mouse.startX <= selectionBounds.x1 + 3;
-  const mouseStartedOverSelectionRight =
-    mouseStartedWithinSelection && mouse.startX >= selectionBounds.x2 - 3;
-  const mouseStartedOverSelectionTop =
-    mouseStartedWithinSelection && mouse.startY <= selectionBounds.y1 + 3;
-  const mouseStartedOverSelectionBottom =
-    mouseStartedWithinSelection && mouse.startY >= selectionBounds.y2 - 3;
-  const lockedAxis =
-    and(keys, ["ShiftLeft", "ShiftRight"]).size !== 1
-      ? null
-      : Math.abs(mouse.x - mouse.startX) > Math.abs(mouse.y - mouse.startY)
-      ? "x"
-      : "y";
-  let transformedLayers = state.doc.layers;
-  // TODO: Filter out layers that don't intersect the viewport using canvas.current.getBoundingClientRect()
-  switch (mouse.status) {
-    case "resize":
-      transformedLayers = transformLayers(
-        transformedLayers,
-        {
-          w:
-            mouseStartedOverSelectionLeft || mouseStartedOverSelectionRight
-              ? (mouse.x - mouse.startX) *
-                (mouseStartedOverSelectionLeft ? -1 : 1)
-              : undefined,
-          h:
-            mouseStartedOverSelectionTop || mouseStartedOverSelectionBottom
-              ? (mouse.y - mouse.startY) *
-                (mouseStartedOverSelectionTop ? -1 : 1)
-              : undefined,
-          cx: mouseStartedOverSelectionLeft ? 1 : 0,
-          cy: mouseStartedOverSelectionTop ? 1 : 0,
-          relative: true
-        },
-        layer => state.selection.has(layer.id)
-      );
-      break;
-    case "drag":
-      transformedLayers = transformLayers(
-        transformedLayers,
-        {
-          x: !lockedAxis || lockedAxis === "x" ? mouse.x - mouse.startX : null,
-          y: !lockedAxis || lockedAxis === "y" ? mouse.y - mouse.startY : null,
-          relative: true
-        },
-        layer => state.selection.has(layer.id)
-      );
-      break;
-    case "pan":
-      transformedLayers = transformLayers(transformedLayers, {
-        x: mouse.x - mouse.startX,
-        y: mouse.y - mouse.startY,
-        relative: true
-      });
-      break;
-    default:
-      break;
-  }
-  transformedLayers = transformLayers(transformedLayers, {
-    x: viewport.x,
-    y: viewport.y,
-    relative: true
-  });
-  const transformedSelectionBounds = getLayerBounds(
-    transformedLayers.filter(layer => selection.has(layer.id))
-  );
-  const display = {
-    layers: transformedLayers.map(
-      ({ id, type, component, name, x1, y1, x2, y2, options }) => ({
-        id,
-        type,
-        component,
-        name,
-        x: x1,
-        y: y1,
-        scale: viewport.scale,
-        width: x2 - x1,
-        height: y2 - y1,
-        options
-      })
-    )
-  };
-  const transformSelection = (transform, storeSnapshot = true) => {
-    setState(
-      current => ({
-        ...current,
-        doc: {
-          ...current.doc,
-          layers: transformLayers(current.doc.layers, transform, layer =>
-            current.selection.has(layer.id)
-          )
-        }
-      }),
-      storeSnapshot
-    );
-  };
   const { measureLayer } = useCanvasConnection(window, canvas, display.layers);
   return (
     <div
@@ -431,16 +515,16 @@ const Editor = ({ config }) => {
                       borderBottom: "1px solid #ddd"
                     }}
                     onClick={event => {
+                      const { shiftKey } = event;
                       event.stopPropagation();
                       setState(
                         current => ({
                           ...current,
-                          selection:
-                            keys.has("ShiftLeft") || keys.has("ShiftRight")
-                              ? current.selection.has(id)
-                                ? not(current.selection, [id])
-                                : or(current.selection, [id])
-                              : set([id])
+                          selection: shiftKey
+                            ? current.selection.has(id)
+                              ? not(current.selection, [id])
+                              : or(current.selection, [id])
+                            : set([id])
                         }),
                         true
                       );
@@ -508,9 +592,9 @@ const Editor = ({ config }) => {
           overflow: "hidden",
           position: "relative",
           cursor:
-            mouse.status === "pan"
+            state.input.mode === "pan"
               ? "grabbing"
-              : keys.has("Space")
+              : state.input.spaceKey
               ? "grab"
               : state.selection.size > 0 &&
                 ((mouseIsOverSelectionLeft && mouseIsOverSelectionTop) ||
@@ -529,40 +613,49 @@ const Editor = ({ config }) => {
               : null
         }}
         onMouseDown={
-          mouse.status === "up"
+          state.input.mode === "up"
             ? ({ clientX, clientY }) => {
                 const rect = canvas.current.getBoundingClientRect();
                 const x = clientX - rect.x - viewport.x;
                 const y = clientY - rect.y - viewport.y;
-                setMouse(current => ({
+                setState(current => ({
                   ...current,
-                  status: "down",
-                  x,
-                  y,
-                  startX: x,
-                  startY: y
+                  input: {
+                    ...current.input,
+                    mode: "down",
+                    mouseX: x,
+                    mouseY: y,
+                    clickX: x,
+                    clickY: y
+                  }
                 }));
               }
             : null
         }
-        onMouseMove={({ clientX, clientY }) => {
+        onMouseMove={({ clientX, clientY, shiftKey }) => {
           const rect = canvas.current.getBoundingClientRect();
           const x = clientX - rect.x - viewport.x;
           const y = clientY - rect.y - viewport.y;
-          setMouse(current => ({
+          setState(current => ({
             ...current,
-            x: clientX - rect.x - viewport.x,
-            y: clientY - rect.y - viewport.y
+            input: {
+              ...current.input,
+              mouseX: clientX - rect.x - viewport.x,
+              mouseY: clientY - rect.y - viewport.y
+            }
           }));
-          if (mouse.status === "down") {
-            const dx = x - mouse.startX;
-            const dy = y - mouse.startY;
+          if (state.input.mode === "down") {
+            const dx = x - state.input.clickX;
+            const dy = y - state.input.clickY;
             const distance = Math.abs(Math.sqrt(dx * dx + dy * dy));
             if (distance > 1) {
-              if (keys.has("Space")) {
-                setMouse(current => ({
+              if (state.input.spaceKey) {
+                setState(current => ({
                   ...current,
-                  status: "pan"
+                  input: {
+                    ...current.input,
+                    mode: "pan"
+                  }
                 }));
               } else if (
                 mouseStartedOverSelectionLeft ||
@@ -570,27 +663,33 @@ const Editor = ({ config }) => {
                 mouseStartedOverSelectionTop ||
                 mouseStartedOverSelectionBottom
               ) {
-                setMouse(current => ({
+                setState(current => ({
                   ...current,
-                  status: "resize"
+                  input: {
+                    ...current.input,
+                    mode: "resize"
+                  }
                 }));
               } else if (
-                selectionBounds.x1 < mouse.startX &&
-                selectionBounds.x2 > mouse.startX &&
-                selectionBounds.y1 < mouse.startY &&
-                selectionBounds.y2 > mouse.startY
+                selectionBounds.x1 < state.input.clickX &&
+                selectionBounds.x2 > state.input.clickX &&
+                selectionBounds.y1 < state.input.clickY &&
+                selectionBounds.y2 > state.input.clickY
               ) {
-                setMouse(current => ({
+                setState(current => ({
                   ...current,
-                  status: "drag"
+                  input: {
+                    ...current.input,
+                    mode: "drag"
+                  }
                 }));
               } else {
                 const layersUnderClick = doc.layers.filter(
                   layer =>
-                    layer.x1 < mouse.startX &&
-                    layer.x2 > mouse.startX &&
-                    layer.y1 < mouse.startY &&
-                    layer.y2 > mouse.startY
+                    layer.x1 < state.input.clickX &&
+                    layer.x2 > state.input.clickX &&
+                    layer.y1 < state.input.clickY &&
+                    layer.y2 > state.input.clickY
                 );
                 if (layersUnderClick.length > 0) {
                   const clickedLayer =
@@ -598,23 +697,25 @@ const Editor = ({ config }) => {
                   setState(
                     current => ({
                       ...current,
-                      selection:
-                        keys.has("ShiftLeft") || keys.has("ShiftRight")
-                          ? current.selection.has(clickedLayer.id)
-                            ? not(current.selection, [clickedLayer.id])
-                            : or(current.selection, [clickedLayer.id])
-                          : set([clickedLayer.id])
+                      selection: shiftKey
+                        ? current.selection.has(clickedLayer.id)
+                          ? not(current.selection, [clickedLayer.id])
+                          : or(current.selection, [clickedLayer.id])
+                        : set([clickedLayer.id]),
+                      input: {
+                        ...current.input,
+                        mode: "drag"
+                      }
                     }),
                     true
                   );
-                  setMouse(current => ({
-                    ...current,
-                    status: "drag"
-                  }));
                 } else {
-                  setMouse(current => ({
+                  setState(current => ({
                     ...current,
-                    status: "select"
+                    input: {
+                      ...current.input,
+                      mode: "select"
+                    }
                   }));
                 }
               }
@@ -622,15 +723,15 @@ const Editor = ({ config }) => {
           }
         }}
         onMouseUp={
-          mouse.status !== "up"
-            ? ({ clientX, clientY }) => {
-                if (mouse.status === "down") {
+          state.input.mode !== "up"
+            ? ({ clientX, clientY, shiftKey }) => {
+                if (state.input.mode === "down") {
                   const layersUnderClick = doc.layers.filter(
                     layer =>
-                      layer.x1 < mouse.x &&
-                      layer.x2 > mouse.x &&
-                      layer.y1 < mouse.y &&
-                      layer.y2 > mouse.y
+                      layer.x1 < state.input.mouseX &&
+                      layer.x2 > state.input.mouseX &&
+                      layer.y1 < state.input.mouseY &&
+                      layer.y2 > state.input.mouseY
                   );
                   if (layersUnderClick.length > 0) {
                     const clickedLayer =
@@ -638,12 +739,11 @@ const Editor = ({ config }) => {
                     setState(
                       current => ({
                         ...current,
-                        selection:
-                          keys.has("ShiftLeft") || keys.has("ShiftRight")
-                            ? current.selection.has(clickedLayer.id)
-                              ? not(current.selection, [clickedLayer.id])
-                              : or(current.selection, [clickedLayer.id])
-                            : set([clickedLayer.id])
+                        selection: shiftKey
+                          ? current.selection.has(clickedLayer.id)
+                            ? not(current.selection, [clickedLayer.id])
+                            : or(current.selection, [clickedLayer.id])
+                          : set([clickedLayer.id])
                       }),
                       true
                     );
@@ -658,26 +758,25 @@ const Editor = ({ config }) => {
                       true
                     );
                   }
-                } else if (mouse.status === "drag") {
-                  transformSelection({
-                    x:
-                      !lockedAxis || lockedAxis === "x"
-                        ? selectionBounds.x1 + mouse.x - mouse.startX
-                        : lockedAxis === "y"
-                        ? selectionBounds.x1
-                        : null,
-                    y:
-                      !lockedAxis || lockedAxis === "y"
-                        ? selectionBounds.y1 + mouse.y - mouse.startY
-                        : lockedAxis === "x"
-                        ? selectionBounds.y1
-                        : null
-                  });
-                } else if (mouse.status === "select") {
-                  const x1 = Math.min(mouse.startX, mouse.x);
-                  const y1 = Math.min(mouse.startY, mouse.y);
-                  const x2 = Math.max(mouse.startX, mouse.x);
-                  const y2 = Math.max(mouse.startY, mouse.y);
+                } else if (state.input.mode === "drag") {
+                  setState(current =>
+                    transformSelection(current, {
+                      x:
+                        lockedAxis === "y"
+                          ? 0
+                          : state.input.mouseX - state.input.clickX,
+                      y:
+                        lockedAxis === "x"
+                          ? 0
+                          : state.input.mouseY - state.input.clickY,
+                      relative: true
+                    })
+                  );
+                } else if (state.input.mode === "select") {
+                  const x1 = Math.min(state.input.clickX, state.input.mouseX);
+                  const y1 = Math.min(state.input.clickY, state.input.mouseY);
+                  const x2 = Math.max(state.input.clickX, state.input.mouseX);
+                  const y2 = Math.max(state.input.clickY, state.input.mouseY);
                   setState(
                     current => ({
                       ...current,
@@ -695,37 +794,49 @@ const Editor = ({ config }) => {
                     }),
                     true
                   );
-                } else if (mouse.status === "pan") {
-                  setViewport(current => ({
+                } else if (state.input.mode === "pan") {
+                  setState(current => ({
                     ...current,
-                    x: current.x + (mouse.x - mouse.startX),
-                    y: current.y + (mouse.y - mouse.startY)
+                    viewport: {
+                      ...current.viewport,
+                      x:
+                        current.viewport.x +
+                        (state.input.mouseX - state.input.clickX),
+                      y:
+                        current.viewport.y +
+                        (state.input.mouseY - state.input.clickY)
+                    }
                   }));
-                } else if (mouse.status === "resize") {
-                  transformSelection({
-                    w:
-                      mouseStartedOverSelectionLeft ||
-                      mouseStartedOverSelectionRight
-                        ? selectionBounds.x2 -
-                          selectionBounds.x1 +
-                          (mouse.x - mouse.startX) *
-                            (mouseStartedOverSelectionLeft ? -1 : 1)
-                        : undefined,
-                    h:
-                      mouseStartedOverSelectionTop ||
-                      mouseStartedOverSelectionBottom
-                        ? selectionBounds.y2 -
-                          selectionBounds.y1 +
-                          (mouse.y - mouse.startY) *
-                            (mouseStartedOverSelectionTop ? -1 : 1)
-                        : undefined,
-                    cx: mouseStartedOverSelectionLeft ? 1 : 0,
-                    cy: mouseStartedOverSelectionTop ? 1 : 0
-                  });
+                } else if (state.input.mode === "resize") {
+                  setState(current =>
+                    transformSelection(current, {
+                      w:
+                        mouseStartedOverSelectionLeft ||
+                        mouseStartedOverSelectionRight
+                          ? selectionBounds.x2 -
+                            selectionBounds.x1 +
+                            (state.input.mouseX - state.input.clickX) *
+                              (mouseStartedOverSelectionLeft ? -1 : 1)
+                          : undefined,
+                      h:
+                        mouseStartedOverSelectionTop ||
+                        mouseStartedOverSelectionBottom
+                          ? selectionBounds.y2 -
+                            selectionBounds.y1 +
+                            (state.input.mouseY - state.input.clickY) *
+                              (mouseStartedOverSelectionTop ? -1 : 1)
+                          : undefined,
+                      cx: mouseStartedOverSelectionLeft ? 1 : 0,
+                      cy: mouseStartedOverSelectionTop ? 1 : 0
+                    })
+                  );
                 }
-                setMouse(current => ({
+                setState(current => ({
                   ...current,
-                  status: "up"
+                  input: {
+                    ...current.input,
+                    mode: "up"
+                  }
                 }));
               }
             : null
@@ -878,15 +989,15 @@ const Editor = ({ config }) => {
               />
             </>
           ) : null}
-          {mouse.status === "up"
+          {state.input.mode === "up"
             ? [
                 doc.layers
                   .filter(
                     ({ x1, y1, x2, y2 }) =>
-                      mouse.x >= x1 &&
-                      mouse.x <= x2 &&
-                      mouse.y >= y1 &&
-                      mouse.y <= y2
+                      state.input.mouseX >= x1 &&
+                      state.input.mouseX <= x2 &&
+                      state.input.mouseY >= y1 &&
+                      state.input.mouseY <= y2
                   )
                   .slice(-1)[0]
               ]
@@ -901,13 +1012,17 @@ const Editor = ({ config }) => {
                     x={
                       x1 +
                       viewport.x +
-                      (mouse.status === "drag" ? mouse.x - mouse.startX : 0) +
+                      (state.input.mode === "drag"
+                        ? state.input.mouseX - state.input.clickX
+                        : 0) +
                       0.5
                     }
                     y={
                       y1 +
                       viewport.y +
-                      (mouse.status === "drag" ? mouse.y - mouse.startY : 0) +
+                      (state.input.mode === "drag"
+                        ? state.input.mouseY - state.input.clickY
+                        : 0) +
                       0.5
                     }
                     width={x2 - x1 - 1}
@@ -915,28 +1030,64 @@ const Editor = ({ config }) => {
                   />
                 ))
             : null}
-          {mouse.status === "select" ? (
+          {state.input.mode === "select" ? (
             <rect
               stroke="#f0f"
               strokeWidth={1}
               strokeDasharray={[1, 2]}
-              x={viewport.x + Math.min(mouse.startX, mouse.x) + 0.5}
-              y={viewport.y + Math.min(mouse.startY, mouse.y) + 0.5}
+              x={
+                viewport.x +
+                Math.min(state.input.clickX, state.input.mouseX) +
+                0.5
+              }
+              y={
+                viewport.y +
+                Math.min(state.input.clickY, state.input.mouseY) +
+                0.5
+              }
               width={Math.max(
-                Math.max(mouse.startX, mouse.x) -
-                  Math.min(mouse.startX, mouse.x) -
+                Math.max(state.input.clickX, state.input.mouseX) -
+                  Math.min(state.input.clickX, state.input.mouseX) -
                   1,
                 0
               )}
               height={Math.max(
-                Math.max(mouse.startY, mouse.y) -
-                  Math.min(mouse.startY, mouse.y) -
+                Math.max(state.input.clickY, state.input.mouseY) -
+                  Math.min(state.input.clickY, state.input.mouseY) -
                   1,
                 0
               )}
             />
           ) : null}
         </svg>
+        <div
+          style={{
+            pointerEvents: "none",
+            userSelect: "none",
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            background: "#eee9"
+          }}
+        >
+          <InfoPanel
+            mouse={{
+              status: state.input.mode,
+              x: state.input.mouseX,
+              y: state.input.mouseY
+            }}
+            viewport={viewport}
+            keys={
+              new Set(
+                [
+                  state.input.shiftKey ? "Shift" : null,
+                  state.input.spaceKey ? "Space" : null
+                ].filter(Boolean)
+              )
+            }
+          />
+        </div>
       </div>
       <div style={{ background: "#eee" }}>
         {selection.size === 0 ? (
@@ -1063,9 +1214,11 @@ const Editor = ({ config }) => {
                 type="number"
                 value={Math.round(selectionBounds.x1)}
                 onChange={({ currentTarget: { value } }) => {
-                  transformSelection({
-                    x: parseInt(value || 0, 10)
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      x: parseInt(value || 0, 10)
+                    })
+                  );
                 }}
               />
               <Label htmlFor="info-panel-y">Y</Label>
@@ -1074,9 +1227,11 @@ const Editor = ({ config }) => {
                 type="number"
                 value={Math.round(selectionBounds.y1)}
                 onChange={({ currentTarget: { value } }) => {
-                  transformSelection({
-                    y: parseInt(value || 0, 10)
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      y: parseInt(value || 0, 10)
+                    })
+                  );
                 }}
               />
               <Label htmlFor="info-panel-w">W</Label>
@@ -1084,9 +1239,11 @@ const Editor = ({ config }) => {
                 type="number"
                 value={Math.round(selectionBounds.x2 - selectionBounds.x1)}
                 onChange={({ currentTarget: { value } }) => {
-                  transformSelection({
-                    w: parseInt(value || 0, 10)
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      w: parseInt(value || 0, 10)
+                    })
+                  );
                 }}
               />
               <Label htmlFor="info-panel-h">H</Label>
@@ -1094,9 +1251,11 @@ const Editor = ({ config }) => {
                 type="number"
                 value={Math.round(selectionBounds.y2 - selectionBounds.y1)}
                 onChange={({ currentTarget: { value } }) => {
-                  transformSelection({
-                    h: parseInt(value || 0, 10)
-                  });
+                  setState(current =>
+                    transformSelection(current, {
+                      h: parseInt(value || 0, 10)
+                    })
+                  );
                 }}
               />
             </div>
