@@ -110,12 +110,12 @@ switch (command) {
     help           Display this help information
 
   Options:
-
+  
+    -b, --bind     The host to bind the app to (default: localhost)
     -c, --config   A relative path to the config file (default: sketchbook/config.js)
     -d, --designs  A relative path to the designs directory (default: sketchbook/designs)
-    -p, --port     The port to run the app on (default: 3000)
-    -b, --bind     The host to bind the app to (default: localhost)
     -h, --help     Display this help information
+    -p, --port     The port to run the app on (default: 3000)
 `);
     break;
   }
