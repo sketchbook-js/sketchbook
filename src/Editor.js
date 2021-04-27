@@ -4,6 +4,7 @@ import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
 import useCanvasConnection from "./editor/useCanvasConnection";
+import useInterval from "./useInterval";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
@@ -140,6 +141,7 @@ const Editor = ({ config }) => {
           fetch(`/designs/${files[0]}`)
             .then(file => file.json())
             .then(doc => {
+              console.log("DOC", doc);
               setState(current => ({
                 name: files[0],
                 doc: {
@@ -162,6 +164,10 @@ const Editor = ({ config }) => {
         doc: state.doc
       })
     }).then(res => res.json());
+  const AUTO_SAVE_INTERVAL = 10000;
+  useInterval(() => {
+    saveFileFunc();
+  }, AUTO_SAVE_INTERVAL);
   const { doc, selection } = state;
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => selection.has(layer.id))
