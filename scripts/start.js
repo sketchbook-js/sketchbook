@@ -40,6 +40,7 @@ const subprocesses = [
         env: {
           SKETCHBOOK_CONFIG: "public/config.js",
           SKETCHBOOK_DESIGNS: "public/designs",
+          SKETCHBOOK_EXAMPLE_DESIGN: "example.json",
           ...process.env
         }
       }

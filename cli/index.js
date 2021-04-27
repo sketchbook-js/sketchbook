@@ -20,10 +20,6 @@ const args = arg({
   "-h": "--help",
 });
 
-if (!args["--file"]) {
-  throw Error("Missing required argument: '--file'");
-}
-
 const configFile = path.join(
   process.cwd(),
   args["--config"] === undefined || args["--config"] === null
@@ -44,7 +40,14 @@ const designsDir = path.join(
     : args["--designs"],
 );
 
-const designFilePath = path.join(designsDir, args["--file"]);
+const designFileName =
+  args["--file"] === undefined || args["--file"] === null
+    ? process.env.SKETCHBOOK_EXAMPLE_DESIGN === undefined ||
+      process.env.SKETCHBOOK_EXAMPLE_DESIGN === null
+      ? "example.json"
+      : process.env.SKETCHBOOK_EXAMPLE_DESIGN
+    : args["--file"];
+const designFilePath = path.join(designsDir, designFileName);
 
 const port =
   args["--port"] === undefined || args["--port"] === null
@@ -90,7 +93,7 @@ switch (command) {
     app.get("/config.js", (req, res) => res.sendFile(configFile));
     app.get(
       "/designs.json",
-      (req, res) => res.json([args["--file"]]),
+      (req, res) => res.json([designFileName]),
       // TODO: Code to get multiple design files from the design directory.
       // res.json(
       //   glob.sync("**/*.json", {
