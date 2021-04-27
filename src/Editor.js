@@ -132,6 +132,8 @@ const Editor = ({ config }) => {
   );
   useEffect(
     () => {
+      // TODO: Allow reading multiple design files.
+      // We only accept the first file for now for simplicity
       fetch("/designs.json")
         .then(file => file.json())
         .then(files => {
@@ -140,7 +142,10 @@ const Editor = ({ config }) => {
             .then(doc => {
               setState(current => ({
                 name: files[0],
-                doc,
+                doc: {
+                  type: "SketchbookDocument",
+                  ...doc
+                },
                 selection: set()
               }));
             });
@@ -148,6 +153,15 @@ const Editor = ({ config }) => {
     },
     [] // eslint-disable-line react-hooks/exhaustive-deps
   );
+  const saveFileFunc = () =>
+    fetch("/design", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: state.name,
+        doc: state.doc
+      })
+    }).then(res => res.json());
   const { doc, selection } = state;
   const selectionBounds = getLayerBounds(
     doc.layers.filter(layer => selection.has(layer.id))
@@ -366,6 +380,9 @@ const Editor = ({ config }) => {
         >
           {state.name}
         </div>
+        <Button style={{ marginLeft: 6 }} onClick={saveFileFunc}>
+          Save File
+        </Button>
         <PanelTitle style={{ marginTop: 6 }}>History</PanelTitle>
         <div
           style={{
