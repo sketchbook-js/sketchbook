@@ -9,16 +9,20 @@ const glob = require("glob");
 
 const args = arg({
   "--config": String,
-  "--files": String,
+  "--file": String,
   "--port": Number,
   "--bind": String,
   "--help": Boolean,
   "-c": "--config",
-  "-f": "--files",
+  "-f": "--file",
   "-p": "--port",
   "-b": "--bind",
   "-h": "--help",
 });
+
+if (!args["--file"]) {
+  throw Error("Missing required argument: '--file'");
+}
 
 const configFile = path.join(
   process.cwd(),
@@ -39,6 +43,8 @@ const designsDir = path.join(
       : process.env.SKETCHBOOK_DESIGNS
     : args["--designs"],
 );
+
+const designFilePath = path.join(designsDir, args["--file"]);
 
 const port =
   args["--port"] === undefined || args["--port"] === null
@@ -66,6 +72,10 @@ switch (command) {
 
     if (!fs.existsSync(configFile))
       throw Error(`Could not find config file: ${configFile}`);
+
+    if (!fs.existsSync(designFilePath))
+      throw Error(`Design file: '${designFilePath}' does not exist.
+      PMake sure the path to the file is correct.`);
 
     const app = express();
 
@@ -114,6 +124,7 @@ switch (command) {
     -b, --bind     The host to bind the app to (default: localhost)
     -c, --config   A relative path to the config file (default: sketchbook/config.js)
     -d, --designs  A relative path to the designs directory (default: sketchbook/designs)
+    -f, --file     A relative path to the design file
     -h, --help     Display this help information
     -p, --port     The port to run the app on (default: 3000)
 `);

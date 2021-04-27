@@ -31,7 +31,11 @@ const subprocesses = [
     color: "#009900",
     subprocess: spawn(
       "node",
-      [path.resolve(__dirname, "../cli/index.js"), "start"],
+      [
+        path.resolve(__dirname, "../cli/index.js"),
+        "start",
+        ...process.argv.slice(2)
+      ],
       {
         env: {
           SKETCHBOOK_CONFIG: "public/config.js",
