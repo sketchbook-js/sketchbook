@@ -10,7 +10,9 @@
       "y1": 100,
       "x2": 750,
       "y2": 140,
-      "options": { "text": "Example Website" }
+      "options": {
+        "text": "Example Website"
+      }
     },
     {
       "id": "ae29e019-c756-4041-8f33-9c8e127f60c0",
@@ -21,7 +23,9 @@
       "y1": 160,
       "x2": 750,
       "y2": 200,
-      "options": { "text": "Lorem ipsum" }
+      "options": {
+        "text": "Lorem ipsum"
+      }
     },
     {
       "id": "749e1378-9445-4453-8b19-ab76509f52ee",
@@ -55,7 +59,9 @@
       "y1": 360,
       "x2": 500,
       "y2": 400,
-      "options": { "text": "Lorem ipsum" }
+      "options": {
+        "text": "Lorem ipsum"
+      }
     },
     {
       "id": "6a2d8a2e-70b9-4b33-9898-442178d96472",
@@ -99,7 +105,9 @@
       "y1": 590,
       "x2": 750,
       "y2": 630,
-      "options": { "text": "Example Form" }
+      "options": {
+        "text": "Example Form"
+      }
     },
     {
       "id": "e724e0de-a581-46e6-8084-256dee1cfbf0",
@@ -110,7 +118,9 @@
       "y1": 650,
       "x2": 750,
       "y2": 670,
-      "options": { "text": "Email" }
+      "options": {
+        "text": "Email"
+      }
     },
     {
       "id": "abb3bb83-bef6-41d4-b054-2d2f6572d569",
@@ -121,7 +131,9 @@
       "y1": 680,
       "x2": 400,
       "y2": 718,
-      "options": { "value": "" }
+      "options": {
+        "value": ""
+      }
     },
     {
       "id": "92e31cf2-486f-4fb9-8321-fa4d7ee3ba05",
@@ -132,7 +144,9 @@
       "y1": 680,
       "x2": 503,
       "y2": 718,
-      "options": { "label": "Subscribe" }
+      "options": {
+        "label": "Subscribe"
+      }
     }
   ]
 }
