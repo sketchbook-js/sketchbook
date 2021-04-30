@@ -1,6 +1,6 @@
 {
   "name": "@sketchbook-js/sketchbook",
-  "version": "0.3.0-0",
+  "version": "0.3.0-1",
   "description": "The design tool that lives in your repo.",
   "repository": "https://github.com/sketchbook-js/sketchbook.git",
   "keywords": [
