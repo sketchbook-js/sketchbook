@@ -102,7 +102,7 @@ switch (command) {
     app.use("/canvas", express.static(path.join(__dirname, "../build/canvas")));
     app.use("/editor", express.static(path.join(__dirname, "../build/editor")));
     app.get("/", (req, res) => {
-      res.sendFile(path.join(__dirname, "../build/editor/index.html"));
+      res.sendFile(path.join(__dirname, "../build/index.html"));
     });
     app.use("/", express.static(path.join(__dirname, "../build/meta")));
 
