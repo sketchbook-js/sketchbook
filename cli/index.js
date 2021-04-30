@@ -5,7 +5,6 @@ const path = require("path");
 const fs = require("fs-extra");
 const arg = require("arg");
 const express = require("express");
-const glob = require("glob");
 
 const args = arg({
   "--config": String,
@@ -30,24 +29,9 @@ const configFile = path.join(
     : args["--config"],
 );
 
-const designsDir = path.join(
-  process.cwd(),
-  args["--designs"] === undefined || args["--designs"] === null
-    ? process.env.SKETCHBOOK_DESIGNS === undefined ||
-      process.env.SKETCHBOOK_DESIGNS === null
-      ? "sketchbook/designs"
-      : process.env.SKETCHBOOK_DESIGNS
-    : args["--designs"],
-);
-
-const designFileName =
-  args["--file"] === undefined || args["--file"] === null
-    ? process.env.SKETCHBOOK_EXAMPLE_DESIGN === undefined ||
-      process.env.SKETCHBOOK_EXAMPLE_DESIGN === null
-      ? "example.json"
-      : process.env.SKETCHBOOK_EXAMPLE_DESIGN
-    : args["--file"];
-const designFilePath = path.join(designsDir, designFileName);
+const designFile = args._[1]
+  ? path.join(process.cwd(), args._[1])
+  : path.join(process.cwd(), "sketchbook/example.json");
 
 const port =
   args["--port"] === undefined || args["--port"] === null
@@ -68,60 +52,55 @@ switch (command) {
     fs.ensureDirSync(path.dirname(configFile));
     fs.copySync(path.join(__dirname, "../build/config.js"), configFile);
 
+    console.log(`Creating example design: ${designFile}`);
+
+    fs.copySync(path.join(__dirname, "../build/example.json"), designFile);
+
+    console.log("Done.");
+
     break;
   }
   case "start": {
-    console.log(`Using config: ${configFile}`);
+    if (!designFile)
+      throw Error(
+        `Design file not provided. You need to specify a design file like this:
+
+  sketchbook start example.json
+`,
+      );
 
     if (!fs.existsSync(configFile))
       throw Error(`Could not find config file: ${configFile}`);
 
-    if (!fs.existsSync(designFilePath))
-      throw Error(`Design file: '${designFilePath}' does not exist.
-      PMake sure the path to the file is correct.`);
+    if (!fs.existsSync(designFile))
+      throw Error(`Could not find design file: ${designFile}`);
+
+    console.log(`Using config: ${configFile}`);
+    console.log(`Editing design: ${designFile}`);
 
     const app = express();
 
-    app.set("json spaces", 2);
     app.use(express.json());
-    app.use(express.urlencoded());
 
     app.get("/env.js", (req, res) => {
       res.type("text/javascript");
-      res.send("window.SKETCHBOOK_MODE = 'interactive';");
+      res.send("window.SKETCHBOOK_MODE = 'dynamic';");
     });
     app.get("/config.js", (req, res) => res.sendFile(configFile));
-    app.get(
-      "/designs.json",
-      (req, res) => res.json([designFileName]),
-      // TODO: Code to get multiple design files from the design directory.
-      // res.json(
-      //   glob.sync("**/*.json", {
-      //     cwd: path.join(__dirname, "../build/designs"),
-      //   }),
-      // ),
-    );
-    app.get("/design", (req, res) => {
-      res.sendFile(designFilePath);
+    app.get("/design.json", (req, res) => {
+      res.type("json").sendFile(designFile);
     });
-    app.post("/design", (req, res) => {
+    app.put("/design.json", (req, res) => {
       try {
-        fs.writeFileSync(designFilePath, JSON.stringify(req.body.doc, null, 2));
-        return res.json({
-          statusCode: 200,
-          message: `Design file successfully saved to ${designFilePath}.`,
-        });
+        fs.writeFileSync(designFile, JSON.stringify(req.body, null, 2));
+        res.json(true);
       } catch (err) {
         console.error(err);
-        return {
-          statusCode: 500,
-          message: `Design file unable to be saved to ${designFilePath}. Please try again.`,
-        };
+        res.status(500).json(`Unable to save design file: ${designFile}`);
       }
     });
     app.use("/canvas", express.static(path.join(__dirname, "../build/canvas")));
     app.use("/editor", express.static(path.join(__dirname, "../build/editor")));
-    app.use("/designs", express.static(designsDir));
     app.get("/", (req, res) => {
       res.sendFile(path.join(__dirname, "../build/editor/index.html"));
     });
@@ -136,10 +115,19 @@ switch (command) {
 
     break;
   }
+  case "build": {
+    // TODO: Create a standalone static build of the app with SKETCHBOOK_MODE = 'static'
+    break;
+  }
   case "help":
   default: {
-    console.log(`Usage: sketchbook [options] [command]
+    console.log(`Usage: sketchbook [options] [command] [file]
 
+
+  File:
+
+    A relative path to the design file to edit (when running \`start\`) or
+    generate (when running \`init\`). (default: sketchbook/example.json)
 
   Commands:
 
@@ -151,8 +139,6 @@ switch (command) {
   
     -b, --bind     The host to bind the app to (default: localhost)
     -c, --config   A relative path to the config file (default: sketchbook/config.js)
-    -d, --designs  A relative path to the designs directory (default: sketchbook/designs)
-    -f, --file     A relative path to the design file
     -h, --help     Display this help information
     -p, --port     The port to run the app on (default: 3000)
 `);

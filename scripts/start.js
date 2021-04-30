@@ -7,7 +7,7 @@ const labelOutput = require("./labelOutput");
 
 copyPublicFolder();
 
-const subprocesses = [
+[
   {
     name: "Canvas Build",
     color: "#0099ff",
@@ -31,16 +31,10 @@ const subprocesses = [
     color: "#009900",
     subprocess: spawn(
       "node",
-      [
-        path.resolve(__dirname, "../cli/index.js"),
-        "start",
-        ...process.argv.slice(2)
-      ],
+      [path.resolve(__dirname, "../cli/index.js"), "start", "example.json"],
       {
         env: {
           SKETCHBOOK_CONFIG: "public/config.js",
-          SKETCHBOOK_DESIGNS: "public/designs",
-          SKETCHBOOK_EXAMPLE_DESIGN: "example.json",
           ...process.env
         }
       }

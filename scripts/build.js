@@ -1,7 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
 const fs = require("fs");
-const glob = require("glob");
 
 const copyPublicFolder = require("./copyPublicFolder");
 
@@ -13,6 +12,11 @@ process.env.NODE_ENV = "production";
 
 copyPublicFolder();
 
+fs.copyFileSync(
+  path.join(__dirname, "../example.json"),
+  path.join(__dirname, "../build/example.json")
+);
+
 webpack(
   [
     { ...canvas, mode: "production" },
@@ -22,16 +26,6 @@ webpack(
     if (err || stats.hasErrors()) {
       console.error(err || stats.toJson("minimal"));
     }
-    fs.writeFileSync(
-      path.join(__dirname, "../build/designs.json"),
-      JSON.stringify(
-        glob.sync("**/*.json", {
-          cwd: path.join(__dirname, "../build/designs")
-        }),
-        null,
-        2
-      )
-    );
     fs.renameSync(
       path.join(__dirname, "../build/editor/index.html"),
       path.join(__dirname, "../build/index.html")
