@@ -102,7 +102,7 @@ switch (command) {
     app.use("/canvas", express.static(path.join(__dirname, "../build/canvas")));
     app.use("/editor", express.static(path.join(__dirname, "../build/editor")));
     app.get("/", (req, res) => {
-      res.sendFile(path.join(__dirname, "../build/index.html"));
+      res.sendFile(path.join(__dirname, "../build/editor/index.html"));
     });
     app.use("/", express.static(path.join(__dirname, "../build/meta")));
 
@@ -117,6 +117,33 @@ switch (command) {
   }
   case "build": {
     // TODO: Create a standalone static build of the app with SKETCHBOOK_MODE = 'static'
+    //
+    // All the meta files will need to be moved to the root dir:
+    //
+    // fs.renameSync(
+    //   path.join(__dirname, "../build/editor/index.html"),
+    //   path.join(__dirname, "../build/index.html")
+    // );
+    // fs.renameSync(
+    //   path.join(__dirname, "../build/meta/favicon.ico"),
+    //   path.join(__dirname, "../build/favicon.ico")
+    // );
+    // fs.renameSync(
+    //   path.join(__dirname, "../build/meta/logo192.png"),
+    //   path.join(__dirname, "../build/logo192.png")
+    // );
+    // fs.renameSync(
+    //   path.join(__dirname, "../build/meta/logo512.png"),
+    //   path.join(__dirname, "../build/logo512.png")
+    // );
+    // fs.renameSync(
+    //   path.join(__dirname, "../build/meta/manifest.json"),
+    //   path.join(__dirname, "../build/manifest.json")
+    // );
+    // fs.renameSync(
+    //   path.join(__dirname, "../build/meta/robots.txt"),
+    //   path.join(__dirname, "../build/robots.txt")
+    // );
     break;
   }
   case "help":
