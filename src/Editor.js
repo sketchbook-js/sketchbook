@@ -1,10 +1,9 @@
-import React, { Fragment, useState, useRef } from "react";
+import React, { Fragment, useEffect, useState, useRef } from "react";
 import { set, or, not, and } from "set-fns";
 import useStateSnapshots from "use-state-snapshots";
 import { Draggable, Droppable, DragDropContext } from "react-beautiful-dnd";
 
 import useCanvasConnection from "./editor/useCanvasConnection";
-import exampleDoc from "./editor/exampleDoc";
 import useKeys from "./useKeys";
 import reorder from "./reorder";
 import pushID from "./pushID";
@@ -106,6 +105,36 @@ const OptionsErrorMessage = ({ children, style, ...props }) => {
   );
 };
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const SaveButton = ({ doc, ...props }) => {
+  const [label, setLabel] = useState("Save");
+  return (
+    <Button
+      onClick={async () => {
+        setLabel("Saving…");
+        const response = await fetch("/design.json", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(doc)
+        });
+        if (response.status === 200) {
+          await sleep(250);
+          setLabel("Saved!");
+          await sleep(500);
+          setLabel("Save");
+        } else {
+          window.alert("Unable to save file.");
+          setLabel("Save");
+        }
+      }}
+      {...props}
+    >
+      {label}
+    </Button>
+  );
+};
+
 const Editor = ({ config }) => {
   const canvas = useRef(null);
   const [elementBeingDraggedId, setElementBeingDraggedId] = useState(null);
@@ -124,11 +153,24 @@ const Editor = ({ config }) => {
   });
   const [state, setState, pointer, setPointer, snapshots] = useStateSnapshots(
     {
-      doc: exampleDoc,
+      doc: { type: "SketchbookDocument", layers: [] },
       selection: set()
     },
     false,
     100
+  );
+  useEffect(
+    () => {
+      fetch(`/design.json`)
+        .then(file => file.json())
+        .then(doc => {
+          setState(current => ({
+            doc,
+            selection: set()
+          }));
+        });
+    },
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   );
   const { doc, selection } = state;
   const selectionBounds = getLayerBounds(
@@ -335,11 +377,11 @@ const Editor = ({ config }) => {
           event.stopPropagation();
         }}
       >
-        <PanelTitle style={{ marginTop: 6 }}>History</PanelTitle>
+        <PanelTitle style={{ marginTop: 6 }}>Changes</PanelTitle>
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, min-content)",
+            gridTemplateColumns: "min-content min-content 1fr min-content",
             alignItems: "center",
             justifyItems: "center",
             gap: 6,
@@ -362,6 +404,9 @@ const Editor = ({ config }) => {
           >
             Redo
           </Button>
+          {window.SKETCHBOOK_MODE === "dynamic" ? (
+            <SaveButton style={{ gridColumnStart: 4 }} doc={state.doc} />
+          ) : null}
         </div>
         <PanelTitle style={{ marginTop: 6 }}>Layers</PanelTitle>
         <DragDropContext
@@ -1532,6 +1577,7 @@ const Editor = ({ config }) => {
                                   setState(current => ({
                                     ...current,
                                     doc: {
+                                      ...current.doc,
                                       layers: current.doc.layers.map(layer =>
                                         layer.id === [...selection][0]
                                           ? {
@@ -1591,6 +1637,7 @@ const Editor = ({ config }) => {
                                   setState(current => ({
                                     ...current,
                                     doc: {
+                                      ...current.doc,
                                       layers: current.doc.layers.map(layer =>
                                         layer.id === [...selection][0]
                                           ? {

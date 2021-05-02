@@ -1,0 +1,152 @@
+{
+  "type": "SketchbookDocument",
+  "layers": [
+    {
+      "id": "33ddc007-5ff0-4963-b65e-557722ac4a69",
+      "type": "SketchbookComponent",
+      "component": "Heading 1",
+      "name": "Heading 1",
+      "x1": 100,
+      "y1": 100,
+      "x2": 750,
+      "y2": 140,
+      "options": {
+        "text": "Example Website"
+      }
+    },
+    {
+      "id": "ae29e019-c756-4041-8f33-9c8e127f60c0",
+      "type": "SketchbookComponent",
+      "component": "Heading 2",
+      "name": "Heading 2",
+      "x1": 350,
+      "y1": 160,
+      "x2": 750,
+      "y2": 200,
+      "options": {
+        "text": "Lorem ipsum"
+      }
+    },
+    {
+      "id": "749e1378-9445-4453-8b19-ab76509f52ee",
+      "type": "SketchbookComponent",
+      "component": "Paragraph",
+      "name": "Paragraph",
+      "x1": 350,
+      "y1": 210,
+      "x2": 750,
+      "y2": 340,
+      "options": {
+        "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+      }
+    },
+    {
+      "id": "82f9ee55-9e3a-4648-9dc6-27bbc7d1c67e",
+      "type": "SketchbookComponent",
+      "component": "Image",
+      "name": "Image",
+      "x1": 100,
+      "y1": 160,
+      "x2": 340,
+      "y2": 340
+    },
+    {
+      "id": "4cd7fb74-dea7-4550-a43b-8409b2ba1562",
+      "type": "SketchbookComponent",
+      "component": "Heading 2",
+      "name": "Heading 2",
+      "x1": 100,
+      "y1": 360,
+      "x2": 500,
+      "y2": 400,
+      "options": {
+        "text": "Lorem ipsum"
+      }
+    },
+    {
+      "id": "6a2d8a2e-70b9-4b33-9898-442178d96472",
+      "type": "SketchbookComponent",
+      "component": "Paragraph",
+      "name": "Paragraph",
+      "x1": 100,
+      "y1": 410,
+      "x2": 500,
+      "y2": 540,
+      "options": {
+        "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+      }
+    },
+    {
+      "id": "3a2fb6af-e7d2-4dae-a591-9140d174004f",
+      "type": "SketchbookComponent",
+      "component": "Image",
+      "name": "Image",
+      "x1": 510,
+      "y1": 360,
+      "x2": 750,
+      "y2": 540
+    },
+    {
+      "id": "5cc616e4-5bec-4f17-b236-5b2438a12acb",
+      "type": "SketchbookComponent",
+      "component": "Horizontal Rule",
+      "name": "Horizontal Rule",
+      "x1": 100,
+      "y1": 560,
+      "x2": 750,
+      "y2": 570
+    },
+    {
+      "id": "01f5f11c-25e9-4f73-b4c7-39be80b548a2",
+      "type": "SketchbookComponent",
+      "component": "Heading 1",
+      "name": "Heading 1",
+      "x1": 100,
+      "y1": 590,
+      "x2": 750,
+      "y2": 630,
+      "options": {
+        "text": "Example Form"
+      }
+    },
+    {
+      "id": "e724e0de-a581-46e6-8084-256dee1cfbf0",
+      "type": "SketchbookComponent",
+      "component": "Label",
+      "name": "Label",
+      "x1": 100,
+      "y1": 650,
+      "x2": 750,
+      "y2": 670,
+      "options": {
+        "text": "Email"
+      }
+    },
+    {
+      "id": "abb3bb83-bef6-41d4-b054-2d2f6572d569",
+      "type": "SketchbookComponent",
+      "component": "Text Input",
+      "name": "Text Input",
+      "x1": 100,
+      "y1": 680,
+      "x2": 400,
+      "y2": 718,
+      "options": {
+        "value": ""
+      }
+    },
+    {
+      "id": "92e31cf2-486f-4fb9-8321-fa4d7ee3ba05",
+      "type": "SketchbookComponent",
+      "component": "Button",
+      "name": "Button",
+      "x1": 410,
+      "y1": 680,
+      "x2": 503,
+      "y2": 718,
+      "options": {
+        "label": "Subscribe"
+      }
+    }
+  ]
+}
