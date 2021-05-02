@@ -29,10 +29,6 @@ const configFile = path.join(
     : args["--config"],
 );
 
-const designFile = args._[1]
-  ? path.join(process.cwd(), args._[1])
-  : path.join(process.cwd(), "sketchbook/example.json");
-
 const port =
   args["--port"] === undefined || args["--port"] === null
     ? 3000
@@ -47,6 +43,16 @@ const command = args["--help"] ? "help" : args._[0];
 
 switch (command) {
   case "init": {
+    const designFile = args._[1]
+      ? path.join(process.cwd(), args._[1])
+      : path.join(process.cwd(), "sketchbook/example.json");
+
+    if (fs.existsSync(configFile))
+      throw Error(`Config file already exists: ${configFile}`);
+
+    if (fs.existsSync(designFile))
+      throw Error(`Design file already exists: ${designFile}`);
+
     console.log(`Creating config: ${configFile}`);
 
     fs.ensureDirSync(path.dirname(configFile));
@@ -54,6 +60,7 @@ switch (command) {
 
     console.log(`Creating example design: ${designFile}`);
 
+    fs.ensureDirSync(path.dirname(designFile));
     fs.copySync(path.join(__dirname, "../build/example.json"), designFile);
 
     console.log("Done.");
@@ -61,6 +68,10 @@ switch (command) {
     break;
   }
   case "start": {
+    const designFile = args._[1]
+      ? path.join(process.cwd(), args._[1])
+      : undefined;
+
     if (!designFile)
       throw Error(
         `Design file not provided. You need to specify a design file like this:
