@@ -7,16 +7,18 @@ const arg = require("arg");
 const express = require("express");
 
 const args = arg({
+  "--bind": String,
   "--config": String,
   "--file": String,
-  "--port": Number,
-  "--bind": String,
   "--help": Boolean,
+  "--output": String,
+  "--port": Number,
+  "-b": "--bind",
   "-c": "--config",
   "-f": "--file",
-  "-p": "--port",
-  "-b": "--bind",
   "-h": "--help",
+  "-o": "--output",
+  "-p": "--port",
 });
 
 const configFile = path.join(
@@ -38,6 +40,11 @@ const host =
   args["--bind"] === undefined || args["--bind"] === null
     ? "localhost"
     : args["--bind"];
+
+const outputDir =
+  args["--output"] === undefined || args["--output"] === null
+    ? path.join(process.cwd(), "build")
+    : path.join(process.cwd(), args["--output"]);
 
 const command = args["--help"] ? "help" : args._[0];
 
@@ -127,34 +134,67 @@ switch (command) {
     break;
   }
   case "build": {
-    // TODO: Create a standalone static build of the app with SKETCHBOOK_MODE = 'static'
-    //
-    // All the meta files will need to be moved to the root dir:
-    //
-    // fs.renameSync(
-    //   path.join(__dirname, "../build/editor/index.html"),
-    //   path.join(__dirname, "../build/index.html")
-    // );
-    // fs.renameSync(
-    //   path.join(__dirname, "../build/meta/favicon.ico"),
-    //   path.join(__dirname, "../build/favicon.ico")
-    // );
-    // fs.renameSync(
-    //   path.join(__dirname, "../build/meta/logo192.png"),
-    //   path.join(__dirname, "../build/logo192.png")
-    // );
-    // fs.renameSync(
-    //   path.join(__dirname, "../build/meta/logo512.png"),
-    //   path.join(__dirname, "../build/logo512.png")
-    // );
-    // fs.renameSync(
-    //   path.join(__dirname, "../build/meta/manifest.json"),
-    //   path.join(__dirname, "../build/manifest.json")
-    // );
-    // fs.renameSync(
-    //   path.join(__dirname, "../build/meta/robots.txt"),
-    //   path.join(__dirname, "../build/robots.txt")
-    // );
+    const designFile = args._[1]
+      ? path.join(process.cwd(), args._[1])
+      : undefined;
+
+    if (!designFile)
+      throw Error(
+        `Design file not provided. You need to specify a design file like this:
+
+sketchbook build example.json
+`,
+      );
+
+    if (!fs.existsSync(configFile))
+      throw Error(`Could not find config file: ${configFile}`);
+
+    if (!fs.existsSync(designFile))
+      throw Error(`Could not find design file: ${designFile}`);
+
+    console.log(`Building to: ${outputDir}`);
+    console.log(`Using config: ${configFile}`);
+    console.log(`Using design: ${designFile}`);
+
+    if (fs.pathExistsSync(outputDir)) {
+      fs.removeSync(outputDir);
+    }
+
+    fs.ensureDirSync(path.dirname(outputDir));
+
+    fs.copySync(path.resolve(__dirname, "../build"), outputDir, {
+      dereference: true,
+      filter: (file) => path.basename(file) !== ".DS_Store",
+    });
+
+    fs.copySync(configFile, path.join(outputDir, "config.js"));
+    fs.copySync(designFile, path.join(outputDir, "design.json"));
+
+    fs.renameSync(
+      path.join(outputDir, "editor/index.html"),
+      path.join(outputDir, "index.html"),
+    );
+    fs.renameSync(
+      path.join(outputDir, "meta/favicon.ico"),
+      path.join(outputDir, "favicon.ico"),
+    );
+    fs.renameSync(
+      path.join(outputDir, "meta/logo192.png"),
+      path.join(outputDir, "logo192.png"),
+    );
+    fs.renameSync(
+      path.join(outputDir, "meta/logo512.png"),
+      path.join(outputDir, "logo512.png"),
+    );
+    fs.renameSync(
+      path.join(outputDir, "meta/manifest.json"),
+      path.join(outputDir, "manifest.json"),
+    );
+    fs.renameSync(
+      path.join(outputDir, "meta/robots.txt"),
+      path.join(outputDir, "robots.txt"),
+    );
+
     break;
   }
   case "help":
@@ -171,6 +211,7 @@ switch (command) {
 
     init           Creates the default config file
     start          Starts the app
+    build          Creates a static build of app
     help           Display this help information
 
   Options:
@@ -178,6 +219,7 @@ switch (command) {
     -b, --bind     The host to bind the app to (default: localhost)
     -c, --config   A relative path to the config file (default: sketchbook/config.js)
     -h, --help     Display this help information
+    -o, --output   A relative path to the directory to build into (default: build)
     -p, --port     The port to run the app on (default: 3000)
 `);
     break;
