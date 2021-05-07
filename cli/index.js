@@ -43,7 +43,7 @@ const host =
 
 const outputDir =
   args["--output"] === undefined || args["--output"] === null
-    ? path.join(process.cwd(), "build")
+    ? path.join(process.cwd(), "sketchbook-build")
     : path.join(process.cwd(), args["--output"]);
 
 const command = args["--help"] ? "help" : args._[0];
@@ -217,9 +217,9 @@ sketchbook build example.json
   Options:
   
     -b, --bind     The host to bind the app to (default: localhost)
-    -c, --config   A relative path to the config file (default: sketchbook/config.js)
+    -c, --config   A relative path to the config file (default: ./sketchbook/config.js)
     -h, --help     Display this help information
-    -o, --output   A relative path to the directory to build into (default: build)
+    -o, --output   A relative path to the directory to build into (default: ./sketchbook-build)
     -p, --port     The port to run the app on (default: 3000)
 `);
     break;
