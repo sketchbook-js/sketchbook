@@ -4,9 +4,9 @@ The project roadmap is managed in GitHub projects:
 
 https://github.com/sketchbook-js/sketchbook/projects/1
 
-General discussion happens in the Spectrum community:
+General discussion happens in the Github Discussions section:
 
-https://spectrum.chat/sketchbook-js
+https://github.com/sketchbook-js/sketchbook/discussions
 
 ## Contributor setup
 
@@ -50,3 +50,31 @@ Steps to set up your local repo:
     ```shell
     yarn run test
     ```
+
+## Testing the npm package works
+
+1. Create a package.json file:
+
+   ```shell
+   yarn init
+   ```
+
+2. Download the sketchbook npm package:
+
+   ```shell
+   yarn add -D @sketchbook-js/sketchbook@dev
+   ```
+
+   or use this command for the production version:
+
+   ```shell
+   yarn add -D @sketchbook-js/sketchbook
+   ```
+
+3. Test running the app with:
+
+   ```shell
+   yarn init && yarn start
+   ```
+
+   or test any commands you want to test.
