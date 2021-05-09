@@ -1,6 +1,6 @@
 {
   "name": "@sketchbook-js/sketchbook",
-  "version": "0.3.0-2",
+  "version": "0.3.0-4",
   "description": "The design tool that lives in your repo.",
   "repository": "https://github.com/sketchbook-js/sketchbook.git",
   "keywords": [
@@ -33,7 +33,11 @@
     "jest": "jest",
     "start": "node scripts/start",
     "release": "np",
-    "test": "yarn eslint && yarn flow check && yarn jest"
+    "test": "yarn eslint && yarn flow check && yarn jest",
+    "preview:init": "node cli/index.js init -c preview/config.js preview/example.json",
+    "preview:start": "node cli/index.js start -c preview/config.js preview/example.json",
+    "preview:build": "node cli/index.js build -c preview/config.js -o preview/build preview/example.json",
+    "preview:help": "node cli/index.js help"
   },
   "publishConfig": {
     "access": "public"
