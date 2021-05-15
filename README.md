@@ -35,14 +35,14 @@ https://demo.sketchbookjs.com
 3.  Run on `http://localhost:3000/`:
 
     ```
-    yarn sketchbook start
+    yarn sketchbook start <path/to/design-file.json>
     ```
 
 ## Contributing
 
 Take a look at the roadmap to see what's planned:
 
-https://github.com/sketchbook-js/sketchbook/projects/1
+https://github.com/orgs/sketchbook-js/projects/1
 
 Ask questions and discuss ideas in the Github Discussions section:
 
