@@ -35,10 +35,8 @@ https://demo.sketchbookjs.com
 3.  Run on `http://localhost:3000/`:
 
     ```
-    yarn sketchbook start <path/to/design/file.json>
+    yarn sketchbook start example.json
     ```
-
-    Replace `<path/to/design/file.json>` with `sketchbook/example.json` to run it with an example design file.
 
 ## Contributing
 
