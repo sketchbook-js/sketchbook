@@ -35,7 +35,7 @@ https://demo.sketchbookjs.com
 3.  Run on `http://localhost:3000/`:
 
     ```
-    yarn sketchbook start example.json
+    yarn sketchbook start sketchbook/example.json
     ```
 
 ## Contributing
