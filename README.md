@@ -4,7 +4,7 @@
   </h1>
   <p>The design tool that lives in your repo.</p>
   <p>
-    <a href="https://travis-ci.org/github/sketchbook-js/sketchbook"><img alt="Travis CI build status" src="https://img.shields.io/travis/sketchbook-js/sketchbook" /></a>
+    <a href="https://github.com/sketchbook-js/sketchbook/actions"><img alt="Github Actions CI build status" src="https://img.shields.io/github/workflow/status/sketchbook-js/sketchbook/build-ci/master" /></a>
   </p>
 </div>
 
