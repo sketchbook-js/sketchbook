@@ -6,21 +6,21 @@ const useEditorConnection = (editorWindow, canvasWindow) => {
   useEffect(() => {
     const receiveMessage = event => {
       switch (event.data.type) {
-        case "sketchbook_status_request": {
+        case "sketchbook_request:ping": {
           editorWindow.postMessage(
             {
-              type: "sketchbook_status_response",
+              type: "sketchbook_response:acknowledge",
               status: "ready"
             },
             "*"
           );
           break;
         }
-        case "sketchbook_render_layers_request": {
+        case "sketchbook_request:render": {
           setLayersToRender(event.data.layers);
           break;
         }
-        case "sketchbook_measure_layer_request": {
+        case "sketchbook_request:measure": {
           setLayersToMeasure(current => [...current, event.data.layer]);
           break;
         }
@@ -39,7 +39,7 @@ const useEditorConnection = (editorWindow, canvasWindow) => {
     sendMeasurements: ({ id, width, height }) => {
       editorWindow.postMessage(
         {
-          type: "sketchbook_measure_layer_response",
+          type: "sketchbook_response:measure",
           id,
           width,
           height

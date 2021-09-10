@@ -9,13 +9,13 @@ const useCanvasStatus = (editorWindow, canvasRef) => {
       if (!canvasRef.current) throw Error("No canvas");
       canvasRef.current.contentWindow.postMessage(
         {
-          type: "sketchbook_status_request"
+          type: "sketchbook_request:ping"
         },
         "*"
       );
     }, 100);
     const receiveMessage = event => {
-      if (event.data.type === "sketchbook_status_response") {
+      if (event.data.type === "sketchbook_response:acknowledge") {
         clearInterval(interval);
         editorWindow.removeEventListener("message", receiveMessage);
         setStatus(event.data.status);
@@ -36,7 +36,7 @@ const useCanvasRender = (status, canvasRef, layers) => {
       if (!canvasRef.current) throw Error("No canvas");
       canvasRef.current.contentWindow.postMessage(
         {
-          type: "sketchbook_render_layers_request",
+          type: "sketchbook_request:render",
           layers
         },
         "*"
@@ -52,7 +52,7 @@ const useCanvasMeasure = (status, editorWindow, canvasRef) => {
         const id = pushID();
         const receiveMessage = event => {
           if (
-            event.data.type === "sketchbook_measure_layer_response" &&
+            event.data.type === "sketchbook_response:measure" &&
             event.data.id === id
           ) {
             resolve({ width: event.data.width, height: event.data.height });
@@ -62,7 +62,7 @@ const useCanvasMeasure = (status, editorWindow, canvasRef) => {
         editorWindow.addEventListener("message", receiveMessage);
         canvasRef.current.contentWindow.postMessage(
           {
-            type: "sketchbook_measure_layer_request",
+            type: "sketchbook_request:measure",
             layer: {
               id,
               type,
