@@ -1,12 +1,8 @@
 # Contributing to Sketchbook
 
-The project roadmap is managed in GitHub projects:
-
-https://github.com/sketchbook-js/sketchbook/projects/1
-
 General discussion happens in the Github Discussions section:
 
-https://github.com/sketchbook-js/sketchbook/discussions
+https://github.com/orgs/sketchbook-js/discussions
 
 ## Contributor setup
 
